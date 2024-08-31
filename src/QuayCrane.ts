@@ -1,6 +1,7 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
 import { Manager } from "./Manager";
 import { AnimateEvent } from "./Event/types";
+import { QuayCraneControl } from "./QuayCraneControl";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
@@ -10,10 +11,13 @@ export class QuayCrane {
 
   manager: Manager;
   id: number;
+
+  // physics
   width: number;
   height: number;
   legSpan: number;
   outReach: number;
+  control: QuayCraneControl;
 
   // mesh
   model: Object3D; // root mesh
@@ -23,6 +27,7 @@ export class QuayCrane {
 
   constructor(
     manager: Manager,
+    initialPosition: Vector3,
     width: number = 10,
     height: number = 20,
     legSpan: number = 10,
@@ -33,13 +38,31 @@ export class QuayCrane {
     this.height = height;
     this.legSpan = legSpan;
     this.outReach = outReach;
+    this.control = new QuayCraneControl(manager, this, initialPosition);
 
     this.id = ++QuayCrane.count;
     this.buildModel();
     this.listenToEvents();
   }
 
-  buildModel() {
+  moveTo(target: Vector3) {
+    if (target.y < -(this.legSpan / 2))
+      throw new Error("Cannot move trolley too far back");
+    if (target.y > this.legSpan / 2 + this.outReach)
+      throw new Error("Cannot move trolley too far forward");
+    if (target.z < 0) throw new Error("Cannot move spreader under ground");
+    if (target.z > this.height)
+      throw new Error("Cannot move spreader above height");
+
+    const trajectory = this.control.planTrajectory(target);
+    this.control.execute(trajectory);
+    this.manager.emit({
+      type: "quaycranemovestart",
+      quayCraneId: this.id,
+    });
+  }
+
+  private buildModel() {
     this.model = new Object3D();
 
     // leg
@@ -89,7 +112,7 @@ export class QuayCrane {
     machineRoom.position.set(
       0,
       -this.legSpan / 4,
-      heightTopLevel + machineH / 2
+      heightTopLevel + machineH / 1.5
     );
     this.model.add(machineRoom);
     this.static.push(machineRoom);
@@ -110,7 +133,11 @@ export class QuayCrane {
       trolleyGeometry,
       new MeshBasicMaterial({ color: "#f54b42" })
     );
-    this.trolley.position.set(0, this.legSpan + this.outReach / 2, this.height);
+    this.trolley.position.set(
+      0,
+      this.legSpan + this.outReach / 2,
+      this.height + SPREADER_THICKNESS
+    );
     this.model.add(this.trolley);
 
     // spreader
@@ -118,21 +145,27 @@ export class QuayCrane {
       trolleyGeometry,
       new MeshBasicMaterial({ color: "#b1ff14" })
     );
-    this.spreader.position.set(0, 0, this.height * -0.2);
+    this.spreader.position.set(0, 0, 0);
     this.trolley.add(this.spreader);
 
     this.manager.scene.add(this.model);
   }
 
-  move(position: Vector3) {}
+  private updateModelState() {
+    this.model.position.setX(this.control.position.x);
+    this.spreader.position.setZ(
+      this.control.position.z - this.height - SPREADER_THICKNESS / 2
+    );
+    this.trolley.position.setY(this.control.position.y);
+  }
 
-  listenToEvents() {
+  private listenToEvents() {
     this.manager.onEvent<AnimateEvent>("animate", (e) => {
       this.animate(e.deltaTime);
     });
   }
 
-  animate(deltaTime: number) {
-    // console.log(deltaTime);
+  private animate(deltaTime: number) {
+    this.updateModelState();
   }
 }

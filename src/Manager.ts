@@ -2,22 +2,21 @@
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   AmbientLight,
-  BoxGeometry,
   Clock,
   Color,
   GridHelper,
-  Mesh,
-  MeshBasicMaterial,
   PerspectiveCamera,
   Raycaster,
   Scene,
   SpotLight,
   WebGLRenderer,
 } from "three";
-import { QuayCrane } from "./QuayCrane";
 import { Event } from "./Event/Event";
 import { EventBase, EventType } from "./Event/types";
 import { Text } from "./Text";
+import { Terminal } from "./Terminal";
+
+const FOV = 46.8;
 
 // unit in meters
 export class Manager {
@@ -28,6 +27,7 @@ export class Manager {
   raycaster: Raycaster;
   scene: Scene;
   text: Text;
+  terminal: Terminal;
   renderer: WebGLRenderer;
 
   constructor() {
@@ -43,19 +43,23 @@ export class Manager {
     this.animate();
   }
 
-  async createObjects() {
+  onEvent<T extends EventBase>(
+    eventType: EventType,
+    callback: (value: T) => void
+  ) {
+    this.event.on(eventType, callback);
+  }
+
+  emit<T extends EventBase>(event: T) {
+    this.event.emit(event);
+  }
+
+  private async createObjects() {
     await this.text.load();
-    new QuayCrane(this);
+    this.terminal = new Terminal(this);
   }
 
-  addTestObject() {
-    const geometry = new BoxGeometry(1, 1, 1);
-    const material = new MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new Mesh(geometry, material);
-    this.scene.add(cube);
-  }
-
-  setupLighting() {
+  private setupLighting() {
     this.scene.add(new AmbientLight(0xf0f0f0));
     const light = new SpotLight(0xffffff, 1.0);
     light.position.set(0, 15, 20);
@@ -69,22 +73,23 @@ export class Manager {
     this.scene.add(light);
   }
 
-  setupScene() {
+  private setupScene() {
     this.scene = new Scene();
     this.scene.background = new Color(0xf0f0f0);
     this.camera = new PerspectiveCamera(
-      75,
+      FOV,
       window.innerWidth / window.innerHeight,
       0.1,
       2000
     );
-    this.camera.position.set(-30, -30, 30);
+    this.camera.position.set(-50, -70, 30);
     this.camera.lookAt(0, 0, 0);
     this.camera.up.set(0, 0, 1);
     this.scene.add(this.camera);
 
-    const gridHelper = new GridHelper(10, 10);
+    const gridHelper = new GridHelper(100, 10);
     gridHelper.rotateX(Math.PI / 2);
+    gridHelper.position.set(0, -40, 0);
     this.scene.add(gridHelper);
 
     this.renderer = new WebGLRenderer({ antialias: true });
@@ -97,7 +102,7 @@ export class Manager {
     window.addEventListener("resize", () => this.onWindowResize(this));
   }
 
-  setupOrbitControl() {
+  private setupOrbitControl() {
     this.orbitControl = new OrbitControls(
       this.camera,
       this.renderer.domElement
@@ -107,17 +112,17 @@ export class Manager {
     this.render();
   }
 
-  onWindowResize(manager: Manager) {
+  private onWindowResize(manager: Manager) {
     manager.camera.aspect = window.innerWidth / window.innerHeight;
     manager.camera.updateProjectionMatrix();
     manager.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  render() {
+  private render() {
     this.renderer.render(this.scene, this.camera);
   }
 
-  animate() {
+  private animate() {
     requestAnimationFrame(() => this.animate());
     this.render();
     const deltaTime = this.clock.getDelta();
@@ -125,12 +130,5 @@ export class Manager {
       type: "animate",
       deltaTime,
     });
-  }
-
-  onEvent<T extends EventBase>(
-    eventType: EventType,
-    callback: (value: T) => void
-  ) {
-    this.event.on(eventType, callback);
   }
 }
