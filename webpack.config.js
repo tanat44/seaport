@@ -1,11 +1,13 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   mode: "development",
   entry: {
     app: "./src/index.ts",
   },
+  context: path.join(__dirname),
   devtool: "inline-source-map",
   devServer: {
     static: "./dist",
@@ -15,6 +17,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: "Hot Module Replacement",
       template: "src/index.html",
+    }),
+    new CopyPlugin({
+      patterns: [{ from: "public" }],
     }),
   ],
   module: {

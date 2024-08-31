@@ -1,39 +1,63 @@
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { PerspectiveCamera, Raycaster, Scene, WebGLRenderer } from "three";
-import * as THREE from "three";
+import {
+  AmbientLight,
+  BoxGeometry,
+  Clock,
+  Color,
+  GridHelper,
+  Mesh,
+  MeshBasicMaterial,
+  PerspectiveCamera,
+  Raycaster,
+  Scene,
+  SpotLight,
+  WebGLRenderer,
+} from "three";
 import { QuayCrane } from "./QuayCrane";
+import { Event } from "./Event/Event";
+import { EventBase, EventType } from "./Event/types";
+import { Text } from "./Text";
 
 // unit in meters
 export class Manager {
-  scene: Scene;
+  private clock: Clock;
+  private event: Event;
+  private orbitControl: OrbitControls;
   camera: PerspectiveCamera;
   raycaster: Raycaster;
+  scene: Scene;
+  text: Text;
   renderer: WebGLRenderer;
-  orbitControl: OrbitControls;
 
   constructor() {
-    this.raycaster = new THREE.Raycaster();
+    this.raycaster = new Raycaster();
     this.setupScene();
     this.setupLighting();
     this.setupOrbitControl();
+    this.clock = new Clock();
+    this.event = new Event(this.renderer.domElement);
+    this.text = new Text();
 
-    // create objects
-    new QuayCrane(this);
+    this.createObjects();
     this.animate();
-    this.render();
+  }
+
+  async createObjects() {
+    await this.text.load();
+    new QuayCrane(this);
   }
 
   addTestObject() {
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
+    const geometry = new BoxGeometry(1, 1, 1);
+    const material = new MeshBasicMaterial({ color: 0x00ff00 });
+    const cube = new Mesh(geometry, material);
     this.scene.add(cube);
   }
 
   setupLighting() {
-    this.scene.add(new THREE.AmbientLight(0xf0f0f0));
-    const light = new THREE.SpotLight(0xffffff, 1.0);
+    this.scene.add(new AmbientLight(0xf0f0f0));
+    const light = new SpotLight(0xffffff, 1.0);
     light.position.set(0, 15, 20);
     light.angle = Math.PI * 0.2;
     light.castShadow = true;
@@ -46,9 +70,9 @@ export class Manager {
   }
 
   setupScene() {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xf0f0f0);
-    this.camera = new THREE.PerspectiveCamera(
+    this.scene = new Scene();
+    this.scene.background = new Color(0xf0f0f0);
+    this.camera = new PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
@@ -59,11 +83,11 @@ export class Manager {
     this.camera.up.set(0, 0, 1);
     this.scene.add(this.camera);
 
-    const gridHelper = new THREE.GridHelper(10, 10);
+    const gridHelper = new GridHelper(10, 10);
     gridHelper.rotateX(Math.PI / 2);
     this.scene.add(gridHelper);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
@@ -96,5 +120,17 @@ export class Manager {
   animate() {
     requestAnimationFrame(() => this.animate());
     this.render();
+    const deltaTime = this.clock.getDelta();
+    this.event.emit({
+      type: "animate",
+      deltaTime,
+    });
+  }
+
+  onEvent<T extends EventBase>(
+    eventType: EventType,
+    callback: (value: T) => void
+  ) {
+    this.event.on(eventType, callback);
   }
 }

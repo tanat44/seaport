@@ -1,11 +1,15 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
 import { Manager } from "./Manager";
+import { AnimateEvent } from "./Event/types";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
 export class QuayCrane {
+  static count = 0;
+
   manager: Manager;
+  id: number;
   width: number;
   height: number;
   legSpan: number;
@@ -30,7 +34,9 @@ export class QuayCrane {
     this.legSpan = legSpan;
     this.outReach = outReach;
 
+    this.id = ++QuayCrane.count;
     this.buildModel();
+    this.listenToEvents();
   }
 
   buildModel() {
@@ -88,6 +94,12 @@ export class QuayCrane {
     this.model.add(machineRoom);
     this.static.push(machineRoom);
 
+    // text label
+    const text = this.manager.text.createTextMesh(`QuayCrane #${this.id}`);
+    text.translateZ(machineH * 2);
+    machineRoom.add(text);
+    // this.static.push(text);
+
     // trolley
     const trolleyGeometry = new BoxGeometry(
       this.width / 2,
@@ -113,4 +125,14 @@ export class QuayCrane {
   }
 
   move(position: Vector3) {}
+
+  listenToEvents() {
+    this.manager.onEvent<AnimateEvent>("animate", (e) => {
+      this.animate(e.deltaTime);
+    });
+  }
+
+  animate(deltaTime: number) {
+    // console.log(deltaTime);
+  }
 }
