@@ -10,6 +10,7 @@ export class Terminal {
   constructor(manager: Manager) {
     this.manager = manager;
     this.quayCranes = new Map();
+    this.moveQuayCrane(this.addQuayCrane(new Vector3(-60, 0, 0)));
     this.moveQuayCrane(this.addQuayCrane(new Vector3(-30, 0, 0)));
     this.moveQuayCrane(this.addQuayCrane(new Vector3(0, 0, 0)));
     this.moveQuayCrane(this.addQuayCrane(new Vector3(30, 0, 0)));
