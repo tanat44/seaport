@@ -1,8 +1,8 @@
 import { Vector3 } from "three";
-import { Manager } from "./Manager";
+import { Manager } from "../Manager";
+import { PhysicsState3D } from "../Physics/PhysicsState3D";
+import { Trajectory } from "../Physics/types";
 import { QuayCrane } from "./QuayCrane";
-import { PhysicsState3D } from "./Physics/PhysicsState3D";
-import { Trajectory } from "./Physics/types";
 
 const Z_OVERSHOOT = 2;
 
@@ -47,8 +47,12 @@ export class QuayCraneControl extends PhysicsState3D {
 
     // 2 lower spreader down to target
     trajectory.push(new Vector3(target.x, target.y, target.z));
-
     return trajectory;
+  }
+
+  override execute(trajectory: Trajectory): void {
+    super.execute(trajectory);
+    this.trajectoryMesh.position.y += this.crane.model.position.y;
   }
 
   protected override afterArrive(): void {

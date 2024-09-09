@@ -1,20 +1,19 @@
-// @ts-ignore
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   AmbientLight,
   Clock,
   Color,
-  GridHelper,
   PerspectiveCamera,
   Raycaster,
   Scene,
   SpotLight,
   WebGLRenderer,
 } from "three";
+// @ts-ignore
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Event } from "./Event/Event";
 import { EventBase, EventType } from "./Event/types";
-import { Text } from "./Text";
 import { Terminal } from "./Terminal";
+import { Text } from "./Text";
 
 const FOV = 46.8;
 
@@ -87,10 +86,9 @@ export class Manager {
     this.camera.up.set(0, 0, 1);
     this.scene.add(this.camera);
 
-    const gridHelper = new GridHelper(100, 10);
-    gridHelper.rotateX(Math.PI / 2);
-    gridHelper.position.set(0, -40, 0);
-    this.scene.add(gridHelper);
+    // const gridHelper = new GridHelper(100, 10);
+    // gridHelper.rotateX(Math.PI / 2);
+    // this.scene.add(gridHelper);
 
     this.renderer = new WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);

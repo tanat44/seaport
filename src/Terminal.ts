@@ -1,20 +1,26 @@
 import { Vector3 } from "three";
-import { Manager } from "./Manager";
-import { QuayCrane } from "./QuayCrane";
+import { QuayCrane } from "./Equipment/QuayCrane";
 import { QuayCraneMoveEndEvent } from "./Event/types";
+import { LayoutManager } from "./LayoutManager";
+import { Manager } from "./Manager";
 
 export class Terminal {
   manager: Manager;
+  layout: LayoutManager;
   quayCranes: Map<number, QuayCrane>;
 
   constructor(manager: Manager) {
     this.manager = manager;
+
+    this.layout = new LayoutManager(manager);
+
+    // init quay cranes on layout spot
     this.quayCranes = new Map();
-    this.moveQuayCrane(this.addQuayCrane(new Vector3(-60, 0, 0)));
-    this.moveQuayCrane(this.addQuayCrane(new Vector3(-30, 0, 0)));
-    this.moveQuayCrane(this.addQuayCrane(new Vector3(0, 0, 0)));
-    this.moveQuayCrane(this.addQuayCrane(new Vector3(30, 0, 0)));
-    this.moveQuayCrane(this.addQuayCrane(new Vector3(60, 0, 0)));
+    this.layout.load().then((layout) => {
+      for (const qcOrigin of layout.quayCraneOrigins) {
+        this.moveQuayCrane(this.addQuayCrane(qcOrigin));
+      }
+    });
 
     this.manager.onEvent<QuayCraneMoveEndEvent>("quaycranemoveend", (e) =>
       this.quayCraneMoveEnd(e.quayCraneId)

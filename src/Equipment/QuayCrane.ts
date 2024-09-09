@@ -1,6 +1,6 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
-import { Manager } from "./Manager";
-import { AnimateEvent } from "./Event/types";
+import { AnimateEvent } from "../Event/types";
+import { Manager } from "../Manager";
 import { QuayCraneControl } from "./QuayCraneControl";
 
 const LEG_SIZE = 0.3;
@@ -38,10 +38,14 @@ export class QuayCrane {
     this.height = height;
     this.legSpan = legSpan;
     this.outReach = outReach;
-    this.control = new QuayCraneControl(manager, this, initialPosition);
+    this.control = new QuayCraneControl(
+      manager,
+      this,
+      new Vector3(initialPosition.x, 0, height / 2)
+    );
 
     this.id = ++QuayCrane.count;
-    this.buildModel();
+    this.buildModel(initialPosition);
     this.listenToEvents();
   }
 
@@ -62,8 +66,9 @@ export class QuayCrane {
     });
   }
 
-  private buildModel() {
+  private buildModel(initialPosition: Vector3) {
     this.model = new Object3D();
+    this.model.position.copy(initialPosition);
 
     // leg
     const heightTopLevel = this.height + SPREADER_THICKNESS;

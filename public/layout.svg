@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="layout.svg"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.76016404"
+     inkscape:cx="437.40559"
+     inkscape:cy="348.60897"
+     inkscape:window-width="1307"
+     inkscape:window-height="812"
+     inkscape:window-x="55"
+     inkscape:window-y="37"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect848"
+       width="72.396652"
+       height="21.927835"
+       x="23.668129"
+       y="42.115364"
+       inkscape:label="yard" />
+    <rect
+       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect1114"
+       width="72.396652"
+       height="21.927835"
+       x="114.51201"
+       y="42.115364"
+       inkscape:label="yard" />
+    <rect
+       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect1116"
+       width="72.396652"
+       height="21.927835"
+       x="23.668129"
+       y="83.186546"
+       inkscape:label="yard" />
+    <rect
+       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect1118"
+       width="72.396652"
+       height="21.927835"
+       x="113.81589"
+       y="82.838486"
+       inkscape:label="yard" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect1120"
+       width="200.13498"
+       height="148.27391"
+       x="3.4806008"
+       y="14.61856"
+       inkscape:label="port" />
+    <circle
+       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path1176"
+       cx="21.927834"
+       cy="24.190228"
+       r="2"
+       inkscape:label="qc" />
+    <circle
+       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="circle1178"
+       cx="59.866467"
+       cy="24.190228"
+       r="2"
+       inkscape:label="qc" />
+    <circle
+       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="circle1180"
+       cx="100.24152"
+       cy="24.190228"
+       r="2"
+       inkscape:label="qc" />
+    <circle
+       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="circle1182"
+       cx="138.18016"
+       cy="24.190228"
+       r="2"
+       inkscape:label="qc" />
+    <rect
+       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect1231"
+       width="72.396652"
+       height="21.927835"
+       x="38.982807"
+       y="124.60579"
+       inkscape:label="yard" />
+    <rect
+       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect1233"
+       width="30.977413"
+       height="21.927835"
+       x="154.19093"
+       y="114.86008"
+       inkscape:label="yard" />
+    <circle
+       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="circle1235"
+       cx="174.03043"
+       cy="24.190228"
+       r="2"
+       inkscape:label="qc" />
+    <circle
+       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="circle1237"
+       cx="194.91408"
+       cy="24.190228"
+       r="2"
+       inkscape:label="qc" />
+  </g>
+</svg>
