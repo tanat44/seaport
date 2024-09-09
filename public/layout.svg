@@ -103,8 +103,8 @@
     <circle
        style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="circle1182"
-       cx="138.18016"
-       cy="24.190228"
+       cx="185.51643"
+       cy="24.538288"
        r="2"
        inkscape:label="qc" />
     <rect
@@ -112,30 +112,8 @@
        id="rect1231"
        width="72.396652"
        height="21.927835"
-       x="38.982807"
+       x="71.352463"
        y="124.60579"
        inkscape:label="yard" />
-    <rect
-       style="fill:#cccccc;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="rect1233"
-       width="30.977413"
-       height="21.927835"
-       x="154.19093"
-       y="114.86008"
-       inkscape:label="yard" />
-    <circle
-       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="circle1235"
-       cx="174.03043"
-       cy="24.190228"
-       r="2"
-       inkscape:label="qc" />
-    <circle
-       style="fill:#ff8080;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="circle1237"
-       cx="194.91408"
-       cy="24.190228"
-       r="2"
-       inkscape:label="qc" />
   </g>
 </svg>
