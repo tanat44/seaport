@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
 import { QuayCraneGantryEvent } from "../Event/types";
 import { Manager } from "../Manager";
-import { CellType, Layout } from "../types";
+import { CellType, GridCoordinate, Layout } from "../types";
 import { QuayCraneSpace } from "./QuayCraneSpace";
 
 export const GRID_SIZE = 5;
@@ -33,6 +33,8 @@ export class PlannerGrid {
     });
   }
 
+  public findPath(from: Vector2, to: Vector2) {}
+
   private isInYardBlock(pos: Vector2): boolean {
     for (const yard of this.layout.yardBlocks) {
       if (yard.containsPoint(pos)) return true;
@@ -50,5 +52,12 @@ export class PlannerGrid {
 
     const space = this.quayCraneSpaces.get(quayCraneId);
     space.updateGrid(qc.box2d, this.grid);
+  }
+
+  private toGrid(pos: Vector2): GridCoordinate {
+    return {
+      x: Math.floor(pos.x / GRID_SIZE),
+      y: Math.floor(pos.y / GRID_SIZE),
+    };
   }
 }
