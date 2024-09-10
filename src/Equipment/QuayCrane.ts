@@ -1,4 +1,13 @@
-import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
+import {
+  Box2,
+  Box3,
+  BoxGeometry,
+  Mesh,
+  MeshBasicMaterial,
+  Object3D,
+  Vector2,
+  Vector3,
+} from "three";
 import { AnimateEvent } from "../Event/types";
 import { Manager } from "../Manager";
 import { QuayCraneControl } from "./QuayCraneControl";
@@ -34,6 +43,7 @@ export class QuayCrane {
     outReach: number = 10
   ) {
     this.manager = manager;
+    this.id = ++QuayCrane.count;
     this.width = width;
     this.height = height;
     this.legSpan = legSpan;
@@ -44,12 +54,11 @@ export class QuayCrane {
       new Vector3(initialPosition.x, 0, height / 2)
     );
 
-    this.id = ++QuayCrane.count;
     this.buildModel(initialPosition);
     this.listenToEvents();
   }
 
-  moveTo(target: Vector3) {
+  public moveTo(target: Vector3) {
     if (target.y < -(this.legSpan / 2))
       throw new Error("Cannot move trolley too far back");
     if (target.y > this.legSpan / 2 + this.outReach)
@@ -64,6 +73,15 @@ export class QuayCrane {
       type: "quaycranemovestart",
       quayCraneId: this.id,
     });
+  }
+
+  public get box2d(): Box2 {
+    const box3 = new Box3().setFromObject(this.model);
+
+    return new Box2(
+      new Vector2(box3.min.x, box3.min.y),
+      new Vector2(box3.max.x, box3.max.y)
+    );
   }
 
   private buildModel(initialPosition: Vector3) {

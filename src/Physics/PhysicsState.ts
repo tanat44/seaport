@@ -1,5 +1,5 @@
-import { Manager } from "../Manager";
 import { AnimateEvent } from "../Event/types";
+import { Manager } from "../Manager";
 
 const ARRIVE_THRESHOLD = 0.05;
 const BRAKE_SAFETY_FACTOR = 1.05;
@@ -110,6 +110,9 @@ export class PhysicsState {
     }
     // update position
     this.position += this.velocity * deltaTime;
+    this.manager.emit({
+      type: `physicsstatechange${this.name}`,
+    });
 
     if (this.arrived) this.onArrive(this);
   }

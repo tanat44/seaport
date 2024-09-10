@@ -23,10 +23,16 @@ export class QuayCraneControl extends PhysicsState3D {
       manager,
       undefined,
       new Vector3(GANTRY_MAX_ACCEL, TROLLY_MAX_ACCEL, SPREADER_MAX_ACCEL),
-      initialPosition
+      initialPosition,
+      quayCrane.id.toString()
     );
     this.manager = manager;
     this.crane = quayCrane;
+    const id = quayCrane.id;
+
+    this.manager.onEvent(`physicsstatechange${id}.x`, () => {
+      this.manager.emit({ type: "quaycranegantry", quayCraneId: id });
+    });
   }
 
   planTrajectory(target: Vector3): Trajectory {

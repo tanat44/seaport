@@ -14,7 +14,7 @@ export class LayoutManager {
 
   constructor(manager: Manager) {
     this.manager = manager;
-    this.yardBlockMaterial = Render.createPlaneMaterial(0xa0a0a0);
+    this.yardBlockMaterial = Render.createPlaneMaterial(0xbbbbbb);
   }
 
   async load(layoutPath: string = "/layout.svg") {

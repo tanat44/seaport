@@ -1,0 +1,88 @@
+import { Box2, Mesh, Vector2 } from "three";
+import { Manager } from "../Manager";
+import { Render } from "../Render";
+import { CellType } from "../types";
+import { GridBox } from "./GridBox";
+import { GRID_SIZE } from "./PlannerGrid";
+
+const HIGHLIGHT_MESH_HEIGHT = 0.5;
+
+export class QuayCraneSpace {
+  manager: Manager;
+  occupyCells: Set<string>;
+  gridBox: GridBox;
+  highlightMesh: Mesh;
+
+  constructor(manager: Manager) {
+    this.manager = manager;
+    this.occupyCells = new Set();
+    this.gridBox = new GridBox(0, 0, 0, 0);
+
+    this.highlightMesh = Render.createPlane(
+      new Box2(new Vector2(-0.5, -0.5), new Vector2(0.5, 0.5)),
+      Render.createPlaneMaterial(0xfcb968),
+      HIGHLIGHT_MESH_HEIGHT
+    );
+    this.manager.scene.add(this.highlightMesh);
+  }
+
+  updateGrid(newBox: Box2, grid: CellType[][]) {
+    const newGridBox: GridBox = new GridBox(
+      Math.floor(newBox.min.x / GRID_SIZE),
+      Math.floor(newBox.min.y / GRID_SIZE),
+      Math.ceil(newBox.max.x / GRID_SIZE),
+      Math.ceil(newBox.max.y / GRID_SIZE)
+    );
+
+    // clamp new grid box value
+    if (newGridBox.minx < 0) newGridBox.minx = 0;
+    if (newGridBox.miny < 0) newGridBox.miny = 0;
+    if (newGridBox.maxx > grid[0].length - 1)
+      newGridBox.maxx = grid[0].length - 1;
+    if (newGridBox.maxy > grid.length - 1) newGridBox.maxy = grid.length - 1;
+
+    if (this.gridBox.equal(newGridBox)) return;
+
+    const toClearCells = new Set<string>(this.occupyCells);
+
+    for (let y = newGridBox.miny; y < newGridBox.maxy; y += 1) {
+      for (let x = newGridBox.minx; x < newGridBox.maxx; x += 1) {
+        const hash = this.hash(x, y);
+        if (this.occupyCells.has(hash)) {
+          toClearCells.delete(hash);
+          continue;
+        } else {
+          grid[y][x] = CellType.UnderQuayCrane;
+          this.occupyCells.add(hash);
+        }
+      }
+    }
+
+    // clear cells
+    for (const cell of Array.from(toClearCells)) {
+      const pos = this.unhash(cell);
+      grid[pos.y][pos.x] = CellType.Drivable;
+    }
+
+    // cache gridbox
+    this.gridBox = newGridBox;
+
+    // update highlight mesh
+    const highlightBox = newGridBox.toBox2(GRID_SIZE);
+    const scale = new Vector2();
+    highlightBox.getSize(scale);
+    const center = new Vector2();
+    highlightBox.getCenter(center);
+    this.highlightMesh.position.set(center.x, center.y, HIGHLIGHT_MESH_HEIGHT);
+    this.highlightMesh.scale.set(scale.x, scale.y, 1);
+  }
+
+  hash(x: number, y: number): string {
+    return `${x}-${y}`;
+  }
+
+  unhash(hash: string) {
+    const value = hash.split("-");
+    return { x: parseInt(value[0]), y: parseInt(value[1]) };
+  }
+}

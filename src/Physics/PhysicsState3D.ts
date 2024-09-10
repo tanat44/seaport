@@ -19,25 +19,26 @@ export class PhysicsState3D {
     manager: Manager,
     maxVelocity: Vector3 | undefined,
     maxAcceleration: Vector3 | undefined,
-    initialPosition: Vector3 | undefined
+    initialPosition: Vector3 | undefined,
+    name: string
   ) {
     this.manager = manager;
     this.x = new PhysicsState(
-      "x",
+      `${name}.x`,
       manager,
       maxVelocity?.x,
       maxAcceleration?.x,
       initialPosition?.x
     );
     this.y = new PhysicsState(
-      "y",
+      `${name}.y`,
       manager,
       maxVelocity?.y,
       maxAcceleration?.y,
       initialPosition?.y
     );
     this.z = new PhysicsState(
-      "z",
+      `${name}.z`,
       manager,
       maxVelocity?.z,
       maxAcceleration?.z,

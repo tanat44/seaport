@@ -5,3 +5,14 @@ export type Layout = {
   quayCraneOrigins: Vector3[];
   yardBlocks: Box2[];
 };
+
+export enum CellType {
+  UnderQuayCrane = "qc",
+  Drivable = "drivable",
+  Yard = "yard",
+}
+
+export type GridCoordinate = {
+  x: number;
+  y: number;
+};
