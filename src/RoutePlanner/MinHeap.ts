@@ -54,7 +54,7 @@ export class MinHeap<T> {
   // Removing an element will remove the
   // top element with highest priority then
   // heapifyDown will be called
-  remove(): Item<T> {
+  remove(): T {
     if (this.heap.length === 0) {
       return null;
     }
@@ -62,12 +62,16 @@ export class MinHeap<T> {
     this.heap[0] = this.heap[this.heap.length - 1];
     this.heap.pop();
     this.heapifyDown();
-    return item;
+    return item.data;
   }
 
   add(value: number, item: T) {
     this.heap.push({ value, data: item });
     this.heapifyUp();
+  }
+
+  get empty(): boolean {
+    return this.heap.length === 0;
   }
 
   private heapifyUp() {

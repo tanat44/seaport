@@ -12,7 +12,4 @@ export enum CellType {
   Yard = "yard",
 }
 
-export type GridCoordinate = {
-  x: number;
-  y: number;
-};
+export type Grid = CellType[][];

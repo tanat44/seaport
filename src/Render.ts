@@ -1,11 +1,15 @@
 import {
   Box2,
+  BufferGeometry,
   DoubleSide,
+  Line,
+  LineBasicMaterial,
   Material,
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
   Vector2,
+  Vector3,
 } from "three";
 
 export class Render {
@@ -25,5 +29,17 @@ export class Render {
       color,
       side: DoubleSide,
     });
+  }
+
+  static createPath(path: Vector3[], color: number): Line {
+    const material = new LineBasicMaterial({ color });
+    const geometry = new BufferGeometry().setFromPoints(path);
+    const line = new Line(geometry, material);
+    return line;
+  }
+
+  static createPath2D(path: Vector2[], z: number, color: number): Line {
+    const path3 = path.map((pos) => new Vector3(pos.x, pos.y, z));
+    return Render.createPath(path3, color);
   }
 }

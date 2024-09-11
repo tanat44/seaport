@@ -1,7 +1,10 @@
 import { Vector2 } from "three";
 import { QuayCraneGantryEvent } from "../Event/types";
 import { Manager } from "../Manager";
-import { CellType, GridCoordinate, Layout } from "../types";
+import { CellType, Grid, Layout } from "../types";
+import { AStar } from "./AStar";
+import { GridCoordinate } from "./GridCoordinate";
+import { PathPlanner } from "./PathPlanner";
 import { QuayCraneSpace } from "./QuayCraneSpace";
 
 export const GRID_SIZE = 5;
@@ -9,7 +12,7 @@ export const GRID_SIZE = 5;
 export class PlannerGrid {
   manager: Manager;
   layout: Layout;
-  grid: CellType[][];
+  grid: Grid;
   quayCraneSpaces: Map<number, QuayCraneSpace>;
 
   constructor(manager: Manager, layout: Layout) {
@@ -31,9 +34,28 @@ export class PlannerGrid {
     this.manager.onEvent<QuayCraneGantryEvent>("quaycranegantry", (e) => {
       this.onQuayCraneGantry(e.quayCraneId);
     });
+
+    // install path planner
+    const planner = new PathPlanner(manager, this);
   }
 
-  public findPath(from: Vector2, to: Vector2) {}
+  findPath(from: Vector2, to: Vector2) {
+    if (!this.drivable(from))
+      throw new Error("Cannot find path from non drivable point");
+
+    if (!this.drivable(to))
+      throw new Error("Cannot find path to non drivable point");
+
+    const fromGrid = GridCoordinate.fromVector2(from, GRID_SIZE);
+    const toGrid = GridCoordinate.fromVector2(to, GRID_SIZE);
+    const path = AStar.search(fromGrid, toGrid, this.grid);
+    return path.map((pos) => pos.toVector2(GRID_SIZE));
+  }
+
+  drivable(pos: Vector2): boolean {
+    const coordinate = GridCoordinate.fromVector2(pos, GRID_SIZE);
+    return this.grid[coordinate.y][coordinate.x] === CellType.Drivable;
+  }
 
   private isInYardBlock(pos: Vector2): boolean {
     for (const yard of this.layout.yardBlocks) {
@@ -52,12 +74,5 @@ export class PlannerGrid {
 
     const space = this.quayCraneSpaces.get(quayCraneId);
     space.updateGrid(qc.box2d, this.grid);
-  }
-
-  private toGrid(pos: Vector2): GridCoordinate {
-    return {
-      x: Math.floor(pos.x / GRID_SIZE),
-      y: Math.floor(pos.y / GRID_SIZE),
-    };
   }
 }

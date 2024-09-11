@@ -3,6 +3,7 @@ import { Manager } from "../Manager";
 import { Render } from "../Render";
 import { CellType } from "../types";
 import { GridBox } from "./GridBox";
+import { GridCoordinate } from "./GridCoordinate";
 import { GRID_SIZE } from "./PlannerGrid";
 
 const HIGHLIGHT_MESH_HEIGHT = 0.5;
@@ -47,7 +48,7 @@ export class QuayCraneSpace {
 
     for (let y = newGridBox.miny; y < newGridBox.maxy; y += 1) {
       for (let x = newGridBox.minx; x < newGridBox.maxx; x += 1) {
-        const hash = this.hash(x, y);
+        const hash = new GridCoordinate(x, y).hash();
         if (this.occupyCells.has(hash)) {
           toClearCells.delete(hash);
           continue;
@@ -60,7 +61,7 @@ export class QuayCraneSpace {
 
     // clear cells
     for (const cell of Array.from(toClearCells)) {
-      const pos = this.unhash(cell);
+      const pos = GridCoordinate.fromHash(cell);
       grid[pos.y][pos.x] = CellType.Drivable;
     }
 
@@ -75,14 +76,5 @@ export class QuayCraneSpace {
     highlightBox.getCenter(center);
     this.highlightMesh.position.set(center.x, center.y, HIGHLIGHT_MESH_HEIGHT);
     this.highlightMesh.scale.set(scale.x, scale.y, 1);
-  }
-
-  hash(x: number, y: number): string {
-    return `${x}-${y}`;
-  }
-
-  unhash(hash: string) {
-    const value = hash.split("-");
-    return { x: parseInt(value[0]), y: parseInt(value[1]) };
   }
 }

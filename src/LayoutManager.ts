@@ -79,6 +79,9 @@ export class LayoutManager {
       );
       block.set(newMin, newMax);
     }
+    console.log(
+      `Terminal size ${layout.terminalSize.x} x ${layout.terminalSize.y}`
+    );
 
     // store layout and draw
     this.layout = layout;

@@ -1,5 +1,6 @@
-import { BufferGeometry, Line, LineBasicMaterial, Vector3 } from "three";
+import { Line, Vector3 } from "three";
 import { Manager } from "../Manager";
+import { Render } from "../Render";
 import { PhysicsState } from "./PhysicsState";
 import { Trajectory } from "./types";
 
@@ -54,7 +55,10 @@ export class PhysicsState3D {
     this.lastTargetIndex = 0;
     this.trajectory = trajectory;
     this.updateAxisTarget();
-    this.trajectoryMesh = this.drawTrajectory(trajectory);
+    this.trajectoryMesh = Render.createPath(
+      [this.position, ...trajectory],
+      0xffffff
+    );
     this.manager.scene.add(this.trajectoryMesh);
   }
 
@@ -91,15 +95,5 @@ export class PhysicsState3D {
 
   private allArrived(): boolean {
     return this.x.arrived && this.y.arrived && this.z.arrived;
-  }
-
-  private drawTrajectory(trajectory: Trajectory): Line {
-    const material = new LineBasicMaterial({ color: 0x0000ff });
-    const geometry = new BufferGeometry().setFromPoints([
-      this.position,
-      ...trajectory,
-    ]);
-    const line = new Line(geometry, material);
-    return line;
   }
 }
