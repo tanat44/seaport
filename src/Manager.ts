@@ -81,9 +81,6 @@ export class Manager {
       0.1,
       2000
     );
-    this.camera.position.set(-50, -70, 30);
-    this.camera.lookAt(0, 0, 0);
-    this.camera.up.set(0, 0, 1);
     this.scene.add(this.camera);
 
     // const gridHelper = new GridHelper(100, 10);
@@ -101,12 +98,17 @@ export class Manager {
   }
 
   private setupOrbitControl() {
+    this.camera.up.set(0, 0, 1);
     this.orbitControl = new OrbitControls(
       this.camera,
       this.renderer.domElement
     );
     this.orbitControl.damping = 0.2;
     this.orbitControl.addEventListener("change", () => this.render());
+
+    // initialize camera position
+    this.camera.position.set(-40, -40, 100);
+    this.camera.lookAt(50, 50, 0);
     this.render();
   }
 

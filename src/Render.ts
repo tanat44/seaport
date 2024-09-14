@@ -7,7 +7,9 @@ import {
   Material,
   Mesh,
   MeshBasicMaterial,
+  Object3D,
   PlaneGeometry,
+  SphereGeometry,
   Vector2,
   Vector3,
 } from "three";
@@ -38,8 +40,22 @@ export class Render {
     return line;
   }
 
-  static createPath2D(path: Vector2[], z: number, color: number): Line {
+  static createPath2D(path: Vector2[], z: number, color: number): Object3D {
     const path3 = path.map((pos) => new Vector3(pos.x, pos.y, z));
-    return Render.createPath(path3, color);
+    const pathMesh = Render.createPath(path3, color);
+
+    return pathMesh;
+  }
+
+  static createSphere(
+    center: Vector2,
+    z: number,
+    radius: number,
+    material: Material
+  ) {
+    const geometry = new SphereGeometry(radius);
+    const sphere = new Mesh(geometry, material);
+    sphere.position.set(center.x, center.y, z);
+    return sphere;
   }
 }

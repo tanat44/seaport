@@ -1,4 +1,5 @@
 import { Box2, Vector2, Vector3 } from "three";
+import { GridCoordinate } from "./GridCoordinate";
 
 export type Layout = {
   terminalSize: Vector2;
@@ -13,3 +14,5 @@ export enum CellType {
 }
 
 export type Grid = CellType[][];
+
+export type GridPath = GridCoordinate[];

@@ -1,18 +1,23 @@
-import { CellType, Grid } from "../types";
 import { GridCoordinate } from "./GridCoordinate";
 import { MinGridHeap } from "./MinGridHeap";
+import { CellType, Grid, GridPath } from "./types";
 
 export class AStar {
   static reconstructPath(
     cameFrom: Map<string, string>,
     current: GridCoordinate
-  ): GridCoordinate[] {
-    const total_path: GridCoordinate[] = [current];
+  ): GridPath {
+    const reverse_path: GridPath = [current];
     while (cameFrom.has(current.hash())) {
       current = GridCoordinate.fromHash(cameFrom.get(current.hash()));
-      total_path.push(current);
+      reverse_path.push(current);
     }
-    return total_path;
+
+    const forward_path: GridPath = [];
+    for (let i = reverse_path.length - 1; i >= 0; --i) {
+      forward_path.push(reverse_path[i]);
+    }
+    return forward_path;
   }
 
   static neighbors(pos: GridCoordinate, map: Grid): GridCoordinate[] {
@@ -22,29 +27,73 @@ export class AStar {
 
     // top
     const height = map.length;
-    x = pos.x;
-    y = pos.y + 1;
-    if (y < height && map[y][x] === CellType.Drivable)
-      neighbors.push(new GridCoordinate(x, y));
+    const top = new GridCoordinate(pos.x, pos.y + 1);
+    if (top.y < height && map[top.y][top.x] === CellType.Drivable)
+      neighbors.push(top);
 
     // bottom
-    x = pos.x;
-    y = pos.y - 1;
-    if (y >= 0 && map[y][x] === CellType.Drivable)
-      neighbors.push(new GridCoordinate(x, y));
+    const bottom = new GridCoordinate(pos.x, pos.y - 1);
+    if (bottom.y >= 0 && map[bottom.y][bottom.x] === CellType.Drivable)
+      neighbors.push(bottom);
 
     // right
     const width = map[0].length;
-    x = pos.x + 1;
-    y = pos.y;
-    if (x < width && map[y][x] === CellType.Drivable)
-      neighbors.push(new GridCoordinate(x, y));
+    const right = new GridCoordinate(pos.x + 1, pos.y);
+    if (right.x < width && map[right.y][right.x] === CellType.Drivable)
+      neighbors.push(right);
 
-    // bottom
-    x = pos.x - 1;
-    y = pos.y;
-    if (x >= 0 && map[y][x] === CellType.Drivable)
-      neighbors.push(new GridCoordinate(x, y));
+    // left
+    const left = new GridCoordinate(pos.x - 1, pos.y);
+    if (left.x >= 0 && map[left.y][left.x] === CellType.Drivable)
+      neighbors.push(left);
+
+    // // top-left
+    // x = pos.x - 1;
+    // y = pos.y + 1;
+    // if (
+    //   y < height &&
+    //   x >= 0 &&
+    //   map[y][x] === CellType.Drivable &&
+    //   map[top.y][top.x] === CellType.Drivable &&
+    //   map[left.y][left.x] === CellType.Drivable
+    // )
+    //   neighbors.push(new GridCoordinate(x, y));
+
+    // // top-right
+    // x = pos.x + 1;
+    // y = pos.y + 1;
+    // if (
+    //   y < height &&
+    //   x < width &&
+    //   map[y][x] === CellType.Drivable &&
+    //   map[top.y][top.x] === CellType.Drivable &&
+    //   map[right.y][right.x] === CellType.Drivable
+    // )
+    //   neighbors.push(new GridCoordinate(x, y));
+
+    // // bottom-left
+    // x = pos.x - 1;
+    // y = pos.y - 1;
+    // if (
+    //   y >= 0 &&
+    //   x >= 0 &&
+    //   map[y][x] === CellType.Drivable &&
+    //   map[bottom.y][bottom.x] === CellType.Drivable &&
+    //   map[left.y][left.x] === CellType.Drivable
+    // )
+    //   neighbors.push(new GridCoordinate(x, y));
+
+    // // bottom-right
+    // x = pos.x + 1;
+    // y = pos.y - 1;
+    // if (
+    //   y >= 0 &&
+    //   x < width &&
+    //   map[y][x] === CellType.Drivable &&
+    //   map[bottom.y][bottom.x] === CellType.Drivable &&
+    //   map[right.y][right.x] === CellType.Drivable
+    // )
+    //   neighbors.push(new GridCoordinate(x, y));
     return neighbors;
   }
 
@@ -52,7 +101,7 @@ export class AStar {
     start: GridCoordinate,
     goal: GridCoordinate,
     map: Grid
-  ): GridCoordinate[] {
+  ): GridPath {
     const openSet = new MinGridHeap();
     openSet.add(start.distanceTo(goal), start);
 

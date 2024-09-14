@@ -1,11 +1,13 @@
 import { Vector2 } from "three";
 import { QuayCraneGantryEvent } from "../Event/types";
 import { Manager } from "../Manager";
-import { CellType, Grid, Layout } from "../types";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { PathPlanner } from "./PathPlanner";
 import { QuayCraneSpace } from "./QuayCraneSpace";
+import { SimplifyPath1 } from "./SimplifyPath1";
+import { SimplifyPath2 } from "./SimplifyPath2";
+import { CellType, Grid, Layout } from "./types";
 
 export const GRID_SIZE = 5;
 
@@ -46,10 +48,20 @@ export class PlannerGrid {
     if (!this.drivable(to))
       throw new Error("Cannot find path to non drivable point");
 
+    // find path
     const fromGrid = GridCoordinate.fromVector2(from, GRID_SIZE);
     const toGrid = GridCoordinate.fromVector2(to, GRID_SIZE);
     const path = AStar.search(fromGrid, toGrid, this.grid);
-    return path.map((pos) => pos.toVector2(GRID_SIZE));
+    // return path.map((pos) => pos.toVector2(GRID_SIZE));
+
+    // simplify1
+    const simplePath1 = SimplifyPath1.simplify(path);
+    // return simplePath1.map((pos) => pos.toVector2(GRID_SIZE));
+
+    // simplify2
+    const simplify = new SimplifyPath2(this.grid);
+    const simplePath2 = simplify.simplify(simplePath1);
+    return simplePath2.map((pos) => pos.toVector2(GRID_SIZE));
   }
 
   drivable(pos: Vector2): boolean {

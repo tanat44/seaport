@@ -1,7 +1,7 @@
 import { Box2, Material, Vector2, Vector3 } from "three";
 import { Manager } from "./Manager";
 import { Render } from "./Render";
-import { Layout } from "./types";
+import { Layout } from "./RoutePlanner/types";
 
 const SVG_SCALE_MULTIPLIER = 1;
 
