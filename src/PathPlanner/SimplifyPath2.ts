@@ -1,6 +1,7 @@
 import { intraCombination } from "./Combination";
 import { GridCoordinate } from "./GridCoordinate";
-import { CellType, Grid, GridPath } from "./types";
+import { GridPlanner } from "./GridPlanner";
+import { Grid, GridPath } from "./types";
 
 export class SimplifyPath2 {
   map: Grid;
@@ -60,7 +61,7 @@ export class SimplifyPath2 {
   private drivable(from: GridCoordinate, to: GridCoordinate): boolean {
     const positions = SimplifyPath2.getPassingGrid(from, to);
     for (const pos of positions) {
-      if (this.map[pos.y][pos.x] !== CellType.Drivable) {
+      if (!GridPlanner.isDrivableCell(this.map[pos.y][pos.x])) {
         return false;
       }
     }

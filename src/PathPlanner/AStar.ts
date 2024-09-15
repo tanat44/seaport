@@ -1,103 +1,10 @@
 import { GridCoordinate } from "./GridCoordinate";
+import { GridPlanner } from "./GridPlanner";
 import { MinGridHeap } from "./MinGridHeap";
-import { CellType, Grid, GridPath } from "./types";
+import { Grid, GridPath } from "./types";
 
 export class AStar {
-  static reconstructPath(
-    cameFrom: Map<string, string>,
-    current: GridCoordinate
-  ): GridPath {
-    const reverse_path: GridPath = [current];
-    while (cameFrom.has(current.hash())) {
-      current = GridCoordinate.fromHash(cameFrom.get(current.hash()));
-      reverse_path.push(current);
-    }
-
-    const forward_path: GridPath = [];
-    for (let i = reverse_path.length - 1; i >= 0; --i) {
-      forward_path.push(reverse_path[i]);
-    }
-    return forward_path;
-  }
-
-  static neighbors(pos: GridCoordinate, map: Grid): GridCoordinate[] {
-    const neighbors: GridCoordinate[] = [];
-    let x = pos.x;
-    let y = pos.y;
-
-    // top
-    const height = map.length;
-    const top = new GridCoordinate(pos.x, pos.y + 1);
-    if (top.y < height && map[top.y][top.x] === CellType.Drivable)
-      neighbors.push(top);
-
-    // bottom
-    const bottom = new GridCoordinate(pos.x, pos.y - 1);
-    if (bottom.y >= 0 && map[bottom.y][bottom.x] === CellType.Drivable)
-      neighbors.push(bottom);
-
-    // right
-    const width = map[0].length;
-    const right = new GridCoordinate(pos.x + 1, pos.y);
-    if (right.x < width && map[right.y][right.x] === CellType.Drivable)
-      neighbors.push(right);
-
-    // left
-    const left = new GridCoordinate(pos.x - 1, pos.y);
-    if (left.x >= 0 && map[left.y][left.x] === CellType.Drivable)
-      neighbors.push(left);
-
-    // // top-left
-    // x = pos.x - 1;
-    // y = pos.y + 1;
-    // if (
-    //   y < height &&
-    //   x >= 0 &&
-    //   map[y][x] === CellType.Drivable &&
-    //   map[top.y][top.x] === CellType.Drivable &&
-    //   map[left.y][left.x] === CellType.Drivable
-    // )
-    //   neighbors.push(new GridCoordinate(x, y));
-
-    // // top-right
-    // x = pos.x + 1;
-    // y = pos.y + 1;
-    // if (
-    //   y < height &&
-    //   x < width &&
-    //   map[y][x] === CellType.Drivable &&
-    //   map[top.y][top.x] === CellType.Drivable &&
-    //   map[right.y][right.x] === CellType.Drivable
-    // )
-    //   neighbors.push(new GridCoordinate(x, y));
-
-    // // bottom-left
-    // x = pos.x - 1;
-    // y = pos.y - 1;
-    // if (
-    //   y >= 0 &&
-    //   x >= 0 &&
-    //   map[y][x] === CellType.Drivable &&
-    //   map[bottom.y][bottom.x] === CellType.Drivable &&
-    //   map[left.y][left.x] === CellType.Drivable
-    // )
-    //   neighbors.push(new GridCoordinate(x, y));
-
-    // // bottom-right
-    // x = pos.x + 1;
-    // y = pos.y - 1;
-    // if (
-    //   y >= 0 &&
-    //   x < width &&
-    //   map[y][x] === CellType.Drivable &&
-    //   map[bottom.y][bottom.x] === CellType.Drivable &&
-    //   map[right.y][right.x] === CellType.Drivable
-    // )
-    //   neighbors.push(new GridCoordinate(x, y));
-    return neighbors;
-  }
-
-  static search(
+  public static search(
     start: GridCoordinate,
     goal: GridCoordinate,
     map: Grid
@@ -141,5 +48,52 @@ export class AStar {
     }
 
     throw new Error("No solution found");
+  }
+
+  private static reconstructPath(
+    cameFrom: Map<string, string>,
+    current: GridCoordinate
+  ): GridPath {
+    const reverse_path: GridPath = [current];
+    while (cameFrom.has(current.hash())) {
+      current = GridCoordinate.fromHash(cameFrom.get(current.hash()));
+      reverse_path.push(current);
+    }
+
+    const forward_path: GridPath = [];
+    for (let i = reverse_path.length - 1; i >= 0; --i) {
+      forward_path.push(reverse_path[i]);
+    }
+    return forward_path;
+  }
+
+  private static neighbors(pos: GridCoordinate, map: Grid): GridCoordinate[] {
+    const neighbors: GridCoordinate[] = [];
+    let x = pos.x;
+    let y = pos.y;
+
+    // top
+    const height = map.length;
+    const top = new GridCoordinate(pos.x, pos.y + 1);
+    if (top.y < height && GridPlanner.isDrivableCell(map[top.y][top.x]))
+      neighbors.push(top);
+
+    // bottom
+    const bottom = new GridCoordinate(pos.x, pos.y - 1);
+    if (bottom.y >= 0 && GridPlanner.isDrivableCell(map[bottom.y][bottom.x]))
+      neighbors.push(bottom);
+
+    // right
+    const width = map[0].length;
+    const right = new GridCoordinate(pos.x + 1, pos.y);
+    if (right.x < width && GridPlanner.isDrivableCell(map[right.y][right.x]))
+      neighbors.push(right);
+
+    // left
+    const left = new GridCoordinate(pos.x - 1, pos.y);
+    if (left.x >= 0 && GridPlanner.isDrivableCell(map[left.y][left.x]))
+      neighbors.push(left);
+
+    return neighbors;
   }
 }

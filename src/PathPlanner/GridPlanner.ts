@@ -1,27 +1,23 @@
 import { Vector2 } from "three";
 import { QuayCraneGantryEvent } from "../Event/types";
+import { QuayCraneSpace } from "../QuayCrane/QuayCraneSpace";
 import { Terminal } from "../Terminal/Terminal";
-import { Visualizer } from "../Visualizer/Visualizer";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
-import { PathPlanner } from "./PathPlanner";
-import { QuayCraneSpace } from "./QuayCraneSpace";
 import { SimplifyPath1 } from "./SimplifyPath1";
 import { SimplifyPath2 } from "./SimplifyPath2";
 import { CellType, Grid, Layout } from "./types";
 
 export const GRID_SIZE = 5;
 
-export class PlannerGrid {
+export class GridPlanner {
   terminal: Terminal;
-  visualizer: Visualizer;
   layout: Layout;
   grid: Grid;
   quayCraneSpaces: Map<number, QuayCraneSpace>;
 
-  constructor(terminal: Terminal, visualizer: Visualizer, layout: Layout) {
+  constructor(terminal: Terminal, layout: Layout) {
     this.terminal = terminal;
-    this.visualizer = visualizer;
     this.layout = layout;
 
     // initialize grid
@@ -30,25 +26,25 @@ export class PlannerGrid {
       const row: CellType[] = [];
       for (let x = 0; x < Math.floor(layout.terminalSize.x); x += GRID_SIZE) {
         const pos = new Vector2(x, y);
-        row.push(this.isInYardBlock(pos) ? CellType.Yard : CellType.Drivable);
+        row.push(this.isInYardBlock(pos) ? CellType.Yard : CellType.Road);
       }
       this.grid.push(row);
     }
 
     this.quayCraneSpaces = new Map();
-    this.visualizer.onEvent<QuayCraneGantryEvent>("quaycranegantry", (e) => {
-      this.onQuayCraneGantry(e.quayCraneId);
-    });
-
-    // install path planner
-    const planner = new PathPlanner(visualizer, this);
+    this.terminal.visualizer.onEvent<QuayCraneGantryEvent>(
+      "quaycranegantry",
+      (e) => {
+        this.onQuayCraneGantry(e.quayCraneId);
+      }
+    );
   }
 
   findPath(from: Vector2, to: Vector2) {
-    if (!this.drivable(from))
+    if (!this.isDrivable(from))
       throw new Error("Cannot find path from non drivable point");
 
-    if (!this.drivable(to))
+    if (!this.isDrivable(to))
       throw new Error("Cannot find path to non drivable point");
 
     // find path
@@ -67,9 +63,14 @@ export class PlannerGrid {
     return simplePath2.map((pos) => pos.toVector2(GRID_SIZE));
   }
 
-  drivable(pos: Vector2): boolean {
+  isDrivable(pos: Vector2): boolean {
     const coordinate = GridCoordinate.fromVector2(pos, GRID_SIZE);
-    return this.grid[coordinate.y][coordinate.x] === CellType.Drivable;
+    const type = this.grid[coordinate.y][coordinate.x];
+    return GridPlanner.isDrivableCell(type);
+  }
+
+  static isDrivableCell(type: CellType): boolean {
+    return type === CellType.Road || type === CellType.UnderQuayCrane;
   }
 
   private isInYardBlock(pos: Vector2): boolean {
@@ -86,7 +87,7 @@ export class PlannerGrid {
     if (!this.quayCraneSpaces.has(quayCraneId)) {
       this.quayCraneSpaces.set(
         quayCraneId,
-        new QuayCraneSpace(this.visualizer)
+        new QuayCraneSpace(this.terminal.visualizer)
       );
     }
 

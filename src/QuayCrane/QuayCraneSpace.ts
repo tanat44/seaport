@@ -1,10 +1,10 @@
 import { Box2, Mesh, Vector2 } from "three";
+import { GridBox } from "../PathPlanner/GridBox";
+import { GridCoordinate } from "../PathPlanner/GridCoordinate";
+import { GRID_SIZE } from "../PathPlanner/GridPlanner";
+import { CellType } from "../PathPlanner/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { GridBox } from "./GridBox";
-import { GridCoordinate } from "./GridCoordinate";
-import { GRID_SIZE } from "./PlannerGrid";
-import { CellType } from "./types";
 
 const HIGHLIGHT_MESH_HEIGHT = 0.5;
 
@@ -21,7 +21,7 @@ export class QuayCraneSpace {
 
     this.highlightMesh = Render.createPlane(
       new Box2(new Vector2(-0.5, -0.5), new Vector2(0.5, 0.5)),
-      Render.createBasicMaterial(0xfcb968),
+      Render.createBasicMaterial(0x333333, 0.2),
       HIGHLIGHT_MESH_HEIGHT
     );
     this.visualizer.scene.add(this.highlightMesh);
@@ -62,7 +62,7 @@ export class QuayCraneSpace {
     // clear cells
     for (const cell of Array.from(toClearCells)) {
       const pos = GridCoordinate.fromHash(cell);
-      grid[pos.y][pos.x] = CellType.Drivable;
+      grid[pos.y][pos.x] = CellType.Road;
     }
 
     // cache gridbox

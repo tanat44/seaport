@@ -39,10 +39,12 @@ export class Render {
     return plane;
   }
 
-  static createBasicMaterial(color: number) {
+  static createBasicMaterial(color: number, opacity?: number) {
     return new MeshBasicMaterial({
       color,
       side: DoubleSide,
+      opacity: opacity ?? 1.0,
+      transparent: opacity !== undefined,
     });
   }
 

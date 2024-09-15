@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { CargoCoordinate } from "../Vessel/CargoCoordinate";
+import { StorageCoordinate } from "../StorageBlock/StorageCoordinate";
 
 export interface QuayCraneJob {
   position: Vector3;
@@ -8,5 +8,5 @@ export interface QuayCraneJob {
 
 export interface QuayCranePickContainerJob extends QuayCraneJob {
   reason: "pickcontainerfromvessel";
-  cargoCoordinate: CargoCoordinate;
+  cargoCoordinate: StorageCoordinate;
 }

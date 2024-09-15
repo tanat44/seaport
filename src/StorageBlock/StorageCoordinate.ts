@@ -5,7 +5,7 @@ import {
   CONTAINER_SIZE_Z,
 } from "../Terminal/const";
 
-export class CargoCoordinate {
+export class StorageCoordinate {
   bay: number;
   row: number;
   tier: number;

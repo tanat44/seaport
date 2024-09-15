@@ -5,9 +5,9 @@ import {
   CONTAINER_SIZE_Y,
   CONTAINER_SIZE_Z,
 } from "../Terminal/const";
-import { CargoCoordinate } from "../Vessel/CargoCoordinate";
 import { CargoOrder } from "../Vessel/types";
 import { Render } from "../Visualizer/Render";
+import { StorageCoordinate } from "./StorageCoordinate";
 
 export type Container = {
   id: string;
@@ -68,7 +68,7 @@ export class StorageBlock {
     this.terminal.visualizer.scene.add(this.mesh);
   }
 
-  unload(coordinate: CargoCoordinate): Container {
+  unload(coordinate: StorageCoordinate): Container {
     const bay = this.bays[coordinate.bay];
     const row = bay[coordinate.row];
 
@@ -90,11 +90,11 @@ export class StorageBlock {
       const bay = this.bays[i];
 
       // get all containers of this bay
-      let allCoordinates: CargoCoordinate[] = [];
+      let allCoordinates: StorageCoordinate[] = [];
       for (let j = 0; j < bay.length; ++j) {
         const row = bay[j];
         for (let k = 0; k < row.length; ++k) {
-          allCoordinates.push(new CargoCoordinate(i, j, k));
+          allCoordinates.push(new StorageCoordinate(i, j, k));
         }
       }
 
@@ -104,6 +104,21 @@ export class StorageBlock {
     }
 
     return plan;
+  }
+
+  findStorage(): StorageCoordinate {
+    const MAX_TRY = 20;
+    for (let i = 0; i < MAX_TRY; ++i) {
+      const bayIndex = Math.floor(Math.random() * this.bays.length);
+      const bay = this.bays[bayIndex];
+      const rowIndex = Math.floor(Math.random() * bay.length);
+      const row = bay[rowIndex];
+      if (row.length < this.maxTiers) {
+        return new StorageCoordinate(bayIndex, rowIndex, row.length);
+      }
+    }
+
+    throw new Error(`Cannot find storage spot after ${MAX_TRY} tries`);
   }
 
   get relativeSpace(): Box2 {
@@ -136,7 +151,7 @@ export class StorageBlock {
           const id = (StorageBlock.containerCount++).toFixed(0);
 
           // render container
-          const coordinate = new CargoCoordinate(i, j, k);
+          const coordinate = new StorageCoordinate(i, j, k);
           const containerMesh = Render.createContainer(
             coordinate.relativePosition
           );

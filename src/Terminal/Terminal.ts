@@ -1,23 +1,22 @@
 import { Vector2, Vector3 } from "three";
 import { QuayCraneMoveEndEvent } from "../Event/types";
-import { PlannerGrid } from "../PathPlanner/PlannerGrid";
+import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { QuayCrane } from "../QuayCrane/QuayCrane";
 import { QuayCraneJob, QuayCranePickContainerJob } from "../QuayCrane/types";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { YardBlock } from "../Yard/YardBlock";
+import { YardManager } from "../Yard/YardManager";
 import { LayoutManager } from "./LayoutManager";
-import { CONTAINER_SIZE_Z, YARD_MAX_TIER } from "./const";
 
 const VESSEL_NAME = "Vessel-Polo";
 export class Terminal {
   visualizer: Visualizer;
   layoutManager: LayoutManager;
-  plannerGrid: PlannerGrid;
+  pathPlanner: PathPlanner;
 
   // storage
   vessels: Map<string, Vessel>;
-  yardBlocks: Map<string, YardBlock>;
+  yardManager: YardManager;
 
   // equipment
   quayCranes: Map<number, QuayCrane>;
@@ -39,7 +38,7 @@ export class Terminal {
     const layout = await this.layoutManager.load();
 
     // init planner
-    this.plannerGrid = new PlannerGrid(this, this.visualizer, layout);
+    this.pathPlanner = new PathPlanner(this, layout);
 
     // init vessel
     this.vessels = new Map();
@@ -48,17 +47,8 @@ export class Terminal {
       new Vessel(this, VESSEL_NAME, 10, 50, 12, 70, layout)
     );
 
-    // init yard block
-    this.yardBlocks = new Map();
-    for (const yardSpace of layout.yardSpaces) {
-      const yard = new YardBlock(
-        this,
-        yardSpace,
-        YARD_MAX_TIER * CONTAINER_SIZE_Z
-      );
-      yard.addRandomCargo();
-      this.yardBlocks.set(yard.id, yard);
-    }
+    // init yard
+    this.yardManager = new YardManager(this, layout);
 
     // init quay cranes
     this.quayCranes = new Map();
@@ -165,9 +155,16 @@ export class Terminal {
 
     console.log(`QC#${e.quayCraneId} - Finished <${e.job.reason}>`);
     if (e.job.reason === "pickcontainerfromvessel") {
+      // remove container from vessel
       const job = e.job as QuayCranePickContainerJob;
       const vessel = this.quayCraneVesselAssignment.get(qc);
       vessel.unload(job.cargoCoordinate);
+    } else if (e.job.reason === "unloadcontaineronground") {
+      // plan path to spot in the yard
+      const from = qc.position;
+      const yardCoordinate = this.yardManager.findStorage();
+      const to = this.yardManager.getContainerHandlingPoint(yardCoordinate);
+      this.pathPlanner.plan(new Vector2(from.x, from.y), to);
     }
 
     this.executeNextQuayCraneJob(qc);

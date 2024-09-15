@@ -9,7 +9,7 @@ export type Layout = {
 
 export enum CellType {
   UnderQuayCrane = "qc",
-  Drivable = "drivable",
+  Road = "road",
   Yard = "yard",
 }
 

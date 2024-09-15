@@ -1,3 +1,3 @@
-import { CargoCoordinate } from "./CargoCoordinate";
+import { StorageCoordinate } from "../StorageBlock/StorageCoordinate";
 
-export type CargoOrder = CargoCoordinate[];
+export type CargoOrder = StorageCoordinate[];

@@ -4,9 +4,10 @@ import {
   QuadraticBezierCurve,
   Vector2,
 } from "three";
+import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
-import { Visualizer } from "../Visualizer/Visualizer";
-import { PlannerGrid } from "./PlannerGrid";
+import { GridPlanner } from "./GridPlanner";
+import { Layout } from "./types";
 
 const PLAN_INTERVAL = 1000;
 
@@ -16,17 +17,37 @@ type Plan = {
 };
 
 export class PathPlanner {
-  visualizer: Visualizer;
-  plannerGrid: PlannerGrid;
+  terminal: Terminal;
+  gridPlanner: GridPlanner;
   timer: NodeJS.Timer;
   pathMesh: Object3D[];
 
-  constructor(visualizer: Visualizer, plannerGrid: PlannerGrid) {
-    this.visualizer = visualizer;
-    this.plannerGrid = plannerGrid;
+  constructor(terminal: Terminal, layout: Layout) {
+    this.terminal = terminal;
+    this.gridPlanner = new GridPlanner(terminal, layout);
     this.timer = setInterval(() => this.tick(), PLAN_INTERVAL);
     this.pathMesh = [];
-    this.tick();
+  }
+
+  plan(from: Vector2, to: Vector2) {
+    // delete old path
+    if (this.pathMesh.length > 0) {
+      this.pathMesh.forEach((mesh) => mesh.removeFromParent());
+      this.pathMesh = [];
+    }
+
+    console.log("PathPlanner: from", from, "to", to);
+    const path = this.gridPlanner.findPath(from, to);
+    this.renderPath(path);
+  }
+
+  randomDrivablePosition(): Vector2 {
+    const { x: width, y: height } = this.gridPlanner.layout.terminalSize;
+    for (let i = 0; i < 100; ++i) {
+      const pos = this.randomVector(width, height);
+      if (this.gridPlanner.isDrivable(pos)) return pos;
+    }
+    throw new Error("Tried 100 randoms but cannot find a viable plan target");
   }
 
   private makeCurve(path: Vector2[]): Vector2[] {
@@ -56,18 +77,7 @@ export class PathPlanner {
     return newControlPoints;
   }
 
-  private tick() {
-    if (this.pathMesh.length > 0) {
-      this.pathMesh.forEach((mesh) => mesh.removeFromParent());
-      this.pathMesh = [];
-    }
-
-    // random plan & render
-    // let plan = this.randomPlan();
-    // const path = this.plannerGrid.findPath(plan.from, plan.to);
-    // console.log("from", plan.from, "to", plan.to);
-    // this.renderPath(path);
-  }
+  private tick() {}
 
   private renderPath(path: Vector2[]) {
     // mesh container
@@ -92,7 +102,7 @@ export class PathPlanner {
     });
     mesh.add(...controlPointMeshes);
 
-    this.visualizer.scene.add(mesh);
+    this.terminal.visualizer.scene.add(mesh);
     this.pathMesh.push(mesh);
   }
 
@@ -107,15 +117,6 @@ export class PathPlanner {
       return this.randomPlan();
 
     return { from, to };
-  }
-
-  private randomDrivablePosition(): Vector2 {
-    const { x: width, y: height } = this.plannerGrid.layout.terminalSize;
-    for (let i = 0; i < 100; ++i) {
-      const pos = this.randomVector(width, height);
-      if (this.plannerGrid.drivable(pos)) return pos;
-    }
-    throw new Error("Tried 100 randoms but cannot find a viable plan target");
   }
 
   private randomVector(xRange: number, yRange: number): Vector2 {
