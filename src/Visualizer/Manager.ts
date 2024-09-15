@@ -10,15 +10,14 @@ import {
 } from "three";
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { Event } from "./Event/Event";
-import { EventBase, EventType } from "./Event/types";
-import { Terminal } from "./Terminal";
+import { Event } from "../Event/Event";
+import { EventBase, EventType } from "../Event/types";
 import { Text } from "./Text";
 
 const FOV = 46.8;
 
 // unit in meters
-export class Manager {
+export class Visualizer {
   private clock: Clock;
   private event: Event;
   private orbitControl: OrbitControls;
@@ -26,7 +25,6 @@ export class Manager {
   raycaster: Raycaster;
   scene: Scene;
   text: Text;
-  terminal: Terminal;
   renderer: WebGLRenderer;
 
   constructor() {
@@ -55,7 +53,6 @@ export class Manager {
 
   private async createObjects() {
     await this.text.load();
-    this.terminal = new Terminal(this);
   }
 
   private setupLighting() {
@@ -94,7 +91,7 @@ export class Manager {
 
     document.body.appendChild(this.renderer.domElement);
 
-    window.addEventListener("resize", () => this.onWindowResize(this));
+    window.addEventListener("resize", () => this.onWindowResize());
   }
 
   private setupOrbitControl() {
@@ -112,10 +109,10 @@ export class Manager {
     this.render();
   }
 
-  private onWindowResize(manager: Manager) {
-    manager.camera.aspect = window.innerWidth / window.innerHeight;
-    manager.camera.updateProjectionMatrix();
-    manager.renderer.setSize(window.innerWidth, window.innerHeight);
+  private onWindowResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   private render() {

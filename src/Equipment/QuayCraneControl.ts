@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
-import { Manager } from "../Manager";
 import { PhysicsState3D } from "../Physics/PhysicsState3D";
 import { Trajectory } from "../Physics/types";
+import { Visualizer } from "../Visualizer/Manager";
 import { QuayCrane } from "./QuayCrane";
 
 const Z_OVERSHOOT = 2;
@@ -11,27 +11,27 @@ const TROLLY_MAX_ACCEL = 1;
 const GANTRY_MAX_ACCEL = 0.5;
 
 export class QuayCraneControl extends PhysicsState3D {
-  manager: Manager;
+  visualizer: Visualizer;
   crane: QuayCrane;
 
   constructor(
-    manager: Manager,
+    visualizer: Visualizer,
     quayCrane: QuayCrane,
     initialPosition: Vector3
   ) {
     super(
-      manager,
+      visualizer,
       undefined,
       new Vector3(GANTRY_MAX_ACCEL, TROLLY_MAX_ACCEL, SPREADER_MAX_ACCEL),
       initialPosition,
       quayCrane.id.toString()
     );
-    this.manager = manager;
+    this.visualizer = visualizer;
     this.crane = quayCrane;
     const id = quayCrane.id;
 
-    this.manager.onEvent(`physicsstatechange${id}.x`, () => {
-      this.manager.emit({ type: "quaycranegantry", quayCraneId: id });
+    this.visualizer.onEvent(`physicsstatechange${id}.x`, () => {
+      this.visualizer.emit({ type: "quaycranegantry", quayCraneId: id });
     });
   }
 
@@ -62,7 +62,7 @@ export class QuayCraneControl extends PhysicsState3D {
   }
 
   protected override afterArrive(): void {
-    this.manager.emit({
+    this.visualizer.emit({
       type: "quaycranemoveend",
       quayCraneId: this.crane.id,
     });

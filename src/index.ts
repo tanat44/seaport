@@ -1,3 +1,5 @@
-import { Manager } from "./Manager";
+import { Terminal } from "./Terminal/Terminal";
+import { Visualizer } from "./Visualizer/Manager";
 
-new Manager();
+const visualizer = new Visualizer();
+const terminal = new Terminal(visualizer);

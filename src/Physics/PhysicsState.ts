@@ -1,11 +1,11 @@
 import { AnimateEvent } from "../Event/types";
-import { Manager } from "../Manager";
+import { Visualizer } from "../Visualizer/Manager";
 
 const ARRIVE_THRESHOLD = 0.05;
 const BRAKE_SAFETY_FACTOR = 1.05;
 
 export class PhysicsState {
-  manager: Manager;
+  visualizer: Visualizer;
   name: string;
 
   // state
@@ -25,13 +25,13 @@ export class PhysicsState {
 
   constructor(
     name: string,
-    manager: Manager,
+    visualizer: Visualizer,
     maxVelocity: number | undefined,
     maxAcceleration: number,
     initialPosition: number | undefined
   ) {
     this.name = name;
-    this.manager = manager;
+    this.visualizer = visualizer;
     this.position = initialPosition ?? 0;
     this.velocity = 0;
     this.acceleration = 0;
@@ -39,7 +39,7 @@ export class PhysicsState {
     this.maxAcceleration = maxAcceleration;
     this.arrived = true;
 
-    this.manager.onEvent<AnimateEvent>("animate", (e) =>
+    this.visualizer.onEvent<AnimateEvent>("animate", (e) =>
       this.animate(e.deltaTime)
     );
   }
@@ -110,7 +110,7 @@ export class PhysicsState {
     }
     // update position
     this.position += this.velocity * deltaTime;
-    this.manager.emit({
+    this.visualizer.emit({
       type: `physicsstatechange${this.name}`,
     });
 

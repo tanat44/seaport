@@ -1,11 +1,11 @@
 import { Line, Vector3 } from "three";
-import { Manager } from "../Manager";
-import { Render } from "../Render";
+import { Visualizer } from "../Visualizer/Manager";
+import { Render } from "../Visualizer/Render";
 import { PhysicsState } from "./PhysicsState";
 import { Trajectory } from "./types";
 
 export class PhysicsState3D {
-  manager: Manager;
+  visualizer: Visualizer;
 
   x: PhysicsState;
   y: PhysicsState;
@@ -17,30 +17,30 @@ export class PhysicsState3D {
   trajectoryMesh: Line | undefined;
 
   constructor(
-    manager: Manager,
+    visualizer: Visualizer,
     maxVelocity: Vector3 | undefined,
     maxAcceleration: Vector3 | undefined,
     initialPosition: Vector3 | undefined,
     name: string
   ) {
-    this.manager = manager;
+    this.visualizer = visualizer;
     this.x = new PhysicsState(
       `${name}.x`,
-      manager,
+      visualizer,
       maxVelocity?.x,
       maxAcceleration?.x,
       initialPosition?.x
     );
     this.y = new PhysicsState(
       `${name}.y`,
-      manager,
+      visualizer,
       maxVelocity?.y,
       maxAcceleration?.y,
       initialPosition?.y
     );
     this.z = new PhysicsState(
       `${name}.z`,
-      manager,
+      visualizer,
       maxVelocity?.z,
       maxAcceleration?.z,
       initialPosition?.z
@@ -59,7 +59,7 @@ export class PhysicsState3D {
       [this.position, ...trajectory],
       0x0000a0
     );
-    this.manager.scene.add(this.trajectoryMesh);
+    this.visualizer.scene.add(this.trajectoryMesh);
   }
 
   private updateAxisTarget() {
@@ -83,7 +83,7 @@ export class PhysicsState3D {
     ++this.lastTargetIndex;
     if (this.lastTargetIndex === this.trajectory.length) {
       // console.log("Trajectory execution complete");
-      this.manager.scene.remove(this.trajectoryMesh);
+      this.visualizer.scene.remove(this.trajectoryMesh);
       this.trajectoryMesh = undefined;
       this.afterArrive();
     } else {

@@ -1,6 +1,7 @@
 import { Vector2 } from "three";
 import { QuayCraneGantryEvent } from "../Event/types";
-import { Manager } from "../Manager";
+import { Terminal } from "../Terminal/Terminal";
+import { Visualizer } from "../Visualizer/Manager";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { PathPlanner } from "./PathPlanner";
@@ -12,13 +13,15 @@ import { CellType, Grid, Layout } from "./types";
 export const GRID_SIZE = 5;
 
 export class PlannerGrid {
-  manager: Manager;
+  terminal: Terminal;
+  visualizer: Visualizer;
   layout: Layout;
   grid: Grid;
   quayCraneSpaces: Map<number, QuayCraneSpace>;
 
-  constructor(manager: Manager, layout: Layout) {
-    this.manager = manager;
+  constructor(terminal: Terminal, visualizer: Visualizer, layout: Layout) {
+    this.terminal = terminal;
+    this.visualizer = visualizer;
     this.layout = layout;
 
     // initialize grid
@@ -33,12 +36,12 @@ export class PlannerGrid {
     }
 
     this.quayCraneSpaces = new Map();
-    this.manager.onEvent<QuayCraneGantryEvent>("quaycranegantry", (e) => {
+    this.visualizer.onEvent<QuayCraneGantryEvent>("quaycranegantry", (e) => {
       this.onQuayCraneGantry(e.quayCraneId);
     });
 
     // install path planner
-    const planner = new PathPlanner(manager, this);
+    const planner = new PathPlanner(visualizer, this);
   }
 
   findPath(from: Vector2, to: Vector2) {
@@ -79,9 +82,12 @@ export class PlannerGrid {
   private onQuayCraneGantry(quayCraneId: number) {
     if (!this.grid) return;
 
-    const qc = this.manager.terminal.getQuayCrane(quayCraneId);
+    const qc = this.terminal.getQuayCrane(quayCraneId);
     if (!this.quayCraneSpaces.has(quayCraneId)) {
-      this.quayCraneSpaces.set(quayCraneId, new QuayCraneSpace(this.manager));
+      this.quayCraneSpaces.set(
+        quayCraneId,
+        new QuayCraneSpace(this.visualizer)
+      );
     }
 
     const space = this.quayCraneSpaces.get(quayCraneId);

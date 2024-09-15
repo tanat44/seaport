@@ -4,8 +4,8 @@ import {
   QuadraticBezierCurve,
   Vector2,
 } from "three";
-import { Manager } from "../Manager";
-import { Render } from "../Render";
+import { Visualizer } from "../Visualizer/Manager";
+import { Render } from "../Visualizer/Render";
 import { PlannerGrid } from "./PlannerGrid";
 
 const PLAN_INTERVAL = 1000;
@@ -16,13 +16,13 @@ type Plan = {
 };
 
 export class PathPlanner {
-  manager: Manager;
+  visualizer: Visualizer;
   plannerGrid: PlannerGrid;
   timer: NodeJS.Timer;
   pathMesh: Object3D[];
 
-  constructor(manager: Manager, plannerGrid: PlannerGrid) {
-    this.manager = manager;
+  constructor(visualizer: Visualizer, plannerGrid: PlannerGrid) {
+    this.visualizer = visualizer;
     this.plannerGrid = plannerGrid;
     this.timer = setInterval(() => this.tick(), PLAN_INTERVAL);
     this.pathMesh = [];
@@ -92,7 +92,7 @@ export class PathPlanner {
     });
     mesh.add(...controlPointMeshes);
 
-    this.manager.scene.add(mesh);
+    this.visualizer.scene.add(mesh);
     this.pathMesh.push(mesh);
   }
 

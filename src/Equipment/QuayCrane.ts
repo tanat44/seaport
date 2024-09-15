@@ -9,7 +9,7 @@ import {
   Vector3,
 } from "three";
 import { AnimateEvent } from "../Event/types";
-import { Manager } from "../Manager";
+import { Visualizer } from "../Visualizer/Manager";
 import { QuayCraneControl } from "./QuayCraneControl";
 
 const LEG_SIZE = 0.3;
@@ -18,7 +18,7 @@ const SPREADER_THICKNESS = 0.6;
 export class QuayCrane {
   static count = 0;
 
-  manager: Manager;
+  visualizer: Visualizer;
   id: number;
 
   // physics
@@ -35,21 +35,21 @@ export class QuayCrane {
   spreader: Mesh;
 
   constructor(
-    manager: Manager,
+    visualizer: Visualizer,
     initialPosition: Vector3,
     width: number = 10,
     height: number = 20,
     legSpan: number = 10,
     outReach: number = 10
   ) {
-    this.manager = manager;
+    this.visualizer = visualizer;
     this.id = ++QuayCrane.count;
     this.width = width;
     this.height = height;
     this.legSpan = legSpan;
     this.outReach = outReach;
     this.control = new QuayCraneControl(
-      manager,
+      visualizer,
       this,
       new Vector3(initialPosition.x, 0, height / 2)
     );
@@ -69,7 +69,7 @@ export class QuayCrane {
 
     const trajectory = this.control.planTrajectory(target);
     this.control.execute(trajectory);
-    this.manager.emit({
+    this.visualizer.emit({
       type: "quaycranemovestart",
       quayCraneId: this.id,
     });
@@ -141,7 +141,7 @@ export class QuayCrane {
     this.static.push(machineRoom);
 
     // text label
-    const text = this.manager.text.createTextMesh(`QuayCrane #${this.id}`);
+    const text = this.visualizer.text.createTextMesh(`QuayCrane #${this.id}`);
     text.translateZ(machineH * 2);
     machineRoom.add(text);
     // this.static.push(text);
@@ -171,7 +171,7 @@ export class QuayCrane {
     this.spreader.position.set(0, 0, 0);
     this.trolley.add(this.spreader);
 
-    this.manager.scene.add(this.model);
+    this.visualizer.scene.add(this.model);
   }
 
   private updateModelState() {
@@ -183,7 +183,7 @@ export class QuayCrane {
   }
 
   private listenToEvents() {
-    this.manager.onEvent<AnimateEvent>("animate", (e) => {
+    this.visualizer.onEvent<AnimateEvent>("animate", (e) => {
       this.animate(e.deltaTime);
     });
   }

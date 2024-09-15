@@ -1,19 +1,19 @@
 import { Box2, Material, Vector2, Vector3 } from "three";
-import { Manager } from "./Manager";
-import { Render } from "./Render";
-import { Layout } from "./RoutePlanner/types";
+import { Layout } from "../RoutePlanner/types";
+import { Visualizer } from "../Visualizer/Manager";
+import { Render } from "../Visualizer/Render";
 
 const SVG_SCALE_MULTIPLIER = 1;
 
 export class LayoutManager {
-  manager: Manager;
+  visualizer: Visualizer;
   layout: Layout;
 
   // material
   yardBlockMaterial: Material;
 
-  constructor(manager: Manager) {
-    this.manager = manager;
+  constructor(visualizer: Visualizer) {
+    this.visualizer = visualizer;
     this.yardBlockMaterial = Render.createPlaneMaterial(0xbbbbbb);
   }
 
@@ -105,7 +105,7 @@ export class LayoutManager {
 
   drawBox(box: Box2, material: Material, z = 0) {
     const plane = Render.createPlane(box, material, z);
-    this.manager.scene.add(plane);
+    this.visualizer.scene.add(plane);
   }
 
   static getAttributeNumber(element: Element, attributeName: string): number {

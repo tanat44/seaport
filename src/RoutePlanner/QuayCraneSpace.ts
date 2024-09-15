@@ -1,6 +1,6 @@
 import { Box2, Mesh, Vector2 } from "three";
-import { Manager } from "../Manager";
-import { Render } from "../Render";
+import { Visualizer } from "../Visualizer/Manager";
+import { Render } from "../Visualizer/Render";
 import { GridBox } from "./GridBox";
 import { GridCoordinate } from "./GridCoordinate";
 import { GRID_SIZE } from "./PlannerGrid";
@@ -9,13 +9,13 @@ import { CellType } from "./types";
 const HIGHLIGHT_MESH_HEIGHT = 0.5;
 
 export class QuayCraneSpace {
-  manager: Manager;
+  visualizer: Visualizer;
   occupyCells: Set<string>;
   gridBox: GridBox;
   highlightMesh: Mesh;
 
-  constructor(manager: Manager) {
-    this.manager = manager;
+  constructor(visualizer: Visualizer) {
+    this.visualizer = visualizer;
     this.occupyCells = new Set();
     this.gridBox = new GridBox(0, 0, 0, 0);
 
@@ -24,7 +24,7 @@ export class QuayCraneSpace {
       Render.createPlaneMaterial(0xfcb968),
       HIGHLIGHT_MESH_HEIGHT
     );
-    this.manager.scene.add(this.highlightMesh);
+    this.visualizer.scene.add(this.highlightMesh);
   }
 
   updateGrid(newBox: Box2, grid: CellType[][]) {
