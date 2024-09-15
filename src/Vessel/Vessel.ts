@@ -1,10 +1,14 @@
 import { Box2, Object3D, Vector2, Vector3 } from "three";
 import { Layout } from "../PathPlanner/types";
+import { Terminal } from "../Terminal/Terminal";
+import {
+  CONTAINER_SIZE_X,
+  CONTAINER_SIZE_Y,
+  CONTAINER_SIZE_Z,
+} from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { CargoCoordinate } from "./CargoCoordinate";
-import { Terminal } from "./Terminal";
-import { CONTAINER_SIZE_X, CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "./const";
-import { VesselUnloadPlan } from "./types";
+import { VesselCargoOrder } from "./types";
 
 let containerCount = 0;
 
@@ -89,8 +93,8 @@ export class Vessel {
     return container;
   }
 
-  planUnload(): VesselUnloadPlan {
-    const plan: VesselUnloadPlan = [];
+  planUnload(): VesselCargoOrder {
+    const plan: VesselCargoOrder = [];
 
     // unload bay by bay, take the highest container off
     for (let i = 0; i < this.cargos.length; ++i) {

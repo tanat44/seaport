@@ -1,5 +1,9 @@
 import { Vector3 } from "three";
-import { CONTAINER_SIZE_X, CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "./const";
+import {
+  CONTAINER_SIZE_X,
+  CONTAINER_SIZE_Y,
+  CONTAINER_SIZE_Z,
+} from "../Terminal/const";
 
 export class CargoCoordinate {
   bay: number;

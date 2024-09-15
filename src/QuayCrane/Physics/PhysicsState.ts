@@ -1,5 +1,5 @@
-import { AnimateEvent } from "../Event/types";
-import { Visualizer } from "../Visualizer/Visualizer";
+import { AnimateEvent } from "../../Event/types";
+import { Visualizer } from "../../Visualizer/Visualizer";
 
 const ARRIVE_THRESHOLD = 0.05;
 const BRAKE_SAFETY_FACTOR = 1.05;

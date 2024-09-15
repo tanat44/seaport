@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { CargoCoordinate } from "../Terminal/CargoCoordinate";
+import { CargoCoordinate } from "../Vessel/CargoCoordinate";
 
 export interface QuayCraneJob {
   position: Vector3;

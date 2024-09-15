@@ -3,9 +3,9 @@ import { QuayCraneMoveEndEvent } from "../Event/types";
 import { PlannerGrid } from "../PathPlanner/PlannerGrid";
 import { QuayCrane } from "../QuayCrane/QuayCrane";
 import { QuayCraneJob, QuayCranePickContainerJob } from "../QuayCrane/types";
+import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { LayoutManager } from "./LayoutManager";
-import { Vessel } from "./Vessel";
 
 const VESSEL_NAME = "tennis";
 export class Terminal {
