@@ -24,7 +24,7 @@ export class LayoutManager {
     // parse svg (1mm in svg = 1000mm actual)
     const layout: Layout = {
       quayCraneOrigins: [],
-      yardBlocks: [],
+      yardSpaces: [],
       terminalSize: new Vector2(),
     };
     const parser = new DOMParser();
@@ -47,7 +47,7 @@ export class LayoutManager {
           const width = LayoutManager.getAttributeNumber(element, "width");
           const height = LayoutManager.getAttributeNumber(element, "height");
           if (label === "yard")
-            layout.yardBlocks.push(
+            layout.yardSpaces.push(
               new Box2(new Vector2(x, y), new Vector2(x + width, y + height))
             );
           else {
@@ -68,7 +68,7 @@ export class LayoutManager {
       qc.x = qc.x - terminalBox.min.x;
       qc.y = -qc.y + terminalBox.min.y + h.y;
     }
-    for (const block of layout.yardBlocks) {
+    for (const block of layout.yardSpaces) {
       const newMin = new Vector2(
         block.min.x - terminalBox.min.x,
         -block.max.y + terminalBox.min.y + h.y
@@ -98,7 +98,7 @@ export class LayoutManager {
     );
 
     // draw yard blocks
-    for (const block of layout.yardBlocks) {
+    for (const block of layout.yardSpaces) {
       this.drawBox(block, this.yardBlockMaterial);
     }
   }

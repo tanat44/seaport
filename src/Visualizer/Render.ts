@@ -24,7 +24,7 @@ import {
 export class Render {
   static containerMaterial = new MeshLambertMaterial({
     color: 0x9500ff,
-    opacity: 0.3,
+    opacity: 0.15,
     transparent: true,
   });
 

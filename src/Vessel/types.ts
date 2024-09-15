@@ -1,3 +1,3 @@
 import { CargoCoordinate } from "./CargoCoordinate";
 
-export type VesselCargoOrder = CargoCoordinate[];
+export type CargoOrder = CargoCoordinate[];

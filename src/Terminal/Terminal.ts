@@ -5,16 +5,21 @@ import { QuayCrane } from "../QuayCrane/QuayCrane";
 import { QuayCraneJob, QuayCranePickContainerJob } from "../QuayCrane/types";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { YardBlock } from "../Yard/YardBlock";
 import { LayoutManager } from "./LayoutManager";
+import { CONTAINER_SIZE_Z, YARD_MAX_TIER } from "./const";
 
-const VESSEL_NAME = "tennis";
+const VESSEL_NAME = "Vessel-Polo";
 export class Terminal {
   visualizer: Visualizer;
   layoutManager: LayoutManager;
   plannerGrid: PlannerGrid;
 
-  // equipment
+  // storage
   vessels: Map<string, Vessel>;
+  yardBlocks: Map<string, YardBlock>;
+
+  // equipment
   quayCranes: Map<number, QuayCrane>;
 
   // operation
@@ -43,6 +48,18 @@ export class Terminal {
       new Vessel(this, VESSEL_NAME, 10, 50, 12, 70, layout)
     );
 
+    // init yard block
+    this.yardBlocks = new Map();
+    for (const yardSpace of layout.yardSpaces) {
+      const yard = new YardBlock(
+        this,
+        yardSpace,
+        YARD_MAX_TIER * CONTAINER_SIZE_Z
+      );
+      yard.addRandomCargo();
+      this.yardBlocks.set(yard.id, yard);
+    }
+
     // init quay cranes
     this.quayCranes = new Map();
     for (const qcOrigin of layout.quayCraneOrigins) {
@@ -66,7 +83,7 @@ export class Terminal {
     this.quayCraneVesselAssignment.set(quayCrane, vessel);
 
     // generate qc jobs
-    const unloadPlan = vessel.planUnload();
+    const unloadPlan = vessel.planFullUnload();
     const qcY = quayCrane.position.y;
     const qcJobs: QuayCraneJob[] = [];
     for (const cargoCoordinate of unloadPlan) {

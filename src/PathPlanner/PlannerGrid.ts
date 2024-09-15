@@ -73,7 +73,7 @@ export class PlannerGrid {
   }
 
   private isInYardBlock(pos: Vector2): boolean {
-    for (const yard of this.layout.yardBlocks) {
+    for (const yard of this.layout.yardSpaces) {
       if (yard.containsPoint(pos)) return true;
     }
     return false;

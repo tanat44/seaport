@@ -7,19 +7,19 @@ import {
 
 export class CargoCoordinate {
   bay: number;
-  column: number;
-  height: number;
-  constructor(bay: number, column: number, height: number) {
+  row: number;
+  tier: number;
+  constructor(bay: number, row: number, tier: number) {
     this.bay = bay;
-    this.column = column;
-    this.height = height;
+    this.row = row;
+    this.tier = tier;
   }
 
   get relativePosition(): Vector3 {
     return new Vector3(
       this.bay * CONTAINER_SIZE_X + CONTAINER_SIZE_X / 2,
-      this.column * CONTAINER_SIZE_Y + CONTAINER_SIZE_Y / 2,
-      this.height * CONTAINER_SIZE_Z + CONTAINER_SIZE_Z / 2
+      this.row * CONTAINER_SIZE_Y + CONTAINER_SIZE_Y / 2,
+      this.tier * CONTAINER_SIZE_Z + CONTAINER_SIZE_Z / 2
     );
   }
 }

@@ -4,7 +4,7 @@ import { GridCoordinate } from "./GridCoordinate";
 export type Layout = {
   terminalSize: Vector2;
   quayCraneOrigins: Vector3[];
-  yardBlocks: Box2[];
+  yardSpaces: Box2[];
 };
 
 export enum CellType {
