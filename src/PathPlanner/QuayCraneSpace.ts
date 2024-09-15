@@ -21,7 +21,7 @@ export class QuayCraneSpace {
 
     this.highlightMesh = Render.createPlane(
       new Box2(new Vector2(-0.5, -0.5), new Vector2(0.5, 0.5)),
-      Render.createPlaneMaterial(0xfcb968),
+      Render.createBasicMaterial(0xfcb968),
       HIGHLIGHT_MESH_HEIGHT
     );
     this.visualizer.scene.add(this.highlightMesh);

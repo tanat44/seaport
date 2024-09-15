@@ -1,5 +1,5 @@
 import { Box2, Material, Vector2, Vector3 } from "three";
-import { Layout } from "../RoutePlanner/types";
+import { Layout } from "../PathPlanner/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 
@@ -14,7 +14,7 @@ export class LayoutManager {
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
-    this.yardBlockMaterial = Render.createPlaneMaterial(0xbbbbbb);
+    this.yardBlockMaterial = Render.createBasicMaterial(0xbbbbbb);
   }
 
   async load(layoutPath: string = "/layout.svg") {
@@ -93,7 +93,7 @@ export class LayoutManager {
     // draw terminal ground
     this.drawBox(
       new Box2(new Vector2(), layout.terminalSize),
-      Render.createPlaneMaterial(0xe0e0e0),
+      Render.createBasicMaterial(0xe0e0e0),
       -0.5
     );
 

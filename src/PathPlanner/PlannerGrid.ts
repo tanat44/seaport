@@ -91,6 +91,6 @@ export class PlannerGrid {
     }
 
     const space = this.quayCraneSpaces.get(quayCraneId);
-    space.updateGrid(qc.box2d, this.grid);
+    space.updateGrid(qc.absoluteSpace, this.grid);
   }
 }

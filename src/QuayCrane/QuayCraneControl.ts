@@ -11,8 +11,8 @@ const TROLLY_MAX_ACCEL = 1;
 const GANTRY_MAX_ACCEL = 0.5;
 
 export class QuayCraneControl extends PhysicsState3D {
-  visualizer: Visualizer;
   crane: QuayCrane;
+  onArrive: () => void;
 
   constructor(
     visualizer: Visualizer,
@@ -51,7 +51,14 @@ export class QuayCraneControl extends PhysicsState3D {
       new Vector3(target.x, this.position.y + trolleyMove / 2, planLiftHeight)
     );
 
-    // 2 lower spreader down to target
+    // 2 trolley to above target
+    const HEIGHT_ABOVE = 3;
+    let overTargetHeight = target.z + HEIGHT_ABOVE;
+    if (overTargetHeight > this.crane.height)
+      overTargetHeight = this.crane.height;
+    trajectory.push(new Vector3(target.x, target.y, overTargetHeight));
+
+    // 3 lower down to target
     trajectory.push(new Vector3(target.x, target.y, target.z));
     return trajectory;
   }
@@ -62,9 +69,6 @@ export class QuayCraneControl extends PhysicsState3D {
   }
 
   protected override afterArrive(): void {
-    this.visualizer.emit({
-      type: "quaycranemoveend",
-      quayCraneId: this.crane.id,
-    });
+    if (this.onArrive) this.onArrive();
   }
 }

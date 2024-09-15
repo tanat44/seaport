@@ -1,5 +1,6 @@
 import {
   Box2,
+  BoxGeometry,
   BufferGeometry,
   DoubleSide,
   Line,
@@ -7,14 +8,26 @@ import {
   Material,
   Mesh,
   MeshBasicMaterial,
+  MeshLambertMaterial,
   Object3D,
   PlaneGeometry,
   SphereGeometry,
   Vector2,
   Vector3,
 } from "three";
+import {
+  CONTAINER_SIZE_X,
+  CONTAINER_SIZE_Y,
+  CONTAINER_SIZE_Z,
+} from "../Terminal/const";
 
 export class Render {
+  static containerMaterial = new MeshLambertMaterial({
+    color: 0x9500ff,
+    opacity: 0.3,
+    transparent: true,
+  });
+
   static createPlane(box: Box2, material: Material, z: number) {
     const size = new Vector2();
     box.getSize(size);
@@ -26,7 +39,7 @@ export class Render {
     return plane;
   }
 
-  static createPlaneMaterial(color: number) {
+  static createBasicMaterial(color: number) {
     return new MeshBasicMaterial({
       color,
       side: DoubleSide,
@@ -57,5 +70,18 @@ export class Render {
     const sphere = new Mesh(geometry, material);
     sphere.position.set(center.x, center.y, z);
     return sphere;
+  }
+
+  static createContainer(position: Vector3) {
+    const RENDER_SCALE = 0.9;
+    const box = new BoxGeometry(
+      CONTAINER_SIZE_X,
+      CONTAINER_SIZE_Z,
+      CONTAINER_SIZE_Y
+    );
+    const mesh = new Mesh(box, Render.containerMaterial);
+    mesh.scale.set(RENDER_SCALE, RENDER_SCALE, RENDER_SCALE);
+    mesh.position.copy(position);
+    return mesh;
   }
 }

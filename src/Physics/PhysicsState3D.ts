@@ -57,7 +57,7 @@ export class PhysicsState3D {
     this.updateAxisTarget();
     this.trajectoryMesh = Render.createPath(
       [this.position, ...trajectory],
-      0x0000a0
+      0xeeff00
     );
     this.visualizer.scene.add(this.trajectoryMesh);
   }

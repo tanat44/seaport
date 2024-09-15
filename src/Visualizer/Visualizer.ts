@@ -15,23 +15,28 @@ import { EventBase, EventType } from "../Event/types";
 import { Text } from "./Text";
 
 const FOV = 46.8;
+const SPEED_DEFAULT = 1.0;
+const SPEED_MULTIPLIER = 2.0;
 
 // unit in meters
 export class Visualizer {
   private clock: Clock;
   private event: Event;
   private orbitControl: OrbitControls;
-  camera: PerspectiveCamera;
-  raycaster: Raycaster;
+  private camera: PerspectiveCamera;
+  private raycaster: Raycaster;
+  private renderer: WebGLRenderer;
+  private speed: number;
+
   scene: Scene;
   text: Text;
-  renderer: WebGLRenderer;
 
   constructor() {
     this.raycaster = new Raycaster();
+    this.speed = SPEED_DEFAULT;
     this.setupScene();
     this.setupLighting();
-    this.setupOrbitControl();
+    this.setupControl();
     this.clock = new Clock();
     this.event = new Event(this.renderer.domElement);
     this.text = new Text();
@@ -49,6 +54,10 @@ export class Visualizer {
 
   emit<T extends EventBase>(event: T) {
     this.event.emit(event);
+  }
+
+  setSpeed(speed: number) {
+    this.speed = speed;
   }
 
   private async createObjects() {
@@ -94,7 +103,8 @@ export class Visualizer {
     window.addEventListener("resize", () => this.onWindowResize());
   }
 
-  private setupOrbitControl() {
+  private setupControl() {
+    // mouse orbit control
     this.camera.up.set(0, 0, 1);
     this.orbitControl = new OrbitControls(
       this.camera,
@@ -107,6 +117,17 @@ export class Visualizer {
     this.camera.position.set(-40, -40, 100);
     this.camera.lookAt(50, 50, 0);
     this.render();
+
+    // keyboard control
+    window.addEventListener("keydown", (e) => this.onKeyDown(e));
+  }
+
+  private onKeyDown(e: KeyboardEvent) {
+    if (e.code === "Equal") {
+      this.setSpeed(this.speed * SPEED_MULTIPLIER);
+    } else if (e.code === "Minus") {
+      this.setSpeed(this.speed / SPEED_MULTIPLIER);
+    }
   }
 
   private onWindowResize() {
@@ -122,7 +143,7 @@ export class Visualizer {
   private animate() {
     requestAnimationFrame(() => this.animate());
     this.render();
-    const deltaTime = this.clock.getDelta();
+    const deltaTime = this.clock.getDelta() * this.speed;
     this.event.emit({
       type: "animate",
       deltaTime,

@@ -62,11 +62,11 @@ export class PathPlanner {
       this.pathMesh = [];
     }
 
-    // plan & render
-    let plan = this.randomPlan();
-    const path = this.plannerGrid.findPath(plan.from, plan.to);
-    console.log("from", plan.from, "to", plan.to);
-    this.renderPath(path);
+    // random plan & render
+    // let plan = this.randomPlan();
+    // const path = this.plannerGrid.findPath(plan.from, plan.to);
+    // console.log("from", plan.from, "to", plan.to);
+    // this.renderPath(path);
   }
 
   private renderPath(path: Vector2[]) {

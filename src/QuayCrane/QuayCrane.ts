@@ -8,9 +8,14 @@ import {
   Vector2,
   Vector3,
 } from "three";
-import { AnimateEvent } from "../Event/types";
+import {
+  AnimateEvent,
+  QuayCraneMoveEndEvent,
+  QuayCraneMoveStartEvent,
+} from "../Event/types";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { QuayCraneControl } from "./QuayCraneControl";
+import { QuayCraneJob } from "./types";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
@@ -34,13 +39,16 @@ export class QuayCrane {
   trolley: Mesh;
   spreader: Mesh;
 
+  // operation
+  currentJob: QuayCraneJob | null;
+
   constructor(
     visualizer: Visualizer,
     initialPosition: Vector3,
     width: number = 10,
     height: number = 20,
     legSpan: number = 10,
-    outReach: number = 10
+    outReach: number = 20
   ) {
     this.visualizer = visualizer;
     this.id = ++QuayCrane.count;
@@ -53,35 +61,64 @@ export class QuayCrane {
       this,
       new Vector3(initialPosition.x, 0, height / 2)
     );
+    this.control.onArrive = () => this.onArrive();
+    this.currentJob = null;
 
     this.buildModel(initialPosition);
     this.listenToEvents();
   }
 
-  public moveTo(target: Vector3) {
-    if (target.y < -(this.legSpan / 2))
-      throw new Error("Cannot move trolley too far back");
-    if (target.y > this.legSpan / 2 + this.outReach)
-      throw new Error("Cannot move trolley too far forward");
-    if (target.z < 0) throw new Error("Cannot move spreader under ground");
-    if (target.z > this.height)
-      throw new Error("Cannot move spreader above height");
+  public randomMove() {
+    const GANTRY_RANGE = 20;
+    const gantryDistance = Math.random() * GANTRY_RANGE - GANTRY_RANGE / 2;
+    const trolleyDistance =
+      Math.random() * (this.legSpan + this.outReach) - this.legSpan / 2;
+    const liftDistance = Math.random() * this.height;
 
-    const trajectory = this.control.planTrajectory(target);
-    this.control.execute(trajectory);
-    this.visualizer.emit({
-      type: "quaycranemovestart",
-      quayCraneId: this.id,
-    });
+    // this.moveTo(
+    //   new Vector3(
+    //     gantryDistance + this.control.position.x,
+    //     trolleyDistance,
+    //     liftDistance
+    //   )
+    // );
   }
 
-  public get box2d(): Box2 {
+  public executeJob(job: QuayCraneJob) {
+    if (this.currentJob)
+      throw new Error("Cannot assign job to busy quay crane");
+
+    // check if it's a valid job
+    if (job.position.y < -(this.legSpan / 2))
+      throw new Error("Cannot move trolley too far back");
+    if (job.position.y > this.legSpan / 2 + this.outReach)
+      throw new Error("Cannot move trolley too far forward");
+    if (job.position.z < 0)
+      throw new Error("Cannot move spreader under ground");
+    if (job.position.z > this.height)
+      throw new Error("Cannot move spreader above height");
+
+    const trajectory = this.control.planTrajectory(job.position);
+    this.control.execute(trajectory);
+    this.visualizer.emit<QuayCraneMoveStartEvent>({
+      type: "quaycranemovestart",
+      quayCraneId: this.id,
+      job,
+    });
+    this.currentJob = job;
+  }
+
+  public get absoluteSpace(): Box2 {
     const box3 = new Box3().setFromObject(this.model);
 
     return new Box2(
       new Vector2(box3.min.x, box3.min.y),
       new Vector2(box3.max.x, box3.max.y)
     );
+  }
+
+  public get position(): Vector3 {
+    return this.model.position.clone();
   }
 
   private buildModel(initialPosition: Vector3) {
@@ -185,6 +222,16 @@ export class QuayCrane {
   private listenToEvents() {
     this.visualizer.onEvent<AnimateEvent>("animate", (e) => {
       this.animate(e.deltaTime);
+    });
+  }
+
+  private onArrive() {
+    const finishedJob = this.currentJob;
+    this.currentJob = null;
+    this.visualizer.emit<QuayCraneMoveEndEvent>({
+      type: "quaycranemoveend",
+      quayCraneId: this.id,
+      job: finishedJob,
     });
   }
 

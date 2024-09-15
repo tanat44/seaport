@@ -1,5 +1,7 @@
 // Event generic
 
+import { QuayCraneJob } from "../QuayCrane/types";
+
 export interface EventBase {
   type: EventType;
 }
@@ -17,10 +19,12 @@ export interface AnimateEvent extends EventBase {
 
 export interface QuayCraneMoveStartEvent extends EventBase {
   quayCraneId: number;
+  job: QuayCraneJob;
 }
 
 export interface QuayCraneMoveEndEvent extends EventBase {
   quayCraneId: number;
+  job: QuayCraneJob;
 }
 
 export interface QuayCraneGantryEvent extends EventBase {
