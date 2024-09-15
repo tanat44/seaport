@@ -1,4 +1,4 @@
-import { Visualizer } from "../Visualizer/Manager";
+import { Visualizer } from "../Visualizer/Visualizer";
 
 export class Vessel {
   visualizer: Visualizer;

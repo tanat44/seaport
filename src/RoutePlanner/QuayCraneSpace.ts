@@ -1,6 +1,6 @@
 import { Box2, Mesh, Vector2 } from "three";
-import { Visualizer } from "../Visualizer/Manager";
 import { Render } from "../Visualizer/Render";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { GridBox } from "./GridBox";
 import { GridCoordinate } from "./GridCoordinate";
 import { GRID_SIZE } from "./PlannerGrid";

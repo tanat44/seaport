@@ -2,7 +2,7 @@ import { Vector3 } from "three";
 import { QuayCrane } from "../Equipment/QuayCrane";
 import { QuayCraneMoveEndEvent } from "../Event/types";
 import { PlannerGrid } from "../RoutePlanner/PlannerGrid";
-import { Visualizer } from "../Visualizer/Manager";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { LayoutManager } from "./LayoutManager";
 
 export class Terminal {

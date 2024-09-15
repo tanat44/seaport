@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { PhysicsState3D } from "../Physics/PhysicsState3D";
 import { Trajectory } from "../Physics/types";
-import { Visualizer } from "../Visualizer/Manager";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { QuayCrane } from "./QuayCrane";
 
 const Z_OVERSHOOT = 2;

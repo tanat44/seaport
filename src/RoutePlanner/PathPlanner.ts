@@ -4,8 +4,8 @@ import {
   QuadraticBezierCurve,
   Vector2,
 } from "three";
-import { Visualizer } from "../Visualizer/Manager";
 import { Render } from "../Visualizer/Render";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { PlannerGrid } from "./PlannerGrid";
 
 const PLAN_INTERVAL = 1000;

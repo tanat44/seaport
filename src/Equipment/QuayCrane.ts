@@ -9,7 +9,7 @@ import {
   Vector3,
 } from "three";
 import { AnimateEvent } from "../Event/types";
-import { Visualizer } from "../Visualizer/Manager";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { QuayCraneControl } from "./QuayCraneControl";
 
 const LEG_SIZE = 0.3;

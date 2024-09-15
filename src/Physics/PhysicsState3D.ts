@@ -1,6 +1,6 @@
 import { Line, Vector3 } from "three";
-import { Visualizer } from "../Visualizer/Manager";
 import { Render } from "../Visualizer/Render";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { PhysicsState } from "./PhysicsState";
 import { Trajectory } from "./types";
 

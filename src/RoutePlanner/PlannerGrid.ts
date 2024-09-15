@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
 import { QuayCraneGantryEvent } from "../Event/types";
 import { Terminal } from "../Terminal/Terminal";
-import { Visualizer } from "../Visualizer/Manager";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { PathPlanner } from "./PathPlanner";
