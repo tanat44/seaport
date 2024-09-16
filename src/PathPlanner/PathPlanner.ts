@@ -29,7 +29,7 @@ export class PathPlanner {
     this.pathMesh = [];
   }
 
-  plan(from: Vector2, to: Vector2) {
+  plan(from: Vector2, to: Vector2): Vector2[] {
     // delete old path
     if (this.pathMesh.length > 0) {
       this.pathMesh.forEach((mesh) => mesh.removeFromParent());
@@ -37,8 +37,11 @@ export class PathPlanner {
     }
 
     console.log("PathPlanner: from", from, "to", to);
-    const path = this.gridPlanner.findPath(from, to);
-    this.renderPath(path);
+    const controlPoints = this.gridPlanner.findPath(from, to);
+    const path = this.makeCurve(controlPoints);
+    this.renderPath(controlPoints, path);
+
+    return path;
   }
 
   randomDrivablePosition(): Vector2 {
@@ -79,24 +82,23 @@ export class PathPlanner {
 
   private tick() {}
 
-  private renderPath(path: Vector2[]) {
+  private renderPath(controlPoints: Vector2[], path: Vector2[]) {
     // mesh container
     const mesh = new Object3D();
+    const Z = 0.1;
 
     // render curve
-    const Z = 0.1;
-    const curvePoints = this.makeCurve(path);
-    const curveMesh = Render.createPath2D(curvePoints, Z, 0x0000a0);
+    const curveMesh = Render.createPath2D(path, Z, 0x0000a0);
     mesh.add(curveMesh);
 
     // render control points
     const startMaterial = new MeshBasicMaterial({ color: 0xff0000 });
     const innerMaterial = new MeshBasicMaterial({ color: 0x888888 });
     const endMaterial = new MeshBasicMaterial({ color: 0x0000a0 });
-    const controlPointMeshes = path.map((point, index) => {
+    const controlPointMeshes = controlPoints.map((point, index) => {
       let material = innerMaterial;
       if (index === 0) material = startMaterial;
-      else if (index === path.length - 1) material = endMaterial;
+      else if (index === controlPoints.length - 1) material = endMaterial;
 
       return Render.createSphere(point, Z, 0.5, material);
     });

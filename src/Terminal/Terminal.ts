@@ -3,6 +3,7 @@ import { QuayCraneMoveEndEvent } from "../Event/types";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { QuayCrane } from "../QuayCrane/QuayCrane";
 import { QuayCraneJob, QuayCranePickContainerJob } from "../QuayCrane/types";
+import { Truck } from "../Truck/Truck";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
@@ -20,6 +21,7 @@ export class Terminal {
 
   // equipment
   quayCranes: Map<number, QuayCrane>;
+  trucks: Map<number, Truck>;
 
   // operation
   quayCraneVesselAssignment: Map<QuayCrane, Vessel>;
@@ -58,6 +60,9 @@ export class Terminal {
     this.visualizer.onEvent<QuayCraneMoveEndEvent>("quaycranemoveend", (e) =>
       this.quayCraneMoveEnd(e)
     );
+
+    // init truck
+    this.trucks = new Map();
 
     // start operation
     this.operate();
@@ -164,7 +169,12 @@ export class Terminal {
       const from = qc.position;
       const yardCoordinate = this.yardManager.findStorage();
       const to = this.yardManager.getContainerHandlingPoint(yardCoordinate);
-      this.pathPlanner.plan(new Vector2(from.x, from.y), to);
+      const drivePath = this.pathPlanner.plan(new Vector2(from.x, from.y), to);
+
+      // create truck to drive
+      const truck = new Truck(this);
+      truck.drive(drivePath);
+      this.trucks.set(truck.id, truck);
     }
 
     this.executeNextQuayCraneJob(qc);
