@@ -9,14 +9,20 @@ import {
 import { Terminal } from "../Terminal/Terminal";
 import { CONTAINER_SIZE_X, CONTAINER_SIZE_Y } from "../Terminal/const";
 import { PathPhysics } from "./PathPhysics";
+import { TEST_PATH } from "./TestPath";
 
 const WHEEL_DIAMETER = 0.8;
-const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x333333 });
-const TRUCK_MATERIAL = new MeshBasicMaterial({ color: 0x7f86e3 });
+const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
+const TRAILER_MATERIAL = new MeshBasicMaterial({ color: 0x7f86e3 });
+const TRACTOR_MATERIAL = new MeshBasicMaterial({ color: 0x544db0 });
+const KINGPIN_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
 const TRUCK_WIDTH = CONTAINER_SIZE_Y * 1.1;
-const WHEEL_BASE = 7;
 const MAX_VELOCITY = 13.8; // 50 kph
 const MAX_ACCELERATION = 3;
+
+const TRAILER_REAR_AXLE_POSITION = -CONTAINER_SIZE_X / 2 + 1;
+const TRAILER_KINGPIN_DISTANCE = CONTAINER_SIZE_X;
+const TRACTOR_WHEEL_BASE = 3;
 
 export class Truck {
   static count = 0;
@@ -24,7 +30,8 @@ export class Truck {
   terminal: Terminal;
 
   id: number;
-  model: Object3D;
+  trailerModel: Object3D;
+  tractorModel: Object3D;
   pathPhysics?: PathPhysics;
 
   constructor(terminal: Terminal) {
@@ -33,27 +40,50 @@ export class Truck {
     this.createModel();
   }
 
-  drive(path: Vector2[]) {
+  drive(controlPoints: Vector2[]) {
     if (this.pathPhysics) {
       console.warn("Abort driving on the current path to drive new path");
     }
 
     this.pathPhysics = new PathPhysics(
       this.terminal.visualizer,
-      path,
+      controlPoints,
+      TRAILER_KINGPIN_DISTANCE,
       MAX_VELOCITY,
       MAX_ACCELERATION,
-      (position: Vector2, rotation: number) => this.update(position, rotation)
+      (
+        positionTrailer: Vector2,
+        rotationTrailer: number,
+        rotationTractor: number
+      ) => this.update(positionTrailer, rotationTrailer, rotationTractor)
     );
   }
 
-  update(position: Vector2, rotation: number) {
-    this.model.position.set(position.x, position.y, 0);
-    this.model.rotation.set(0, 0, rotation);
+  update(
+    positionTrailer: Vector2,
+    rotationTrailer: number,
+    rotationTractor: number
+  ) {
+    this.trailerModel.position.set(positionTrailer.x, positionTrailer.y, 0);
+    this.trailerModel.rotation.set(0, 0, rotationTrailer);
+    this.tractorModel.rotation.set(0, 0, rotationTractor - rotationTrailer);
+  }
+
+  testDrive() {
+    this.drive(TEST_PATH);
   }
 
   private createModel() {
-    this.model = new Object3D();
+    // TRAILER
+    this.trailerModel = new Object3D();
+    this.terminal.visualizer.scene.add(this.trailerModel);
+
+    // trailer bed
+    const bedLength = TRAILER_KINGPIN_DISTANCE;
+    const truckBedGeometry = new BoxGeometry(bedLength, TRUCK_WIDTH, 0.2);
+    const truckBed = new Mesh(truckBedGeometry, TRAILER_MATERIAL);
+    truckBed.position.set(0, 0, WHEEL_DIAMETER);
+    this.trailerModel.add(truckBed);
 
     // wheel
     const wheelGeometry = new CylinderGeometry(
@@ -62,51 +92,75 @@ export class Truck {
       0.2
     );
     const wheel = new Mesh(wheelGeometry, WHEEL_MATERIAL);
-    const rearWheelX = -CONTAINER_SIZE_X / 2 + 1;
-    const frontWheelX = WHEEL_BASE + rearWheelX;
     const halfWidth = TRUCK_WIDTH / 2;
 
-    // wheel RR
-    const wheelRR = wheel.clone();
-    wheelRR.position.set(rearWheelX, -halfWidth, 0);
-    this.model.add(wheelRR);
-    // wheel RL
-    const wheelRL = wheel.clone();
-    wheelRL.position.set(rearWheelX, halfWidth, 0);
-    this.model.add(wheelRL);
-    // wheel FR
-    const wheelFR = wheel.clone();
-    wheelFR.position.set(frontWheelX, -halfWidth, 0);
-    this.model.add(wheelFR);
-    // wheel FL
-    const wheelFL = wheel.clone();
-    wheelFL.position.set(frontWheelX, halfWidth, 0);
-    this.model.add(wheelFL);
+    // wheel R
+    const wheelR = wheel.clone();
+    wheelR.position.set(TRAILER_REAR_AXLE_POSITION, -halfWidth, 0);
+    this.trailerModel.add(wheelR);
+    // wheel L
+    const wheelL = wheel.clone();
+    wheelL.position.set(TRAILER_REAR_AXLE_POSITION, halfWidth, 0);
+    this.trailerModel.add(wheelL);
 
-    // truck bed
-    const bedLength = CONTAINER_SIZE_X;
-    const truckBedGeometry = new BoxGeometry(bedLength, TRUCK_WIDTH, 0.2);
-    const truckBed = new Mesh(truckBedGeometry, TRUCK_MATERIAL);
-    truckBed.position.set(0, 0, WHEEL_DIAMETER);
-    this.model.add(truckBed);
+    // kingpin
+    const kingpin = new Object3D();
+    kingpin.translateX(TRAILER_KINGPIN_DISTANCE);
+    this.trailerModel.add(kingpin);
+
+    // kingpin cylinder
+    const kingpinGeometry = new CylinderGeometry(0.2, 0.2, 1);
+    const kingpinCylinder = new Mesh(kingpinGeometry, KINGPIN_MATERIAL);
+    kingpinCylinder.rotateX(Math.PI / 2);
+    kingpinCylinder.translateY(1);
+    kingpin.add(kingpinCylinder);
+
+    // TRACTOR
+    this.tractorModel = new Object3D();
+    kingpin.add(this.tractorModel);
 
     // cabin
     const cabinLength = 3;
     const cabinHeight = 3;
     const cabinGeometry = new BoxGeometry(
-      cabinHeight,
+      cabinLength,
       TRUCK_WIDTH,
-      cabinLength
+      cabinHeight
     );
-    const cabin = new Mesh(cabinGeometry, TRUCK_MATERIAL);
+    const cabin = new Mesh(cabinGeometry, TRACTOR_MATERIAL);
     cabin.position.set(
-      (bedLength + cabinLength) / 2 + 0.5,
+      TRACTOR_WHEEL_BASE + 1 - cabinLength / 2,
       0,
       WHEEL_DIAMETER + cabinHeight / 2
     );
-    this.model.add(cabin);
+    this.tractorModel.add(cabin);
 
-    this.model.position.set(20, 20, 0);
-    this.terminal.visualizer.scene.add(this.model);
+    // cabin base
+    const cabinBaseLength = TRACTOR_WHEEL_BASE + 2;
+    const cabinBaseGeometry = new BoxGeometry(
+      cabinBaseLength,
+      TRUCK_WIDTH,
+      0.2
+    );
+    const cabinBase = new Mesh(cabinBaseGeometry, TRACTOR_MATERIAL);
+    cabinBase.position.set(cabinBaseLength / 2 - 1, 0, WHEEL_DIAMETER);
+    this.tractorModel.add(cabinBase);
+
+    // wheel RR
+    const wheelRR = wheel.clone();
+    wheelRR.position.set(0, -halfWidth, 0);
+    this.tractorModel.add(wheelRR);
+    // wheel RL
+    const wheelRL = wheel.clone();
+    wheelRL.position.set(0, halfWidth, 0);
+    this.tractorModel.add(wheelRL);
+    // wheel FR
+    const wheelFR = wheel.clone();
+    wheelFR.position.set(TRACTOR_WHEEL_BASE, -halfWidth, 0);
+    this.tractorModel.add(wheelFR);
+    // wheel FL
+    const wheelFL = wheel.clone();
+    wheelFL.position.set(TRACTOR_WHEEL_BASE, halfWidth, 0);
+    this.tractorModel.add(wheelFL);
   }
 }

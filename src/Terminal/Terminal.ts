@@ -63,6 +63,9 @@ export class Terminal {
 
     // init truck
     this.trucks = new Map();
+    // const truck = new Truck(this);
+    // truck.testDrive();
+    // truck.drive([new Vector2(0, 0), new Vector2(20, 20), new Vector2(40, 0)]);
 
     // start operation
     this.operate();
