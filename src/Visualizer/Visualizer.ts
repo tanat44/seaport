@@ -12,6 +12,7 @@ import {
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Event } from "../Event/Event";
 import { EventBase, EventType } from "../Event/types";
+import { MessageBox } from "./MessageBox";
 import { Text } from "./Text";
 
 const FOV = 46.8;
@@ -30,6 +31,7 @@ export class Visualizer {
 
   scene: Scene;
   text: Text;
+  messageBox: MessageBox;
 
   constructor() {
     this.raycaster = new Raycaster();
@@ -40,6 +42,7 @@ export class Visualizer {
     this.clock = new Clock();
     this.event = new Event(this.renderer.domElement);
     this.text = new Text();
+    this.messageBox = new MessageBox(this.renderer.domElement);
 
     this.createObjects();
     this.animate();
@@ -98,7 +101,12 @@ export class Visualizer {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
 
-    document.body.appendChild(this.renderer.domElement);
+    // dom
+    const element = this.renderer.domElement;
+    element.style.position = "absolute";
+    element.style.top = "0";
+    element.style.left = "0";
+    document.body.appendChild(element);
 
     window.addEventListener("resize", () => this.onWindowResize());
   }
@@ -125,8 +133,10 @@ export class Visualizer {
   private onKeyDown(e: KeyboardEvent) {
     if (e.code === "Equal") {
       this.setSpeed(this.speed * SPEED_MULTIPLIER);
+      this.messageBox.showMessage(`Simulation speed ${this.speed}x`);
     } else if (e.code === "Minus") {
       this.setSpeed(this.speed / SPEED_MULTIPLIER);
+      this.messageBox.showMessage(`Simulation speed ${this.speed}x`);
     }
   }
 
@@ -148,5 +158,9 @@ export class Visualizer {
       type: "animate",
       deltaTime,
     });
+  }
+
+  get dom(): HTMLElement {
+    return this.renderer.domElement;
   }
 }

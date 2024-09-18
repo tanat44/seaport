@@ -79,7 +79,6 @@ export class PhysicsState3D {
       return;
     }
 
-    // console.log("Arrived at trajectory index", this.lastTargetIndex);
     ++this.lastTargetIndex;
     if (this.lastTargetIndex === this.trajectory.length) {
       // console.log("Trajectory execution complete");

@@ -3,7 +3,6 @@ import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 
-const ARRIVE_THRESHOLD = 0.1;
 type UpdateCallback = (
   positionTrailer: Vector2,
   rotationTrailer: number,

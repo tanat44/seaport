@@ -1,7 +1,6 @@
 import { AnimateEvent } from "../../Event/types";
 import { Visualizer } from "../../Visualizer/Visualizer";
 
-const ARRIVE_THRESHOLD = 0.05;
 const BRAKE_SAFETY_FACTOR = 1.05;
 
 export class PhysicsState {
@@ -22,6 +21,7 @@ export class PhysicsState {
   stopAtTarget: boolean;
   onArrive: (state: PhysicsState) => void | undefined;
   arrived: boolean;
+  forwardMotion: boolean;
 
   constructor(
     name: string,
@@ -38,6 +38,7 @@ export class PhysicsState {
     this.maxVelocity = maxVelocity;
     this.maxAcceleration = maxAcceleration;
     this.arrived = true;
+    this.forwardMotion = true;
 
     this.visualizer.onEvent<AnimateEvent>("animate", (e) =>
       this.animate(e.deltaTime)
@@ -49,10 +50,11 @@ export class PhysicsState {
     stopAtTarget: boolean,
     onArrive: (state: PhysicsState) => void
   ) {
-    this.arrived = false;
     this.targetPosition = position;
     this.stopAtTarget = stopAtTarget;
+    this.forwardMotion = this.targetPosition > this.position;
     this.onArrive = onArrive;
+    this.arrived = false;
   }
 
   private animate(deltaTime: number) {
@@ -60,34 +62,34 @@ export class PhysicsState {
       return;
     }
     if (this.targetPosition !== undefined) {
-      const remainDistance = Math.abs(this.targetPosition - this.position);
-      this.arrived = remainDistance < ARRIVE_THRESHOLD;
+      const remainDistance = this.targetPosition - this.position;
+      this.arrived = this.forwardMotion
+        ? remainDistance < 0
+        : remainDistance > 0;
       if (this.arrived) {
         this.position = this.targetPosition;
         this.arrived = true;
         this.acceleration = 0;
+        this.velocity = 0;
       } else {
         if (this.stopAtTarget) {
           const brakeDistance =
             ((this.velocity * this.velocity) / 2 / this.maxAcceleration) *
             BRAKE_SAFETY_FACTOR;
 
-          if (remainDistance < brakeDistance) {
-            this.acceleration =
-              this.targetPosition > this.position
-                ? -this.maxAcceleration
-                : this.maxAcceleration;
+          if (Math.abs(remainDistance) < brakeDistance) {
+            this.acceleration = this.forwardMotion
+              ? -this.maxAcceleration
+              : this.maxAcceleration;
           } else {
-            this.acceleration =
-              this.targetPosition > this.position
-                ? this.maxAcceleration
-                : -this.maxAcceleration;
-          }
-        } else {
-          this.acceleration =
-            this.targetPosition > this.position
+            this.acceleration = this.forwardMotion
               ? this.maxAcceleration
               : -this.maxAcceleration;
+          }
+        } else {
+          this.acceleration = this.forwardMotion
+            ? this.maxAcceleration
+            : -this.maxAcceleration;
         }
       }
     }
@@ -114,6 +116,8 @@ export class PhysicsState {
       type: `physicsstatechange${this.name}`,
     });
 
-    if (this.arrived) this.onArrive(this);
+    if (this.arrived) {
+      this.onArrive(this);
+    }
   }
 }
