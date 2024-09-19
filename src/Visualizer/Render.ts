@@ -28,6 +28,20 @@ export class Render {
     transparent: true,
   });
 
+  static containerTransitMaterial = new MeshLambertMaterial({
+    color: 0x9500ff,
+    opacity: 0.7,
+    transparent: true,
+  });
+
+  static trolleyMaterial = new MeshBasicMaterial({
+    color: 0xfc9803,
+  });
+
+  static spreaderMaterial = new MeshBasicMaterial({
+    color: 0x47ff14,
+  });
+
   static createPlane(box: Box2, material: Material, z: number) {
     const size = new Vector2();
     box.getSize(size);

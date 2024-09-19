@@ -20,7 +20,7 @@ export class YardManager {
         yardSpace,
         YARD_MAX_TIER * CONTAINER_SIZE_Z
       );
-      yard.addRandomCargo();
+      // yard.addRandomCargo();
       this.yardBlocks.set(yard.id, yard);
     }
   }
@@ -43,5 +43,13 @@ export class YardManager {
     const handlingCoordinate = new StorageCoordinate(coordinate.bay, -1, 0);
     const pos = handlingCoordinate.relativePosition.add(yard.position);
     return new Vector2(pos.x, pos.y);
+  }
+
+  get allYards(): YardBlock[] {
+    return Array.from(this.yardBlocks, ([_, value]) => value);
+  }
+
+  getYard(id: string): YardBlock {
+    return this.yardBlocks.get(id);
   }
 }

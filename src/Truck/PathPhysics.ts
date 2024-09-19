@@ -1,5 +1,5 @@
 import { Object3D, Vector2 } from "three";
-import { AnimateEvent } from "../Event/types";
+import { AnimateEvent, TruckDriveEndEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 
@@ -10,6 +10,9 @@ type UpdateCallback = (
 ) => void;
 
 export class PathPhysics {
+  visualizer: Visualizer;
+  truckId: string;
+
   // path trailer
   pathTrailer: Vector2[];
   pathTrailerDistances: number[];
@@ -27,18 +30,22 @@ export class PathPhysics {
 
   // temporal
   lastIndex: number;
+  arrived: boolean;
 
   // render
   meshes: Object3D[];
 
   constructor(
     visualizer: Visualizer,
+    truckId: string,
     controlPoints: Vector2[],
     trailerPivotDistance: number,
     maxVelocity: number,
     maxAcceleration: number,
     onUpdate: UpdateCallback
   ) {
+    this.visualizer = visualizer;
+    this.truckId = truckId;
     this.pathTrailer = PathPhysics.resampleEvenSpace(controlPoints);
     this.pathTractor = PathPhysics.pathKingPin(
       this.pathTrailer,
@@ -63,6 +70,7 @@ export class PathPhysics {
     this.velocity = 0;
     this.acceleration = 0;
     this.lastIndex = 0;
+    this.arrived = false;
 
     // render
     const pathTractorMesh = Render.createPath2D(this.pathTractor, 0, 0xa600ff);
@@ -70,13 +78,9 @@ export class PathPhysics {
     this.meshes = [pathTractorMesh];
 
     // setup event listener
-    visualizer.onEvent<AnimateEvent>("animate", (e) =>
+    this.visualizer.onEvent<AnimateEvent>("animate", (e) =>
       this.animate(e.deltaTime)
     );
-  }
-
-  get arrived(): boolean {
-    return this.lastIndex === this.pathTrailer.length - 1;
   }
 
   get totalDistance(): number {
@@ -84,10 +88,23 @@ export class PathPhysics {
   }
 
   private animate(deltaTime: number) {
-    if (this.arrived) {
+    if (this.arrived) return;
+
+    if (this.lastIndex === this.pathTrailer.length - 1) {
       this.distance = this.totalDistance;
       this.velocity = 0;
       this.acceleration = 0;
+      this.meshes.forEach((mesh) => mesh.removeFromParent());
+      this.arrived = true;
+      this.visualizer.emit<TruckDriveEndEvent>({
+        type: `truckdriveend-${this.truckId}`,
+        truckId: this.truckId,
+      });
+      this.visualizer.emit<TruckDriveEndEvent>({
+        type: `truckdriveend`,
+        truckId: this.truckId,
+      });
+
       return;
     }
 
@@ -141,8 +158,8 @@ export class PathPhysics {
   }
 
   private get positionTrailer(): Vector2 {
-    if (this.arrived) return this.pathTrailer[this.pathTrailer.length - 1];
-
+    if (this.arrived || this.lastIndex === this.pathTrailer.length - 1)
+      return this.pathTrailer[this.pathTrailer.length - 1];
     const lastDistance = this.pathTrailerDistances[this.lastIndex];
     const p0 = this.pathTrailer[this.lastIndex];
     const p1 = this.pathTrailer[this.lastIndex + 1];

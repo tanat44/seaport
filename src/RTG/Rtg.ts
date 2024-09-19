@@ -10,20 +10,18 @@ import {
 } from "three";
 import {
   AnimateEvent,
-  QuayCraneMoveEndEvent,
-  QuayCraneMoveStartEvent,
+  RtgMoveStartEndEvent,
+  RtgMoveStartEvent,
 } from "../Event/types";
-import { Container } from "../StorageBlock/StorageBlock";
-import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { QuayCraneControl } from "./QuayCraneControl";
-import { QuayCraneJob } from "./types";
+import { RtgControl } from "./RtgControl";
+import { RtgJob } from "./types";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
-export class QuayCrane {
+export class Rtg {
   static count = 0;
 
   visualizer: Visualizer;
@@ -33,41 +31,35 @@ export class QuayCrane {
   width: number;
   height: number;
   legSpan: number;
-  outReach: number;
-  control: QuayCraneControl;
+  control: RtgControl;
 
   // mesh
   model: Object3D; // root mesh
   trolley: Mesh;
   spreader: Mesh;
-  containerPlaceholder: Object3D;
 
   // operation
-  currentJob: QuayCraneJob | null;
-  container: Container | null;
+  currentJob: RtgJob | null;
 
   constructor(
     visualizer: Visualizer,
     initialPosition: Vector3,
-    width: number = 10,
-    height: number = 20,
-    legSpan: number = 10,
-    outReach: number = 20
+    width: number,
+    height: number,
+    legSpan: number
   ) {
     this.visualizer = visualizer;
-    this.id = `QC.${++QuayCrane.count}`;
+    this.id = `RTG.${++Rtg.count}`;
     this.width = width;
     this.height = height;
     this.legSpan = legSpan;
-    this.outReach = outReach;
-    this.control = new QuayCraneControl(
+    this.control = new RtgControl(
       visualizer,
       this,
-      new Vector3(initialPosition.x, 0, height / 2)
+      new Vector3(initialPosition.x, this.width, height)
     );
     this.control.onArrive = () => this.onArrive();
     this.currentJob = null;
-    this.container = null;
 
     this.buildModel(initialPosition);
     this.listenToEvents();
@@ -76,8 +68,7 @@ export class QuayCrane {
   public randomMove() {
     const GANTRY_RANGE = 20;
     const gantryDistance = Math.random() * GANTRY_RANGE - GANTRY_RANGE / 2;
-    const trolleyDistance =
-      Math.random() * (this.legSpan + this.outReach) - this.legSpan / 2;
+    const trolleyDistance = Math.random() * this.legSpan - this.legSpan / 2;
     const liftDistance = Math.random() * this.height;
 
     // this.moveTo(
@@ -89,14 +80,14 @@ export class QuayCrane {
     // );
   }
 
-  public executeJob(job: QuayCraneJob) {
+  public executeJob(job: RtgJob) {
     if (this.currentJob)
       throw new Error("Cannot assign job to busy quay crane");
 
     // check if it's a valid job
     if (job.position.y < -(this.legSpan / 2))
       throw new Error("Cannot move trolley too far back");
-    if (job.position.y > this.legSpan / 2 + this.outReach)
+    if (job.position.y > this.legSpan / 2)
       throw new Error("Cannot move trolley too far forward");
     if (job.position.z < 0)
       throw new Error("Cannot move spreader under ground");
@@ -105,9 +96,9 @@ export class QuayCrane {
 
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
-    this.visualizer.emit<QuayCraneMoveStartEvent>({
-      type: "quaycranemovestart",
-      quayCraneId: this.id,
+    this.visualizer.emit<RtgMoveStartEvent>({
+      type: "rtgmovestart",
+      rtgId: this.id,
       job,
     });
     this.currentJob = job;
@@ -126,20 +117,6 @@ export class QuayCrane {
     return this.model.position.clone();
   }
 
-  public pickContainer(container: Container) {
-    this.container = container;
-    this.containerPlaceholder.add(this.container.mesh);
-    this.container.mesh.position.set(0, 0, 0);
-    this.container.mesh.material = Render.containerTransitMaterial;
-  }
-
-  public dropContainer(): Container {
-    const container = this.container;
-    this.container = null;
-    this.containerPlaceholder.remove(container.mesh);
-    return container;
-  }
-
   private buildModel(initialPosition: Vector3) {
     this.model = new Object3D();
     this.model.position.copy(initialPosition);
@@ -151,51 +128,33 @@ export class QuayCrane {
 
     // legBL
     const legBL = new Mesh(legGeometry, legMaterial);
-    legBL.position.set(-this.width / 2, -this.legSpan / 2, heightTopLevel / 2);
+    legBL.position.set(-this.width / 2, 0, heightTopLevel / 2);
 
     // legBR
     const legBR = new Mesh(legGeometry, legMaterial);
-    legBR.position.set(this.width / 2, -this.legSpan / 2, heightTopLevel / 2);
+    legBR.position.set(this.width / 2, 0, heightTopLevel / 2);
 
     // legTL
     const legTL = new Mesh(legGeometry, legMaterial);
-    legTL.position.set(-this.width / 2, this.legSpan / 2, heightTopLevel / 2);
+    legTL.position.set(-this.width / 2, this.legSpan, heightTopLevel / 2);
 
     // legTR
     const legTR = new Mesh(legGeometry, legMaterial);
-    legTR.position.set(this.width / 2, this.legSpan / 2, heightTopLevel / 2);
+    legTR.position.set(this.width / 2, this.legSpan, heightTopLevel / 2);
     this.model.add(legBL, legBR, legTL, legTR);
 
     // rail
     const railL = new Mesh(
-      new BoxGeometry(LEG_SIZE, this.legSpan + this.outReach, LEG_SIZE),
+      new BoxGeometry(LEG_SIZE, this.legSpan, LEG_SIZE),
       legMaterial
     );
-    railL.position.set(-this.width / 4, this.outReach / 2, heightTopLevel);
+    railL.position.set(-this.width / 2, this.legSpan / 2, heightTopLevel);
     const railR = new Mesh(
-      new BoxGeometry(LEG_SIZE, this.legSpan + this.outReach, LEG_SIZE),
+      new BoxGeometry(LEG_SIZE, this.legSpan, LEG_SIZE),
       legMaterial
     );
-    railR.position.set(this.width / 4, this.outReach / 2, heightTopLevel);
+    railR.position.set(this.width / 2, this.legSpan / 2, heightTopLevel);
     this.model.add(railL, railR);
-
-    // machine room
-    const machineH = this.width / 5;
-    const machineRoom = new Mesh(
-      new BoxGeometry(this.width / 3, this.legSpan / 3, machineH),
-      legMaterial
-    );
-    machineRoom.position.set(
-      0,
-      -this.legSpan / 4,
-      heightTopLevel + machineH / 1.5
-    );
-    this.model.add(machineRoom);
-
-    // text label
-    const text = this.visualizer.text.createTextMesh(this.id);
-    text.translateZ(machineH * 2);
-    machineRoom.add(text);
 
     // trolley
     const trolleyGeometry = new BoxGeometry(
@@ -206,7 +165,7 @@ export class QuayCrane {
     this.trolley = new Mesh(trolleyGeometry, Render.trolleyMaterial);
     this.trolley.position.set(
       0,
-      this.legSpan + this.outReach / 2,
+      this.legSpan,
       this.height + SPREADER_THICKNESS
     );
     this.model.add(this.trolley);
@@ -216,10 +175,10 @@ export class QuayCrane {
     this.spreader.position.set(0, 0, 0);
     this.trolley.add(this.spreader);
 
-    // container placeholder
-    this.containerPlaceholder = new Object3D();
-    this.containerPlaceholder.position.set(0, 0, -CONTAINER_SIZE_Z / 2);
-    this.spreader.add(this.containerPlaceholder);
+    // text label
+    const text = this.visualizer.text.createTextMesh(this.id);
+    text.translateZ(3);
+    this.trolley.add(text);
 
     this.visualizer.scene.add(this.model);
   }
@@ -241,9 +200,9 @@ export class QuayCrane {
   private onArrive() {
     const finishedJob = this.currentJob;
     this.currentJob = null;
-    this.visualizer.emit<QuayCraneMoveEndEvent>({
-      type: "quaycranemoveend",
-      quayCraneId: this.id,
+    this.visualizer.emit<RtgMoveStartEndEvent>({
+      type: "rtgmoveend",
+      rtgId: this.id,
       job: finishedJob,
     });
   }

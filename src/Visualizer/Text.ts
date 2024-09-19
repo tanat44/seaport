@@ -1,8 +1,9 @@
 //@ts-ignore
+import { Box3, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
+//@ts-ignore
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 //@ts-ignore
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { Box3, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three";
 
 export class Text {
   loader: FontLoader;
@@ -12,7 +13,7 @@ export class Text {
     this.loader = new FontLoader();
   }
 
-  load(url: string = "/gentilis_regular.typeface.json"): Promise<void> {
+  load(url: string = "/helvetiker_bold.typeface.json"): Promise<void> {
     return new Promise(
       (resolve: () => void, reject: (reason: Error) => void) => {
         this.loader.load(

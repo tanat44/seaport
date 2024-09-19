@@ -36,7 +36,7 @@ export class PathPlanner {
       this.pathMesh = [];
     }
 
-    console.log("PathPlanner: from", from, "to", to);
+    // console.log("PathPlanner: from", from, "to", to);
     const controlPoints = this.gridPlanner.findPath(from, to);
     const path = this.makeCurve(controlPoints);
     this.renderPath(controlPoints, path);

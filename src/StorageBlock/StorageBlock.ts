@@ -1,4 +1,4 @@
-import { Box2, Object3D, Vector2, Vector3 } from "three";
+import { Box2, Mesh, Object3D, Vector2, Vector3 } from "three";
 import { Terminal } from "../Terminal/Terminal";
 import {
   CONTAINER_SIZE_X,
@@ -11,7 +11,7 @@ import { StorageCoordinate } from "./StorageCoordinate";
 
 export type Container = {
   id: string;
-  mesh: Object3D;
+  mesh: Mesh;
 };
 
 export type Row = Container[]; // [a, b, ... , c]  a is at the bottom of the vessel, c is at the top
@@ -66,6 +66,13 @@ export class StorageBlock {
     this.mesh = new Object3D();
     this.mesh.position.set(origin.x, origin.y, 0);
     this.terminal.visualizer.scene.add(this.mesh);
+  }
+
+  getContainerId(coordinate: StorageCoordinate): string {
+    const bay = this.bays[coordinate.bay];
+    const row = bay[coordinate.row];
+    const container = row[coordinate.tier];
+    return container.id;
   }
 
   unload(coordinate: StorageCoordinate): Container {

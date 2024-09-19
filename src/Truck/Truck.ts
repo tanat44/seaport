@@ -5,9 +5,17 @@ import {
   MeshBasicMaterial,
   Object3D,
   Vector2,
+  Vector3,
 } from "three";
+import { TruckDriveEndEvent } from "../Event/types";
+import { Container } from "../StorageBlock/StorageBlock";
 import { Terminal } from "../Terminal/Terminal";
-import { CONTAINER_SIZE_X, CONTAINER_SIZE_Y } from "../Terminal/const";
+import {
+  CONTAINER_SIZE_X,
+  CONTAINER_SIZE_Y,
+  CONTAINER_SIZE_Z,
+} from "../Terminal/const";
+import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
 import { TEST_PATH } from "./TestPath";
 
@@ -17,8 +25,8 @@ const TRAILER_MATERIAL = new MeshBasicMaterial({ color: 0x7f86e3 });
 const TRACTOR_MATERIAL = new MeshBasicMaterial({ color: 0x544db0 });
 const KINGPIN_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
 const TRUCK_WIDTH = CONTAINER_SIZE_Y * 1.1;
-const MAX_VELOCITY = 13.8; // 50 kph
-const MAX_ACCELERATION = 3;
+const MAX_VELOCITY = 8.3; // 30 kph
+const MAX_ACCELERATION = 2;
 
 const TRAILER_REAR_AXLE_POSITION = -CONTAINER_SIZE_X / 2 + 1;
 const TRAILER_KINGPIN_DISTANCE = CONTAINER_SIZE_X;
@@ -29,15 +37,29 @@ export class Truck {
 
   terminal: Terminal;
 
-  id: number;
+  id: string;
   trailerModel: Object3D;
   tractorModel: Object3D;
-  pathPhysics?: PathPhysics;
+  pathPhysics: PathPhysics | null;
 
-  constructor(terminal: Terminal) {
+  container: Container | null;
+  containerPlaceholder: Object3D;
+
+  constructor(terminal: Terminal, initialPosition?: Vector3) {
     this.terminal = terminal;
-    this.id = Truck.count++;
+    this.id = `Truck.${Truck.count++}`;
+    this.pathPhysics = null;
+    this.container = null;
     this.createModel();
+
+    if (initialPosition) {
+      this.trailerModel.position.copy(initialPosition);
+    }
+
+    this.terminal.visualizer.onEvent<TruckDriveEndEvent>(
+      `truckdriveend-${this.id}`,
+      (e) => this.onDriveEnd(e)
+    );
   }
 
   drive(controlPoints: Vector2[]) {
@@ -47,6 +69,7 @@ export class Truck {
 
     this.pathPhysics = new PathPhysics(
       this.terminal.visualizer,
+      this.id,
       controlPoints,
       TRAILER_KINGPIN_DISTANCE,
       MAX_VELOCITY,
@@ -59,6 +82,10 @@ export class Truck {
     );
   }
 
+  onDriveEnd(e: TruckDriveEndEvent) {
+    this.pathPhysics = null;
+  }
+
   update(
     positionTrailer: Vector2,
     rotationTrailer: number,
@@ -69,8 +96,35 @@ export class Truck {
     this.tractorModel.rotation.set(0, 0, rotationTractor - rotationTrailer);
   }
 
-  testDrive() {
-    this.drive(TEST_PATH);
+  load(container: Container) {
+    if (this.container)
+      throw new Error("Unable to load container to non empty truck");
+
+    this.container = container;
+    this.containerPlaceholder.add(container.mesh);
+    this.container.mesh.position.set(0, 0, 0);
+    this.container.mesh.material = Render.containerTransitMaterial;
+  }
+
+  unload(): Container {
+    if (!this.container) throw new Error("Unable to unload empty truck");
+
+    const container = this.container;
+    this.container = null;
+    container.mesh.material = Render.containerMaterial;
+    this.containerPlaceholder.remove(container.mesh);
+    return container;
+  }
+
+  get position(): Vector2 {
+    return new Vector2(
+      this.trailerModel.position.x,
+      this.trailerModel.position.y
+    );
+  }
+
+  static containerLoadHeight(): number {
+    return WHEEL_DIAMETER + CONTAINER_SIZE_Z / 2;
   }
 
   private createModel() {
@@ -84,6 +138,11 @@ export class Truck {
     const truckBed = new Mesh(truckBedGeometry, TRAILER_MATERIAL);
     truckBed.position.set(0, 0, WHEEL_DIAMETER);
     this.trailerModel.add(truckBed);
+
+    // container placeholder
+    this.containerPlaceholder = new Object3D();
+    this.containerPlaceholder.position.set(0, 0, CONTAINER_SIZE_Z / 2);
+    truckBed.add(this.containerPlaceholder);
 
     // wheel
     const wheelGeometry = new CylinderGeometry(
@@ -135,6 +194,11 @@ export class Truck {
     );
     this.tractorModel.add(cabin);
 
+    // text label
+    const text = this.terminal.visualizer.text.createTextMesh(this.id);
+    text.translateZ(3);
+    cabin.add(text);
+
     // cabin base
     const cabinBaseLength = TRACTOR_WHEEL_BASE + 2;
     const cabinBaseGeometry = new BoxGeometry(
@@ -162,5 +226,9 @@ export class Truck {
     const wheelFL = wheel.clone();
     wheelFL.position.set(TRACTOR_WHEEL_BASE, halfWidth, 0);
     this.tractorModel.add(wheelFL);
+  }
+
+  private testDrive() {
+    this.drive(TEST_PATH);
   }
 }

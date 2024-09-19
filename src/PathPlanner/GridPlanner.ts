@@ -14,7 +14,7 @@ export class GridPlanner {
   terminal: Terminal;
   layout: Layout;
   grid: Grid;
-  quayCraneSpaces: Map<number, QuayCraneSpace>;
+  quayCraneSpaces: Map<string, QuayCraneSpace>;
 
   constructor(terminal: Terminal, layout: Layout) {
     this.terminal = terminal;
@@ -80,7 +80,7 @@ export class GridPlanner {
     return false;
   }
 
-  private onQuayCraneGantry(quayCraneId: number) {
+  private onQuayCraneGantry(quayCraneId: string) {
     if (!this.grid) return;
 
     const qc = this.terminal.getQuayCrane(quayCraneId);
