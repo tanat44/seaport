@@ -67,21 +67,6 @@ export class Rtg {
     this.listenToEvents();
   }
 
-  public randomMove() {
-    const GANTRY_RANGE = 20;
-    const gantryDistance = Math.random() * GANTRY_RANGE - GANTRY_RANGE / 2;
-    const trolleyDistance = Math.random() * this.legSpan - this.legSpan / 2;
-    const liftDistance = Math.random() * this.height;
-
-    // this.moveTo(
-    //   new Vector3(
-    //     gantryDistance + this.control.position.x,
-    //     trolleyDistance,
-    //     liftDistance
-    //   )
-    // );
-  }
-
   public executeJob(job: RtgJob) {
     if (this.currentJob)
       throw new Error("Cannot assign job to busy quay crane");
