@@ -2,6 +2,7 @@ import { Vector2, Vector3 } from "three";
 import { TruckReleaseEvent } from "../Event/types";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "./Truck";
+import { TruckJob } from "./types";
 
 const TRUCK_COUNT = 10;
 
@@ -46,6 +47,17 @@ export class TruckManager {
         }
       );
     });
+  }
+
+  execute(job: TruckJob) {
+    const truck = this.getTruck(job.truckId);
+
+    console.log(job);
+    truck.execute(job);
+  }
+
+  private isAvailable(truckId: string): boolean {
+    return this.availableTrucks.findIndex((truck) => truck.id === truckId) > -1;
   }
 
   private getClosestTruck(jobPosition: Vector2): Truck | null {

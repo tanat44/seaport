@@ -18,6 +18,7 @@ import {
 import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
 import { TEST_PATH } from "./TestPath";
+import { TruckJob } from "./types";
 
 const WHEEL_DIAMETER = 0.8;
 const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
@@ -42,6 +43,7 @@ export class Truck {
   tractorModel: Object3D;
   pathPhysics: PathPhysics | null;
 
+  currentJob: TruckJob;
   container: Container | null;
   containerPlaceholder: Object3D;
 
@@ -56,10 +58,20 @@ export class Truck {
       this.trailerModel.position.copy(initialPosition);
     }
 
-    this.terminal.visualizer.onEvent<TruckDriveEndEvent>(
-      `truckdriveend-${this.id}`,
-      (e) => this.onDriveEnd(e)
+    this.terminal.visualizer.onEvent<TruckDriveEndEvent>(`truckdriveend`, (e) =>
+      this.onDriveEnd(e)
     );
+  }
+
+  execute(job: TruckJob) {
+    if (this.currentJob) {
+      throw new Error(
+        `Truck ${this.id} has ongoing job. Cannot execute duplicate job`
+      );
+    }
+
+    this.drive(job.controlPoints);
+    this.currentJob = job;
   }
 
   drive(controlPoints: Vector2[]) {
@@ -69,7 +81,7 @@ export class Truck {
 
     this.pathPhysics = new PathPhysics(
       this.terminal.visualizer,
-      this.id,
+      this,
       controlPoints,
       TRAILER_KINGPIN_DISTANCE,
       MAX_VELOCITY,
@@ -82,11 +94,12 @@ export class Truck {
     );
   }
 
-  onDriveEnd(e: TruckDriveEndEvent) {
+  private onDriveEnd(e: TruckDriveEndEvent) {
+    if (e.truckId !== this.id) return;
     this.pathPhysics = null;
   }
 
-  update(
+  private update(
     positionTrailer: Vector2,
     rotationTrailer: number,
     rotationTractor: number

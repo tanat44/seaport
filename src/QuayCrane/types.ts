@@ -4,16 +4,17 @@ import { StorageCoordinate } from "../StorageBlock/StorageCoordinate";
 
 export interface QuayCraneJob {
   position: Vector3;
-  reason: "pickcontainer" | "dropcontainer";
+  reason: "pickcontainerfromvessel" | "dropcontainertotruck";
 }
 
-export interface QuayCranePickContainerJob extends QuayCraneJob {
-  reason: "pickcontainer";
+export interface QuayCranePickContainerFromVesselJob extends QuayCraneJob {
+  reason: "pickcontainerfromvessel";
   cargoCoordinate: StorageCoordinate;
   containerId: string;
 }
 
-export interface QuayCraneDropContainer extends QuayCraneJob {
-  reason: "dropcontainer";
-  container: Container;
+export interface QuayCraneDropContainerToTruckJob extends QuayCraneJob {
+  reason: "dropcontainertotruck";
+  container: Container | undefined;
+  truckId: string | undefined;
 }

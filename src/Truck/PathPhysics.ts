@@ -2,6 +2,7 @@ import { Object3D, Vector2 } from "three";
 import { AnimateEvent, TruckDriveEndEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { Truck } from "./Truck";
 
 type UpdateCallback = (
   positionTrailer: Vector2,
@@ -11,7 +12,7 @@ type UpdateCallback = (
 
 export class PathPhysics {
   visualizer: Visualizer;
-  truckId: string;
+  truck: Truck;
 
   // path trailer
   pathTrailer: Vector2[];
@@ -37,7 +38,7 @@ export class PathPhysics {
 
   constructor(
     visualizer: Visualizer,
-    truckId: string,
+    truck: Truck,
     controlPoints: Vector2[],
     trailerPivotDistance: number,
     maxVelocity: number,
@@ -45,7 +46,7 @@ export class PathPhysics {
     onUpdate: UpdateCallback
   ) {
     this.visualizer = visualizer;
-    this.truckId = truckId;
+    this.truck = truck;
     this.pathTrailer = PathPhysics.resampleEvenSpace(controlPoints);
     this.pathTractor = PathPhysics.pathKingPin(
       this.pathTrailer,
@@ -97,12 +98,9 @@ export class PathPhysics {
       this.meshes.forEach((mesh) => mesh.removeFromParent());
       this.arrived = true;
       this.visualizer.emit<TruckDriveEndEvent>({
-        type: `truckdriveend-${this.truckId}`,
-        truckId: this.truckId,
-      });
-      this.visualizer.emit<TruckDriveEndEvent>({
         type: `truckdriveend`,
-        truckId: this.truckId,
+        truckId: this.truck.id,
+        job: this.truck.currentJob,
       });
 
       return;

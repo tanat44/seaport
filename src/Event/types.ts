@@ -1,7 +1,9 @@
 // Event generic
 
+import { Box2 } from "three";
 import { QuayCraneJob } from "../QuayCrane/types";
 import { RtgJob } from "../RTG/types";
+import { TruckJob } from "../Truck/types";
 
 export interface EventBase {
   type: EventType;
@@ -14,7 +16,6 @@ export type EventType =
   | "quaycranegantry"
   | "rtgmovestart"
   | "rtgmoveend"
-  | `truckdriveend-${string}`
   | "truckdriveend"
   | "truckrelease"
   | `physicsstatechange${string}`;
@@ -35,6 +36,7 @@ export interface QuayCraneMoveEndEvent extends EventBase {
 
 export interface QuayCraneGantryEvent extends EventBase {
   quayCraneId: string;
+  absoluteSpace: Box2;
 }
 
 export interface RtgMoveStartEvent extends EventBase {
@@ -42,13 +44,14 @@ export interface RtgMoveStartEvent extends EventBase {
   job: RtgJob;
 }
 
-export interface RtgMoveStartEndEvent extends EventBase {
+export interface RtgMoveEndEvent extends EventBase {
   rtgId: string;
   job: RtgJob;
 }
 
 export interface TruckDriveEndEvent extends EventBase {
   truckId: string;
+  job: TruckJob;
 }
 
 export interface TruckReleaseEvent extends EventBase {

@@ -10,7 +10,7 @@ import {
 } from "three";
 import {
   AnimateEvent,
-  RtgMoveStartEndEvent,
+  RtgMoveEndEvent,
   RtgMoveStartEvent,
 } from "../Event/types";
 import { Render } from "../Visualizer/Render";
@@ -31,6 +31,7 @@ export class Rtg {
   width: number;
   height: number;
   legSpan: number;
+  origin: Vector3;
   control: RtgControl;
 
   // mesh
@@ -43,7 +44,7 @@ export class Rtg {
 
   constructor(
     visualizer: Visualizer,
-    initialPosition: Vector3,
+    origin: Vector3,
     width: number,
     height: number,
     legSpan: number
@@ -53,15 +54,16 @@ export class Rtg {
     this.width = width;
     this.height = height;
     this.legSpan = legSpan;
+    this.origin = origin.clone();
     this.control = new RtgControl(
       visualizer,
       this,
-      new Vector3(initialPosition.x, this.width, height)
+      new Vector3(origin.x, this.width, height)
     );
     this.control.onArrive = () => this.onArrive();
     this.currentJob = null;
 
-    this.buildModel(initialPosition);
+    this.buildModel(origin);
     this.listenToEvents();
   }
 
@@ -200,7 +202,7 @@ export class Rtg {
   private onArrive() {
     const finishedJob = this.currentJob;
     this.currentJob = null;
-    this.visualizer.emit<RtgMoveStartEndEvent>({
+    this.visualizer.emit<RtgMoveEndEvent>({
       type: "rtgmoveend",
       rtgId: this.id,
       job: finishedJob,

@@ -35,7 +35,7 @@ export class GridPlanner {
     this.terminal.visualizer.onEvent<QuayCraneGantryEvent>(
       "quaycranegantry",
       (e) => {
-        this.onQuayCraneGantry(e.quayCraneId);
+        this.onQuayCraneGantry(e);
       }
     );
   }
@@ -80,10 +80,10 @@ export class GridPlanner {
     return false;
   }
 
-  private onQuayCraneGantry(quayCraneId: string) {
+  private onQuayCraneGantry(e: QuayCraneGantryEvent) {
     if (!this.grid) return;
 
-    const qc = this.terminal.getQuayCrane(quayCraneId);
+    const quayCraneId = e.quayCraneId;
     if (!this.quayCraneSpaces.has(quayCraneId)) {
       this.quayCraneSpaces.set(
         quayCraneId,
@@ -92,6 +92,6 @@ export class GridPlanner {
     }
 
     const space = this.quayCraneSpaces.get(quayCraneId);
-    space.updateGrid(qc.absoluteSpace, this.grid);
+    space.updateGrid(e.absoluteSpace, this.grid);
   }
 }

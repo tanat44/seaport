@@ -31,7 +31,11 @@ export class QuayCraneControl extends PhysicsState3D {
     const id = quayCrane.id;
 
     this.visualizer.onEvent(`physicsstatechange${id}.x`, () => {
-      this.visualizer.emit({ type: "quaycranegantry", quayCraneId: id });
+      this.visualizer.emit({
+        type: "quaycranegantry",
+        quayCraneId: id,
+        absoluteSpace: quayCrane.absoluteSpace,
+      });
     });
   }
 

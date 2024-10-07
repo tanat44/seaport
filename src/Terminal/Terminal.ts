@@ -1,17 +1,29 @@
 import { Vector2, Vector3 } from "three";
-import { QuayCraneMoveEndEvent, TruckDriveEndEvent } from "../Event/types";
+import {
+  QuayCraneMoveEndEvent,
+  RtgMoveEndEvent,
+  TruckDriveEndEvent,
+} from "../Event/types";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { QuayCrane } from "../QuayCrane/QuayCrane";
-import { QuayCraneJob, QuayCranePickContainerJob } from "../QuayCrane/types";
-import { Rtg } from "../RTG/Rtg";
+import { QuayCraneManager } from "../QuayCrane/QuayCraneManager";
+import {
+  QuayCraneDropContainerToTruckJob,
+  QuayCraneJob,
+  QuayCranePickContainerFromVesselJob,
+} from "../QuayCrane/types";
+import { RtgManager } from "../RTG/RtgManager";
+import {
+  RtgDropContainerInYardJob,
+  RtgPickContainerFromTruckJob,
+} from "../RTG/types";
 import { Truck } from "../Truck/Truck";
 import { TruckManager } from "../Truck/TruckManager";
+import { TruckContainerMoveToYardJob, TruckEmptyMoveJob } from "../Truck/types";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { YardBlock } from "../Yard/YardBlock";
 import { YardManager } from "../Yard/YardManager";
 import { LayoutManager } from "./LayoutManager";
-import { CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "./const";
 
 const VESSEL_NAME = "Vessel-Polo";
 export class Terminal {
@@ -24,23 +36,13 @@ export class Terminal {
   yardManager: YardManager;
 
   // equipment
-  quayCranes: Map<string, QuayCrane>;
-  rtgs: Map<string, Rtg>;
+  quayCraneManager: QuayCraneManager;
+  rtgManager: RtgManager;
   truckManager: TruckManager;
-
-  // operation
-  quayCraneVesselAssignment: Map<QuayCrane, Vessel>;
-  quayCraneJobs: Map<QuayCrane, QuayCraneJob[]>;
-  containerIdTruckAssignment: Map<string, Truck>;
-  rtgYardAssignment: Map<Rtg, YardBlock>;
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
     this.layoutManager = new LayoutManager(visualizer);
-    this.quayCraneVesselAssignment = new Map();
-    this.quayCraneJobs = new Map();
-    this.containerIdTruckAssignment = new Map();
-    this.rtgYardAssignment = new Map();
     this.init();
   }
 
@@ -62,31 +64,16 @@ export class Terminal {
     this.yardManager = new YardManager(this, layout);
 
     // init quay cranes
-    this.quayCranes = new Map();
-    for (const qcOrigin of layout.quayCraneOrigins) {
-      const qc = this.addQuayCrane(qcOrigin);
-    }
+    this.quayCraneManager = new QuayCraneManager(this, layout.quayCraneOrigins);
     this.visualizer.onEvent<QuayCraneMoveEndEvent>("quaycranemoveend", (e) =>
       this.onQuayCraneMoveEnd(e)
     );
 
     // init rtgs
-    this.rtgs = new Map();
-    for (const yard of this.yardManager.allYards) {
-      const truckLaneSize = CONTAINER_SIZE_Y * 2;
-      const initPosition = yard.position;
-      initPosition.y -= truckLaneSize;
-      const rtg = new Rtg(
-        this.visualizer,
-        initPosition,
-        7,
-        yard.height + CONTAINER_SIZE_Z,
-        yard.depth + truckLaneSize
-      );
-      // rtg.executeJob({ position: new Vector3(0, 0, 0), reason: "move" });
-      this.rtgs.set(rtg.id, rtg);
-      this.rtgYardAssignment.set(rtg, yard);
-    }
+    this.rtgManager = new RtgManager(this, this.yardManager.allYards);
+    this.visualizer.onEvent<RtgMoveEndEvent>("rtgmoveend", (e) =>
+      this.onRtgMoveEnd(e)
+    );
 
     // init truck
     this.truckManager = new TruckManager(this);
@@ -98,14 +85,9 @@ export class Terminal {
     this.operate();
   }
 
-  getQuayCrane(id: string) {
-    return this.quayCranes.get(id);
-  }
-
   private operate() {
     const vessel = this.vessels.get(VESSEL_NAME);
-    const quayCrane = this.findQuayCraneForVessel(vessel);
-    this.quayCraneVesselAssignment.set(quayCrane, vessel);
+    const quayCrane = this.quayCraneManager.assignQuayCrane(vessel);
 
     // generate qc jobs
     const unloadPlan = vessel.planFullUnload();
@@ -120,9 +102,9 @@ export class Terminal {
         jobPosition.y - qcY,
         jobPosition.z
       );
-      const pickJob: QuayCranePickContainerJob = {
+      const pickJob: QuayCranePickContainerFromVesselJob = {
         position: pickPosition,
-        reason: "pickcontainer",
+        reason: "pickcontainerfromvessel",
         cargoCoordinate,
         containerId: vessel.getContainerId(cargoCoordinate),
       };
@@ -134,57 +116,26 @@ export class Terminal {
         0,
         Truck.containerLoadHeight()
       );
-      qcJobs.push({
+      const dropJob: QuayCraneDropContainerToTruckJob = {
+        reason: "dropcontainertotruck",
         position: dropPosition,
-        reason: "dropcontainer",
-      });
+        container: undefined,
+        truckId: undefined,
+      };
+      qcJobs.push(dropJob);
     }
 
-    this.quayCraneJobs.set(quayCrane, qcJobs);
+    this.quayCraneManager.queueJobs(quayCrane.id, qcJobs);
     this.executeNextQuayCraneJob(quayCrane);
   }
 
-  private findQuayCraneForVessel(vessel: Vessel): QuayCrane {
-    const vesselSpace = vessel.absoluteSpace;
-    const vesselCenter = new Vector2();
-    vesselSpace.getCenter(vesselCenter);
-
-    let minDistance = Infinity;
-    let bestQc: QuayCrane = null;
-
-    for (const [_, qc] of this.quayCranes) {
-      const qcSpace = qc.absoluteSpace;
-      const center = new Vector2();
-      qcSpace.getCenter(center);
-
-      const distance = Math.abs(vesselCenter.x - center.x);
-      if (distance < minDistance) {
-        minDistance = distance;
-        bestQc = qc;
-      }
-    }
-    return bestQc;
-  }
-
   private executeNextQuayCraneJob(quayCrane: QuayCrane) {
-    const jobs = this.quayCraneJobs.get(quayCrane);
-
-    if (jobs === undefined || jobs.length === 0) {
-      console.log("No more job for quaycrane", quayCrane.id);
-      return;
-    }
-
-    const vessel = this.quayCraneVesselAssignment.get(quayCrane);
-    if (!vessel)
-      throw new Error("No vessel assign for this quay crane to work on");
-
-    // do the first job in queue
-    const job = jobs.shift();
+    const job = this.quayCraneManager.nextJob(quayCrane.id);
     quayCrane.executeJob(job);
 
     // assign truck to qc when qc start moving to pick container
-    if (job.reason === "pickcontainer") {
-      const pickJob = job as QuayCranePickContainerJob;
+    if (job.reason === "pickcontainerfromvessel") {
+      const pickJob = job as QuayCranePickContainerFromVesselJob;
       const underQcPosition = new Vector2(
         quayCrane.position.x,
         quayCrane.position.y
@@ -194,32 +145,34 @@ export class Terminal {
           truck.position,
           underQcPosition
         );
-        truck.drive(drivePath);
-        this.containerIdTruckAssignment.set(pickJob.containerId, truck);
+
+        // create truck empty move job
+        const truckJob: TruckEmptyMoveJob = {
+          reason: "emptymove",
+          truckId: truck.id,
+          controlPoints: drivePath,
+        };
+        this.truckManager.execute(truckJob);
       });
     }
   }
 
-  private addQuayCrane(position: Vector3): QuayCrane {
-    const qc = new QuayCrane(this.visualizer, position);
-    this.quayCranes.set(qc.id, qc);
-    return qc;
-  }
-
   private onQuayCraneMoveEnd(e: QuayCraneMoveEndEvent) {
-    const qc = this.quayCranes.get(e.quayCraneId);
+    // console.log(`QC#${e.quayCraneId} - Finished <${e.job.reason}>`);
+    const qc = this.quayCraneManager.getQuayCrane(e.quayCraneId);
     if (!qc) throw new Error("Cannot move unknown quay crane");
 
-    // console.log(`QC#${e.quayCraneId} - Finished <${e.job.reason}>`);
+    // qc moved to pick container position at vessel
 
-    if (e.job.reason === "pickcontainer") {
-      // pick container from vessel
-      const job = e.job as QuayCranePickContainerJob;
-      const vessel = this.quayCraneVesselAssignment.get(qc);
+    if (e.job.reason === "pickcontainerfromvessel") {
+      const job = e.job as QuayCranePickContainerFromVesselJob;
+      const vessel = this.quayCraneManager.getAssignedVessel(e.quayCraneId);
       const container = vessel.unload(job.cargoCoordinate);
       qc.pickContainer(container);
-    } else if (e.job.reason === "dropcontainer") {
-      // qc drop container
+
+      // qc moved to drop position on truck
+    } else if (e.job.reason === "dropcontainertotruck") {
+      const job = e.job as QuayCraneDropContainerToTruckJob;
       const container = qc.dropContainer();
 
       // plan truck path
@@ -228,32 +181,62 @@ export class Terminal {
       const to = this.yardManager.getContainerHandlingPoint(yardCoordinate);
       const drivePath = this.pathPlanner.plan(from, to);
 
-      const truck = this.containerIdTruckAssignment.get(container.id);
-      if (!truck)
-        throw new Error(
-          "No truck is assign to this drop container from quay crane"
-        );
-
-      truck.load(container);
-      truck.drive(drivePath);
-      this.containerIdTruckAssignment.delete(container.id);
+      // create truck job to deliver container to yard
+      const truckJob: TruckContainerMoveToYardJob = {
+        reason: "movecontainertoyard",
+        controlPoints: drivePath,
+        truckId: job.truckId,
+        yardCoordinate,
+        container,
+      };
+      this.truckManager.execute(truckJob);
     }
 
     this.executeNextQuayCraneJob(qc);
   }
 
   private onTruckDriveEnd(e: TruckDriveEndEvent) {
-    for (const [containerId, truck] of this.containerIdTruckAssignment) {
-      if (truck.id === e.truckId) {
-        // truck is waiting for container.
-        return;
-      }
-    }
-
-    // this truck doesn't wait for container, release it to available pool
-    this.truckManager.releaseTruck(e.truckId);
-
     const truck = this.truckManager.getTruck(e.truckId);
-    truck.unload();
+
+    // truck arrive at yard. ready to unload to rtg
+    if (e.job.reason === "movecontainertoyard") {
+      const job = e.job as TruckContainerMoveToYardJob;
+
+      // create rtg job to prepare to pickup from truck
+      const rtgJob: RtgPickContainerFromTruckJob = {
+        reason: "pickcontainerfromtruck",
+        rtgId: this.rtgManager.findRtg(job.yardCoordinate.yardId),
+        position: new Vector3(truck.position.x, truck.position.y, 0),
+        truckId: e.truckId,
+        yardCoordinate: job.yardCoordinate,
+      };
+      this.rtgManager.queueRtgJob(rtgJob);
+    }
+  }
+
+  private onRtgMoveEnd(e: RtgMoveEndEvent) {
+    if (e.job.reason === "pickcontainerfromtruck") {
+      const job = e.job as RtgPickContainerFromTruckJob;
+
+      // unload container
+      const truck = this.truckManager.getTruck(job.truckId);
+      if (!truck) throw new Error("Rtg move to truck but cannot find truck");
+      const container = truck.unload();
+      this.truckManager.releaseTruck(job.truckId);
+
+      // create storage job for rtg
+      const yardId = this.rtgManager.findYard(job.rtgId);
+      const position = job.yardCoordinate.relativePosition;
+      const storageJob: RtgDropContainerInYardJob = {
+        reason: "dropcontainerinyard",
+        rtgId: job.rtgId,
+        position,
+        container,
+      };
+      this.rtgManager.queueRtgJob(storageJob);
+
+      // release truck
+      this.truckManager.releaseTruck(job.truckId);
+    }
   }
 }
