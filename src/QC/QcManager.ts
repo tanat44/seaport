@@ -1,16 +1,16 @@
 import { Vector2, Vector3 } from "three";
 import { Terminal } from "../Terminal/Terminal";
 import { Vessel } from "../Vessel/Vessel";
-import { QuayCrane } from "./QuayCrane";
-import { QuayCraneJob } from "./types";
+import { Qc } from "./Qc";
+import { QcDropContainerToTruckJob, QcJob } from "./types";
 
-export class QuayCraneManager {
+export class QcManager {
   private terminal: Terminal;
-  private quayCranes: Map<string, QuayCrane>;
+  private quayCranes: Map<string, Qc>;
 
   // operation
-  private vessels: Map<QuayCrane, Vessel>;
-  private jobQueues: Map<QuayCrane, QuayCraneJob[]>;
+  private vessels: Map<Qc, Vessel>;
+  private jobQueues: Map<Qc, QcJob[]>;
 
   constructor(terminal: Terminal, origins: Vector3[]) {
     this.terminal = terminal;
@@ -29,13 +29,13 @@ export class QuayCraneManager {
     return this.quayCranes.get(id);
   }
 
-  assignQuayCrane(vessel: Vessel): QuayCrane {
+  assignQuayCrane(vessel: Vessel): Qc {
     const qc = this.findQuayCraneForVessel(vessel);
     this.vessels.set(qc, vessel);
     return qc;
   }
 
-  queueJobs(quayCraneId: string, jobs: QuayCraneJob[]) {
+  queueJobs(quayCraneId: string, jobs: QcJob[]) {
     const queue = this.jobQueues.get(this.getQuayCrane(quayCraneId));
 
     if (!queue)
@@ -51,7 +51,7 @@ export class QuayCraneManager {
     return this.vessels.get(qc);
   }
 
-  nextJob(quayCraneId: string): QuayCraneJob {
+  nextJob(quayCraneId: string): QcJob {
     const qc = this.getQuayCrane(quayCraneId);
     const jobs = this.jobQueues.get(qc);
 
@@ -60,19 +60,34 @@ export class QuayCraneManager {
     return jobs.shift();
   }
 
-  private addQuayCrane(position: Vector3): QuayCrane {
-    const qc = new QuayCrane(this.terminal.visualizer, position);
+  assignTruckIdToNextDropJob(quayCraneId: string, truckId: string) {
+    const qc = this.getQuayCrane(quayCraneId);
+    const jobs = this.jobQueues.get(qc);
+
+    if (!qc || jobs.length === 0)
+      throw new Error(`Cannot assign truck id to next drop job`);
+
+    const firstJob = jobs[0];
+    if (firstJob.reason !== "qcdropcontainertotruck")
+      throw new Error(`Next quay crane job isn't a drop job`);
+
+    const dropJob = firstJob as QcDropContainerToTruckJob;
+    dropJob.truckId = truckId;
+  }
+
+  private addQuayCrane(position: Vector3): Qc {
+    const qc = new Qc(this.terminal.visualizer, position);
     this.quayCranes.set(qc.id, qc);
     return qc;
   }
 
-  private findQuayCraneForVessel(vessel: Vessel): QuayCrane {
+  private findQuayCraneForVessel(vessel: Vessel): Qc {
     const vesselSpace = vessel.absoluteSpace;
     const vesselCenter = new Vector2();
     vesselSpace.getCenter(vesselCenter);
 
     let minDistance = Infinity;
-    let bestQc: QuayCrane = null;
+    let bestQc: Qc = null;
 
     for (const [_, qc] of this.quayCranes) {
       const qcSpace = qc.absoluteSpace;

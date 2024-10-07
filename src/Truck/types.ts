@@ -5,15 +5,15 @@ import { YardCoordinate } from "../Yard/YardCoordinate";
 export interface TruckJob {
   truckId: string;
   controlPoints: Vector2[];
-  reason: "movecontainertoyard" | "emptymove";
+  reason: "truckmovecontainertoyard" | "truckemptymove";
 }
 
 export interface TruckEmptyMoveJob extends TruckJob {
-  reason: "emptymove";
+  reason: "truckemptymove";
 }
 
 export interface TruckContainerMoveToYardJob extends TruckJob {
-  reason: "movecontainertoyard";
+  reason: "truckmovecontainertoyard";
   container: Container;
   yardCoordinate: YardCoordinate;
 }

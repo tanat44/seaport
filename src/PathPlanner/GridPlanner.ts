@@ -1,6 +1,6 @@
 import { Vector2 } from "three";
-import { QuayCraneGantryEvent } from "../Event/types";
-import { QuayCraneSpace } from "../QuayCrane/QuayCraneSpace";
+import { QcGantryEvent } from "../Event/types";
+import { QcSpace } from "../QC/QcSpace";
 import { Terminal } from "../Terminal/Terminal";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
@@ -14,7 +14,7 @@ export class GridPlanner {
   terminal: Terminal;
   layout: Layout;
   grid: Grid;
-  quayCraneSpaces: Map<string, QuayCraneSpace>;
+  quayCraneSpaces: Map<string, QcSpace>;
 
   constructor(terminal: Terminal, layout: Layout) {
     this.terminal = terminal;
@@ -32,12 +32,9 @@ export class GridPlanner {
     }
 
     this.quayCraneSpaces = new Map();
-    this.terminal.visualizer.onEvent<QuayCraneGantryEvent>(
-      "quaycranegantry",
-      (e) => {
-        this.onQuayCraneGantry(e);
-      }
-    );
+    this.terminal.visualizer.onEvent<QcGantryEvent>("qcgantry", (e) => {
+      this.onQuayCraneGantry(e);
+    });
   }
 
   findPath(from: Vector2, to: Vector2) {
@@ -80,14 +77,14 @@ export class GridPlanner {
     return false;
   }
 
-  private onQuayCraneGantry(e: QuayCraneGantryEvent) {
+  private onQuayCraneGantry(e: QcGantryEvent) {
     if (!this.grid) return;
 
     const quayCraneId = e.quayCraneId;
     if (!this.quayCraneSpaces.has(quayCraneId)) {
       this.quayCraneSpaces.set(
         quayCraneId,
-        new QuayCraneSpace(this.terminal.visualizer)
+        new QcSpace(this.terminal.visualizer)
       );
     }
 

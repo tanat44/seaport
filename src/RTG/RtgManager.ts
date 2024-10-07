@@ -41,7 +41,7 @@ export class RtgManager {
 
       // move to yard origin
       const job: RtgEmptyMoveJob = {
-        reason: "emptymove",
+        reason: "rtgemptymove",
         rtgId: rtg.id,
         position: yard.position,
       };

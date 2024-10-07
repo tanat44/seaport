@@ -5,20 +5,23 @@ import { YardCoordinate } from "../Yard/YardCoordinate";
 export interface RtgJob {
   rtgId: string;
   position: Vector3;
-  reason: "pickcontainerfromtruck" | "dropcontainerinyard" | "emptymove";
+  reason:
+    | "rtgpickcontainerfromtruck"
+    | "rtgdropcontainerinyard"
+    | "rtgemptymove";
 }
 
 export interface RtgEmptyMoveJob extends RtgJob {
-  reason: "emptymove";
+  reason: "rtgemptymove";
 }
 
 export interface RtgPickContainerFromTruckJob extends RtgJob {
-  reason: "pickcontainerfromtruck";
+  reason: "rtgpickcontainerfromtruck";
   truckId: string;
   yardCoordinate: YardCoordinate;
 }
 
 export interface RtgDropContainerInYardJob extends RtgJob {
-  reason: "dropcontainerinyard";
+  reason: "rtgdropcontainerinyard";
   container: Container;
 }

@@ -8,7 +8,7 @@ import { Visualizer } from "../Visualizer/Visualizer";
 
 const HIGHLIGHT_MESH_HEIGHT = 0.5;
 
-export class QuayCraneSpace {
+export class QcSpace {
   visualizer: Visualizer;
   occupyCells: Set<string>;
   gridBox: GridBox;

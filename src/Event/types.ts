@@ -1,7 +1,7 @@
 // Event generic
 
 import { Box2 } from "three";
-import { QuayCraneJob } from "../QuayCrane/types";
+import { QcJob } from "../QC/types";
 import { RtgJob } from "../RTG/types";
 import { TruckJob } from "../Truck/types";
 
@@ -11,9 +11,8 @@ export interface EventBase {
 
 export type EventType =
   | "animate"
-  | "quaycranemovestart"
-  | "quaycranemoveend"
-  | "quaycranegantry"
+  | "qcmoveend"
+  | "qcgantry"
   | "rtgmovestart"
   | "rtgmoveend"
   | "truckdriveend"
@@ -24,17 +23,12 @@ export interface AnimateEvent extends EventBase {
   deltaTime: number;
 }
 
-export interface QuayCraneMoveStartEvent extends EventBase {
+export interface QcMoveEndEvent extends EventBase {
   quayCraneId: string;
-  job: QuayCraneJob;
+  job: QcJob;
 }
 
-export interface QuayCraneMoveEndEvent extends EventBase {
-  quayCraneId: string;
-  job: QuayCraneJob;
-}
-
-export interface QuayCraneGantryEvent extends EventBase {
+export interface QcGantryEvent extends EventBase {
   quayCraneId: string;
   absoluteSpace: Box2;
 }

@@ -2,7 +2,7 @@ import { Vector3 } from "three";
 import { PhysicsState3D } from "../Physics/PhysicsState3D";
 import { Trajectory } from "../Physics/types";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { QuayCrane } from "./QuayCrane";
+import { Qc } from "./Qc";
 
 const Z_OVERSHOOT = 2;
 
@@ -10,15 +10,11 @@ const SPREADER_MAX_ACCEL = 2;
 const TROLLY_MAX_ACCEL = 1;
 const GANTRY_MAX_ACCEL = 0.5;
 
-export class QuayCraneControl extends PhysicsState3D {
-  crane: QuayCrane;
+export class QcControl extends PhysicsState3D {
+  crane: Qc;
   onArrive: () => void;
 
-  constructor(
-    visualizer: Visualizer,
-    quayCrane: QuayCrane,
-    initialPosition: Vector3
-  ) {
+  constructor(visualizer: Visualizer, quayCrane: Qc, initialPosition: Vector3) {
     super(
       visualizer,
       undefined,
@@ -32,7 +28,7 @@ export class QuayCraneControl extends PhysicsState3D {
 
     this.visualizer.onEvent(`physicsstatechange${id}.x`, () => {
       this.visualizer.emit({
-        type: "quaycranegantry",
+        type: "qcgantry",
         quayCraneId: id,
         absoluteSpace: quayCrane.absoluteSpace,
       });

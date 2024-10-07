@@ -8,22 +8,18 @@ import {
   Vector2,
   Vector3,
 } from "three";
-import {
-  AnimateEvent,
-  QuayCraneMoveEndEvent,
-  QuayCraneMoveStartEvent,
-} from "../Event/types";
+import { AnimateEvent, QcMoveEndEvent } from "../Event/types";
 import { Container } from "../StorageBlock/StorageBlock";
 import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { QuayCraneControl } from "./QuayCraneControl";
-import { QuayCraneJob } from "./types";
+import { QcControl } from "./QcControl";
+import { QcJob } from "./types";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
-export class QuayCrane {
+export class Qc {
   static count = 0;
 
   visualizer: Visualizer;
@@ -34,7 +30,7 @@ export class QuayCrane {
   height: number;
   legSpan: number;
   outReach: number;
-  control: QuayCraneControl;
+  control: QcControl;
 
   // mesh
   model: Object3D; // root mesh
@@ -43,7 +39,7 @@ export class QuayCrane {
   containerPlaceholder: Object3D;
 
   // operation
-  currentJob: QuayCraneJob | null;
+  currentJob: QcJob | null;
   container: Container | null;
 
   constructor(
@@ -55,12 +51,12 @@ export class QuayCrane {
     outReach: number = 20
   ) {
     this.visualizer = visualizer;
-    this.id = `QC.${++QuayCrane.count}`;
+    this.id = `QC.${++Qc.count}`;
     this.width = width;
     this.height = height;
     this.legSpan = legSpan;
     this.outReach = outReach;
-    this.control = new QuayCraneControl(
+    this.control = new QcControl(
       visualizer,
       this,
       new Vector3(initialPosition.x, 0, height / 2)
@@ -89,7 +85,7 @@ export class QuayCrane {
     // );
   }
 
-  public executeJob(job: QuayCraneJob) {
+  public executeJob(job: QcJob) {
     if (this.currentJob)
       throw new Error("Cannot assign job to busy quay crane");
 
@@ -105,11 +101,6 @@ export class QuayCrane {
 
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
-    this.visualizer.emit<QuayCraneMoveStartEvent>({
-      type: "quaycranemovestart",
-      quayCraneId: this.id,
-      job,
-    });
     this.currentJob = job;
   }
 
@@ -241,8 +232,8 @@ export class QuayCrane {
   private onArrive() {
     const finishedJob = this.currentJob;
     this.currentJob = null;
-    this.visualizer.emit<QuayCraneMoveEndEvent>({
-      type: "quaycranemoveend",
+    this.visualizer.emit<QcMoveEndEvent>({
+      type: "qcmoveend",
       quayCraneId: this.id,
       job: finishedJob,
     });

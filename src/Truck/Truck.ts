@@ -43,7 +43,7 @@ export class Truck {
   tractorModel: Object3D;
   pathPhysics: PathPhysics | null;
 
-  currentJob: TruckJob;
+  currentJob: TruckJob | null;
   container: Container | null;
   containerPlaceholder: Object3D;
 
@@ -96,6 +96,7 @@ export class Truck {
 
   private onDriveEnd(e: TruckDriveEndEvent) {
     if (e.truckId !== this.id) return;
+    this.currentJob = null;
     this.pathPhysics = null;
   }
 
