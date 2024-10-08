@@ -31,6 +31,11 @@ export class TruckManager {
     console.log("release truck: ", truckId);
     const truck = this.trucks.get(truckId);
     this.availableTrucks.push(truck);
+    const releaseEvent: TruckReleaseEvent = {
+      type: "truckrelease",
+      truckId: truckId,
+    };
+    this.terminal.visualizer.emit(releaseEvent);
   }
 
   getAvailableTruck(jobPosition: Vector2): Promise<Truck> {
@@ -51,8 +56,6 @@ export class TruckManager {
 
   execute(job: TruckJob) {
     const truck = this.getTruck(job.truckId);
-
-    console.log(job);
     truck.execute(job);
   }
 

@@ -1,6 +1,5 @@
 import { Vector2 } from "three";
 import { Layout } from "../PathPlanner/types";
-import { StorageCoordinate } from "../StorageBlock/StorageCoordinate";
 import { CONTAINER_SIZE_Z, YARD_MAX_TIER } from "../Terminal/const";
 import { Terminal } from "../Terminal/Terminal";
 import { YardBlock } from "./YardBlock";
@@ -38,11 +37,7 @@ export class YardManager {
   getContainerHandlingPoint(coordinate: YardCoordinate): Vector2 {
     const yard = this.yardBlocks.get(coordinate.yardId);
     if (!yard) throw new Error("Yard doesn't exist");
-
-    // handling at same bay, row -1, tier 0
-    const handlingCoordinate = new StorageCoordinate(coordinate.bay, -1, 0);
-    const pos = handlingCoordinate.relativePosition.add(yard.position);
-    return new Vector2(pos.x, pos.y);
+    return yard.getContainerHandlingPoint(coordinate);
   }
 
   get allYards(): YardBlock[] {

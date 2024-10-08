@@ -37,7 +37,7 @@ export class GridPlanner {
     });
   }
 
-  findPath(from: Vector2, to: Vector2) {
+  findPath(from: Vector2, to: Vector2): Vector2[] {
     if (!this.isDrivable(from))
       throw new Error("Cannot find path from non drivable point");
 
@@ -57,7 +57,12 @@ export class GridPlanner {
     // simplify2
     const simplify = new SimplifyPath2(this.grid);
     const simplePath2 = simplify.simplify(simplePath1);
-    return simplePath2.map((pos) => pos.toVector2(GRID_SIZE));
+
+    // replace first and last with exact from and to position
+    const simplifiedPath = simplePath2.map((pos) => pos.toVector2(GRID_SIZE));
+    simplifiedPath[0].copy(from);
+    simplifiedPath[simplifiedPath.length - 1].copy(to);
+    return simplifiedPath;
   }
 
   isDrivable(pos: Vector2): boolean {

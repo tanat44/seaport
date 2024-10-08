@@ -1,3 +1,4 @@
+import { Vector3 } from "three";
 import { RtgMoveEndEvent } from "../Event/types";
 import { CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Terminal } from "../Terminal/Terminal";
@@ -32,21 +33,25 @@ export class RtgManager {
         yard.depth + truckLaneSize
       );
       this.rtgs.set(rtg.id, rtg);
-      this.terminal.visualizer.onEvent<RtgMoveEndEvent>("rtgmoveend", (e) =>
-        this.onmoveend(e)
-      );
 
       // assign rtg to yard
       this.rtgYardAssignment.set(rtg, yard);
+
+      // init job queue
+      this.jobQueues.set(rtg, []);
 
       // move to yard origin
       const job: RtgEmptyMoveJob = {
         reason: "rtgemptymove",
         rtgId: rtg.id,
-        position: yard.position,
+        position: new Vector3(0, 0, rtg.height),
       };
-      this.jobQueues.set(rtg, [job]);
+      rtg.execute(job);
     }
+
+    this.terminal.visualizer.onEvent<RtgMoveEndEvent>("rtgmoveend", (e) =>
+      this.onMoveEnd(e)
+    );
   }
 
   queueRtgJob(job: RtgJob) {
@@ -55,8 +60,8 @@ export class RtgManager {
     if (!jobQueue) throw new Error("No job queue for rtg id: " + job.rtgId);
 
     // execute immediately if rtg is idle
-    if (jobQueue.length === 0) {
-      rtg.executeJob(job);
+    if (!rtg.busy) {
+      rtg.execute(job);
     } else {
       jobQueue.push(job);
     }
@@ -69,23 +74,27 @@ export class RtgManager {
     return undefined;
   }
 
-  findYard(rtgId: string): string {
+  findYard(rtgId: string): YardBlock {
     const rtg = this.rtgs.get(rtgId);
     const yard = this.rtgYardAssignment.get(rtg);
 
     if (!rtg || !yard) throw new Error("Unable to find yard for rtg id");
 
-    return yard.id;
+    return yard;
   }
 
-  private onmoveend(e: RtgMoveEndEvent) {
+  getRtg(rtgId: string): Rtg {
+    return this.rtgs.get(rtgId);
+  }
+
+  private onMoveEnd(e: RtgMoveEndEvent) {
     const rtg = this.rtgs.get(e.rtgId);
     const jobQueue = this.jobQueues.get(rtg);
 
     // do next job
     if (jobQueue.length > 0) {
       const nextJob = jobQueue.shift();
-      rtg.executeJob(nextJob);
+      rtg.execute(nextJob);
     }
   }
 }

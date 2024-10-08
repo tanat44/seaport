@@ -13,6 +13,8 @@ import {
   RtgMoveEndEvent,
   RtgMoveStartEvent,
 } from "../Event/types";
+import { Container } from "../StorageBlock/StorageBlock";
+import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { RtgControl } from "./RtgControl";
@@ -38,9 +40,11 @@ export class Rtg {
   model: Object3D; // root mesh
   trolley: Mesh;
   spreader: Mesh;
+  containerPlaceholder: Object3D;
 
   // operation
   currentJob: RtgJob | null;
+  container: Container | null;
 
   constructor(
     visualizer: Visualizer,
@@ -55,11 +59,7 @@ export class Rtg {
     this.height = height;
     this.legSpan = legSpan;
     this.origin = origin.clone();
-    this.control = new RtgControl(
-      visualizer,
-      this,
-      new Vector3(origin.x, this.width, height)
-    );
+    this.control = new RtgControl(visualizer, this, new Vector3(0, 0, height));
     this.control.onArrive = () => this.onArrive();
     this.currentJob = null;
 
@@ -67,14 +67,12 @@ export class Rtg {
     this.listenToEvents();
   }
 
-  public executeJob(job: RtgJob) {
-    if (this.currentJob)
-      throw new Error("Cannot assign job to busy quay crane");
+  public execute(job: RtgJob) {
+    if (this.currentJob) throw new Error("Cannot assign job to busy rtg");
 
     // check if it's a valid job
-    if (job.position.y < -(this.legSpan / 2))
-      throw new Error("Cannot move trolley too far back");
-    if (job.position.y > this.legSpan / 2)
+    if (job.position.y < 0) throw new Error("Cannot move trolley too far back");
+    if (job.position.y > this.legSpan)
       throw new Error("Cannot move trolley too far forward");
     if (job.position.z < 0)
       throw new Error("Cannot move spreader under ground");
@@ -102,6 +100,24 @@ export class Rtg {
 
   public get position(): Vector3 {
     return this.model.position.clone();
+  }
+
+  get busy(): boolean {
+    return this.currentJob && true;
+  }
+
+  public pickContainer(container: Container) {
+    this.container = container;
+    this.containerPlaceholder.add(this.container.mesh);
+    this.container.mesh.position.set(0, 0, 0);
+    this.container.mesh.material = Render.containerTransitMaterial;
+  }
+
+  public dropContainer(): Container {
+    const container = this.container;
+    this.container = null;
+    this.containerPlaceholder.remove(container.mesh);
+    return container;
   }
 
   private buildModel(initialPosition: Vector3) {
@@ -150,17 +166,18 @@ export class Rtg {
       SPREADER_THICKNESS
     );
     this.trolley = new Mesh(trolleyGeometry, Render.trolleyMaterial);
-    this.trolley.position.set(
-      0,
-      this.legSpan,
-      this.height + SPREADER_THICKNESS
-    );
+    this.trolley.position.set(0, 0, this.height + SPREADER_THICKNESS);
     this.model.add(this.trolley);
 
     // spreader
     this.spreader = new Mesh(trolleyGeometry, Render.spreaderMaterial);
     this.spreader.position.set(0, 0, 0);
     this.trolley.add(this.spreader);
+
+    // container placeholder
+    this.containerPlaceholder = new Object3D();
+    this.containerPlaceholder.position.set(0, 0, -CONTAINER_SIZE_Z / 2);
+    this.spreader.add(this.containerPlaceholder);
 
     // text label
     const text = this.visualizer.text.createTextMesh(this.id);
@@ -171,7 +188,7 @@ export class Rtg {
   }
 
   private updateModelState() {
-    this.model.position.setX(this.control.position.x);
+    this.model.position.setX(this.control.position.x + this.origin.x);
     this.spreader.position.setZ(
       this.control.position.z - this.height - SPREADER_THICKNESS / 2
     );

@@ -178,7 +178,11 @@ export class Terminal {
       // qc moved to drop position on truck
     } else if (e.job.reason === "qcdropcontainertotruck") {
       const job = e.job as QcDropContainerToTruckJob;
+
+      // load container on truck
       const container = qc.dropContainer();
+      const truck = this.truckManager.getTruck(job.truckId);
+      truck.load(container);
 
       // plan truck path
       const from = new Vector2(qc.position.x, qc.position.y);
@@ -195,31 +199,42 @@ export class Terminal {
         container,
       };
       this.truckManager.execute(truckJob);
+
+      // rtg job 1: move to container handling point
+      const yard = this.yardManager.getYard(yardCoordinate.yardId);
+      const handlingPosition = yard.getContainerHandlingPoint(yardCoordinate);
+
+      const rtgId = this.rtgManager.findRtg(yard.id);
+      const rtgJob: RtgPickContainerFromTruckJob = {
+        reason: "rtgpickcontainerfromtruck",
+        rtgId,
+        position: yard.globalPositionToRtgPosition(
+          new Vector3(handlingPosition.x, handlingPosition.y)
+        ),
+        truckId: job.truckId,
+        yardCoordinate: yardCoordinate,
+      };
+      this.rtgManager.queueRtgJob(rtgJob);
+
+      // rtg job 2: unload container to yard
+      const storageJob: RtgDropContainerInYardJob = {
+        reason: "rtgdropcontainerinyard",
+        rtgId,
+        position: yard.coordinateToRtgPosition(yardCoordinate),
+        container,
+      };
+      this.rtgManager.queueRtgJob(storageJob);
     }
 
     this.executeNextQuayCraneJob(qc);
   }
 
   private onTruckDriveEnd(e: TruckDriveEndEvent) {
-    const truck = this.truckManager.getTruck(e.truckId);
-
-    // truck arrive at yard. ready to unload to rtg
-    if (e.job.reason === "truckmovecontainertoyard") {
-      const job = e.job as TruckContainerMoveToYardJob;
-
-      // create rtg job to prepare to pickup from truck
-      const rtgJob: RtgPickContainerFromTruckJob = {
-        reason: "rtgpickcontainerfromtruck",
-        rtgId: this.rtgManager.findRtg(job.yardCoordinate.yardId),
-        position: new Vector3(truck.position.x, truck.position.y, 0),
-        truckId: e.truckId,
-        yardCoordinate: job.yardCoordinate,
-      };
-      this.rtgManager.queueRtgJob(rtgJob);
-    }
+    // do nothing for now
   }
 
   private onRtgMoveEnd(e: RtgMoveEndEvent) {
+    const rtg = this.rtgManager.getRtg(e.rtgId);
     if (e.job.reason === "rtgpickcontainerfromtruck") {
       const job = e.job as RtgPickContainerFromTruckJob;
 
@@ -227,21 +242,12 @@ export class Terminal {
       const truck = this.truckManager.getTruck(job.truckId);
       if (!truck) throw new Error("Rtg move to truck but cannot find truck");
       const container = truck.unload();
-      this.truckManager.releaseTruck(job.truckId);
-
-      // create storage job for rtg
-      const yardId = this.rtgManager.findYard(job.rtgId);
-      const position = job.yardCoordinate.relativePosition;
-      const storageJob: RtgDropContainerInYardJob = {
-        reason: "rtgdropcontainerinyard",
-        rtgId: job.rtgId,
-        position,
-        container,
-      };
-      this.rtgManager.queueRtgJob(storageJob);
+      rtg.pickContainer(container);
 
       // release truck
       this.truckManager.releaseTruck(job.truckId);
+    } else if (e.job.reason === "rtgdropcontainerinyard") {
+      const container = rtg.dropContainer();
     }
   }
 }

@@ -55,11 +55,7 @@ export class PhysicsState3D {
     this.lastTargetIndex = 0;
     this.trajectory = trajectory;
     this.updateAxisTarget();
-    this.trajectoryMesh = Render.createPath(
-      [this.position, ...trajectory],
-      0xe100ff
-    );
-    this.visualizer.scene.add(this.trajectoryMesh);
+    this.drawTrajectory();
   }
 
   private updateAxisTarget() {
@@ -88,6 +84,14 @@ export class PhysicsState3D {
     } else {
       this.updateAxisTarget();
     }
+  }
+
+  protected drawTrajectory() {
+    this.trajectoryMesh = Render.createPath(
+      [this.position, ...this.trajectory],
+      0xe100ff
+    );
+    this.visualizer.scene.add(this.trajectoryMesh);
   }
 
   protected afterArrive() {}

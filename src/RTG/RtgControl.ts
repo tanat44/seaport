@@ -1,6 +1,7 @@
 import { Vector3 } from "three";
 import { PhysicsState3D } from "../Physics/PhysicsState3D";
 import { Trajectory } from "../Physics/types";
+import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Rtg } from "./Rtg";
 
@@ -29,20 +30,15 @@ export class RtgControl extends PhysicsState3D {
   planTrajectory(target: Vector3): Trajectory {
     const trajectory: Trajectory = [];
 
-    // 0 plan gantry
-    trajectory.push(new Vector3(target.x, this.position.y, this.position.z));
-
-    let planLiftHeight = Math.max(this.position.z, target.z) + Z_OVERSHOOT;
-    if (planLiftHeight > this.rtg.height) {
-      planLiftHeight = this.rtg.height;
-    }
-    // 1 move spreader up to plan lift height
-    const trolleyMove = target.y - this.position.y;
+    // 0 move spreader up to max height
     trajectory.push(
-      new Vector3(target.x, this.position.y + trolleyMove / 2, planLiftHeight)
+      new Vector3(this.position.x, this.position.y, this.rtg.height)
     );
 
-    // 2 trolley to above target
+    // 1 gantry to target
+    trajectory.push(new Vector3(target.x, this.position.y, this.rtg.height));
+
+    // 2 trolley to target
     const HEIGHT_ABOVE = 3;
     let overTargetHeight = target.z + HEIGHT_ABOVE;
     if (overTargetHeight > this.rtg.height) overTargetHeight = this.rtg.height;
@@ -50,13 +46,16 @@ export class RtgControl extends PhysicsState3D {
 
     // 3 lower down to target
     trajectory.push(new Vector3(target.x, target.y, target.z));
+
     return trajectory;
   }
 
-  override execute(trajectory: Trajectory): void {
-    super.execute(trajectory);
-    this.trajectoryMesh.position.y += this.rtg.model.position.y;
-    this.trajectoryMesh.position.x += this.rtg.model.position.x;
+  protected override drawTrajectory(): void {
+    const points = [this.position, ...this.trajectory].map((point) =>
+      point.clone().add(this.rtg.origin)
+    );
+    this.trajectoryMesh = Render.createPath(points, 0xe100ff);
+    this.visualizer.scene.add(this.trajectoryMesh);
   }
 
   protected override afterArrive(): void {
