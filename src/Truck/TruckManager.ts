@@ -3,7 +3,7 @@ import { TruckJob } from "../Job/Definition/TruckJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "./Truck";
 
-const TRUCK_COUNT = 10;
+const TRUCK_COUNT = 2;
 
 export class TruckManager {
   private terminal: Terminal;
@@ -48,8 +48,7 @@ export class TruckManager {
 
   execute(job: TruckJob): boolean {
     const truck = this.getTruck(job.truckId);
-    if (!truck) return false;
-
+    if (!truck || this.lockedTruck.get(job.truckId)) return false;
     truck.execute(job);
     this.lockedTruck.set(truck.id, true);
 
@@ -64,8 +63,7 @@ export class TruckManager {
     let bestTruck: Truck = null;
     const closestDistance = Infinity;
     for (const [truckId, truck] of this.trucks) {
-      if (this.lockedTruck.has(truckId)) continue;
-
+      if (this.lockedTruck.get(truckId)) continue;
       const pos = truck.position;
       const distance = new Vector2(pos.x, pos.y).distanceTo(jobPosition);
       if (distance < closestDistance) {
@@ -73,7 +71,7 @@ export class TruckManager {
       }
     }
 
-    console.log("closest truck: ", bestTruck?.id && "-");
+    // console.log("closest truck: ", bestTruck?.id ?? "-");
     return bestTruck;
   }
 

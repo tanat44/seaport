@@ -68,6 +68,7 @@ export class Rtg {
   }
 
   public execute(job: RtgJob) {
+    // console.log("Rtg: execute", job);
     if (this.currentJob) throw new Error("Cannot assign job to busy rtg");
 
     // check if it's a valid job

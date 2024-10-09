@@ -63,7 +63,6 @@ export class JobRunner {
       return;
     }
     for (const sequence of this.jobSequences) {
-      console.log("d");
       if (sequence.completed) {
         this.completedJobIds.add(sequence.id);
         continue;
@@ -96,7 +95,7 @@ export class JobRunner {
             const truck = this.truckManager.getAvailableTruck(truckJob.to);
             if (truck) {
               sequence.assignTruck(truck.id);
-              truck.execute(truckJob);
+              this.truckManager.execute(truckJob);
               oneExecuted = true;
             }
           } else if (truckJob.reason === "truckmovecontainertoyard") {
@@ -109,7 +108,7 @@ export class JobRunner {
             // load container to truck
             const truck = this.truckManager.getTruck(truckJob.truckId);
             truck.load(container);
-            truck.execute(truckJob);
+            this.truckManager.execute(truckJob);
             oneExecuted = true;
           }
         } else {
