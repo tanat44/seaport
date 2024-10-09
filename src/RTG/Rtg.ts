@@ -18,7 +18,7 @@ import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { RtgControl } from "./RtgControl";
-import { RtgJob } from "./types";
+import { RtgJob } from "./RtgJob";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
@@ -71,7 +71,8 @@ export class Rtg {
     if (this.currentJob) throw new Error("Cannot assign job to busy rtg");
 
     // check if it's a valid job
-    if (job.position.y < 0) throw new Error("Cannot move trolley too far back");
+    if (job.position.y < 0)
+      throw new Error(`Cannot move trolley too far back ${this.id}`);
     if (job.position.y > this.legSpan)
       throw new Error("Cannot move trolley too far forward");
     if (job.position.z < 0)

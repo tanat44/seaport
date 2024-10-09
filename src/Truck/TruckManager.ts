@@ -2,7 +2,7 @@ import { Vector2, Vector3 } from "three";
 import { TruckReleaseEvent } from "../Event/types";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "./Truck";
-import { TruckJob } from "./types";
+import { TruckJob } from "./TruckJob";
 
 const TRUCK_COUNT = 10;
 

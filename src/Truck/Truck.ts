@@ -18,7 +18,7 @@ import {
 import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
 import { TEST_PATH } from "./TestPath";
-import { TruckJob } from "./types";
+import { TruckJob } from "./TruckJob";
 
 const WHEEL_DIAMETER = 0.8;
 const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
@@ -70,7 +70,8 @@ export class Truck {
       );
     }
 
-    this.drive(job.controlPoints);
+    const path = this.terminal.pathPlanner.plan(this.position, job.to);
+    this.drive(path);
     this.currentJob = job;
   }
 

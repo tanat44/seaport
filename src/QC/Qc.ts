@@ -14,7 +14,7 @@ import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { QcControl } from "./QcControl";
-import { QcJob } from "./types";
+import { QcJob } from "./QcJob";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
@@ -67,22 +67,6 @@ export class Qc {
 
     this.buildModel(initialPosition);
     this.listenToEvents();
-  }
-
-  public randomMove() {
-    const GANTRY_RANGE = 20;
-    const gantryDistance = Math.random() * GANTRY_RANGE - GANTRY_RANGE / 2;
-    const trolleyDistance =
-      Math.random() * (this.legSpan + this.outReach) - this.legSpan / 2;
-    const liftDistance = Math.random() * this.height;
-
-    // this.moveTo(
-    //   new Vector3(
-    //     gantryDistance + this.control.position.x,
-    //     trolleyDistance,
-    //     liftDistance
-    //   )
-    // );
   }
 
   public executeJob(job: QcJob) {

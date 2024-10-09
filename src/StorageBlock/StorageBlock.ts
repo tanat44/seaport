@@ -97,17 +97,21 @@ export class StorageBlock {
       const bay = this.bays[i];
 
       // get all containers of this bay
-      let allCoordinates: StorageCoordinate[] = [];
+      let bayOrder: CargoOrder = [];
       for (let j = 0; j < bay.length; ++j) {
         const row = bay[j];
         for (let k = 0; k < row.length; ++k) {
-          allCoordinates.push(new StorageCoordinate(i, j, k));
+          const coordinate = new StorageCoordinate(i, j, k);
+          bayOrder.push({
+            containerId: this.getContainerId(coordinate),
+            coordinate,
+          });
         }
       }
 
       // sort operation by height
-      allCoordinates = allCoordinates.sort((a, b) => b.tier - a.tier);
-      plan.push(...allCoordinates);
+      bayOrder = bayOrder.sort((a, b) => b.coordinate.tier - a.coordinate.tier);
+      plan.push(...bayOrder);
     }
 
     return plan;
