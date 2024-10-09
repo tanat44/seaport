@@ -1,5 +1,4 @@
 import { Vector2, Vector3 } from "three";
-import { TruckReleaseEvent } from "../Event/types";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "./Truck";
@@ -9,17 +8,17 @@ const TRUCK_COUNT = 10;
 export class TruckManager {
   private terminal: Terminal;
   private trucks: Map<string, Truck>;
-  private availableTrucks: Truck[];
+  private lockedTruck: Map<string, boolean>;
 
   constructor(terminal: Terminal) {
     this.terminal = terminal;
     this.trucks = new Map();
-    this.availableTrucks = [];
+    this.lockedTruck = new Map();
     for (let i = 0; i < TRUCK_COUNT; ++i) {
       const initialPosition = new Vector3(20, 3 + 4 * i, 0);
       const truck = new Truck(this.terminal, initialPosition);
       this.trucks.set(truck.id, truck);
-      this.availableTrucks.push(truck);
+      this.lockedTruck.set(truck.id, false);
     }
   }
 
@@ -27,69 +26,62 @@ export class TruckManager {
     return this.trucks.get(truckId);
   }
 
-  releaseTruck(truckId: string) {
-    console.log("release truck: ", truckId);
-    const truck = this.trucks.get(truckId);
-    this.availableTrucks.push(truck);
-    const releaseEvent: TruckReleaseEvent = {
-      type: "truckrelease",
-      truckId: truckId,
-    };
-    this.terminal.visualizer.emit(releaseEvent);
-  }
+  // getAvailableTruckAsync(jobPosition: Vector2): Promise<Truck> {
+  //   return new Promise((resolve, reject) => {
+  //     const truck = this.getClosestTruck(jobPosition);
+  //     if (truck) resolve(truck);
 
-  getAvailableTruckAsync(jobPosition: Vector2): Promise<Truck> {
-    return new Promise((resolve, reject) => {
-      const truck = this.getClosestTruck(jobPosition);
-      if (truck) resolve(truck);
-
-      // no available truck .. wait for next available truck
-      this.terminal.visualizer.onEvent<TruckReleaseEvent>(
-        "truckrelease",
-        (e) => {
-          const truck = this.trucks.get(e.truckId);
-          resolve(truck);
-        }
-      );
-    });
-  }
+  //     // no available truck .. wait for next available truck
+  //     this.terminal.visualizer.onEvent<TruckReleaseEvent>(
+  //       "truckrelease",
+  //       (e) => {
+  //         const truck = this.trucks.get(e.truckId);
+  //         resolve(truck);
+  //       }
+  //     );
+  //   });
+  // }
 
   getAvailableTruck(jobPosition: Vector2): Truck | null {
     return this.getClosestTruck(jobPosition);
   }
 
-  execute(job: TruckJob) {
+  execute(job: TruckJob): boolean {
     const truck = this.getTruck(job.truckId);
+    if (!truck) return false;
+
     truck.execute(job);
+    this.lockedTruck.set(truck.id, true);
+
+    return true;
   }
 
-  private isAvailable(truckId: string): boolean {
-    return this.availableTrucks.findIndex((truck) => truck.id === truckId) > -1;
+  releaseTruck(truckId: string) {
+    this.lockedTruck.set(truckId, false);
   }
 
   private getClosestTruck(jobPosition: Vector2): Truck | null {
-    if (this.availableTrucks.length === 0) return null;
-
-    let closestTruckIndex = 0;
+    let bestTruck: Truck = null;
     const closestDistance = Infinity;
-    for (let i = 0; i < this.availableTrucks.length; ++i) {
-      const pos = this.availableTrucks[i].position;
+    for (const [truckId, truck] of this.trucks) {
+      if (this.lockedTruck.has(truckId)) continue;
+
+      const pos = truck.position;
       const distance = new Vector2(pos.x, pos.y).distanceTo(jobPosition);
       if (distance < closestDistance) {
-        closestTruckIndex = i;
+        bestTruck = truck;
       }
     }
-    const trucks = this.availableTrucks.splice(closestTruckIndex, 1);
 
-    // this.printAvailableTrucks();
-    console.log("closest truck: ", trucks[0].id);
-    return trucks[0];
+    console.log("closest truck: ", bestTruck?.id && "-");
+    return bestTruck;
   }
 
   private printAvailableTrucks() {
     let text = "Available: ";
-    for (const truck of this.availableTrucks) {
-      text += truck.id + " ";
+    for (const [id, _] of this.trucks) {
+      if (this.lockedTruck.has(id)) continue;
+      text += id + " ";
     }
     console.log(text);
   }

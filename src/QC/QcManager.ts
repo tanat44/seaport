@@ -9,17 +9,19 @@ export class QcManager {
   private quayCranes: Map<string, Qc>;
 
   // operation
-  private vessels: Map<Qc, Vessel>;
+  private lockedQc: Map<string, boolean>;
+  private qcToVessel: Map<Qc, Vessel>;
 
   constructor(terminal: Terminal, origins: Vector3[]) {
     this.terminal = terminal;
     this.quayCranes = new Map();
+    this.lockedQc = new Map();
     for (const qcOrigin of origins) {
       const qc = this.addQuayCrane(qcOrigin);
       this.quayCranes.set(qc.id, qc);
+      this.lockedQc.set(qc.id, false);
     }
-
-    this.vessels = new Map();
+    this.qcToVessel = new Map();
   }
 
   getQuayCrane(id: string) {
@@ -28,7 +30,7 @@ export class QcManager {
 
   assignQuayCrane(vessel: Vessel): Qc {
     const qc = this.findQuayCraneForVessel(vessel);
-    this.vessels.set(qc, vessel);
+    this.qcToVessel.set(qc, vessel);
     return qc;
   }
 
@@ -36,17 +38,22 @@ export class QcManager {
     const qc = this.getQuayCrane(quayCraneId);
     if (!qc) throw new Error("Cannot get vessel of undefined quay crane");
 
-    return this.vessels.get(qc);
+    return this.qcToVessel.get(qc);
   }
 
   execute(job: QcJob): boolean {
     const qc = this.getQuayCrane(job.qcId);
-    if (qc.idle) {
+    if (qc.idle && !this.lockedQc.get(qc.id)) {
       qc.execute(job);
+      this.lockedQc.set(qc.id, true);
       return true;
     }
 
     return false;
+  }
+
+  releaseQc(qcId: string) {
+    this.lockedQc.set(qcId, false);
   }
 
   private addQuayCrane(position: Vector3): Qc {

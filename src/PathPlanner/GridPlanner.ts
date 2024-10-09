@@ -85,7 +85,7 @@ export class GridPlanner {
   private onQuayCraneGantry(e: QcGantryEvent) {
     if (!this.grid) return;
 
-    const quayCraneId = e.quayCraneId;
+    const quayCraneId = e.qcId;
     if (!this.quayCraneSpaces.has(quayCraneId)) {
       this.quayCraneSpaces.set(
         quayCraneId,

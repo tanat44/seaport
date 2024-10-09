@@ -17,6 +17,7 @@ export class TruckEmptyMoveJob extends TruckJob {
 }
 
 export class TruckContainerMoveToYardJob extends TruckJob {
+  qcId: string;
   container: Container;
   yardCoordinate: YardCoordinate;
 

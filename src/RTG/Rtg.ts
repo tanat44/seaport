@@ -203,13 +203,13 @@ export class Rtg {
   }
 
   private onArrive() {
-    const finishedJob = this.currentJob;
-    this.currentJob = null;
     this.visualizer.emit<RtgMoveEndEvent>({
       type: "rtgmoveend",
       rtgId: this.id,
-      job: finishedJob,
+      job: this.currentJob,
     });
+    this.currentJob.completed = true;
+    this.currentJob = null;
   }
 
   private animate(deltaTime: number) {

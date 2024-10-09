@@ -10,6 +10,7 @@ export interface EventBase {
 export type EventType =
   | "animate"
   | "qcmoveend"
+  | "qcjobfinish"
   | "qcgantry"
   | "rtgmovestart"
   | "rtgmoveend"
@@ -22,12 +23,17 @@ export interface AnimateEvent extends EventBase {
 }
 
 export interface QcMoveEndEvent extends EventBase {
-  quayCraneId: string;
+  qcId: string;
+  job: QcJob;
+}
+
+export interface QcJobFinishEvent extends EventBase {
+  qcId: string;
   job: QcJob;
 }
 
 export interface QcGantryEvent extends EventBase {
-  quayCraneId: string;
+  qcId: string;
   absoluteSpace: Box2;
 }
 

@@ -218,13 +218,13 @@ export class Qc {
   }
 
   private onArrive() {
-    const finishedJob = this.currentJob;
-    this.currentJob = null;
     this.visualizer.emit<QcMoveEndEvent>({
       type: "qcmoveend",
-      quayCraneId: this.id,
-      job: finishedJob,
+      qcId: this.id,
+      job: this.currentJob,
     });
+    this.currentJob.completed = true;
+    this.currentJob = null;
   }
 
   private animate(deltaTime: number) {

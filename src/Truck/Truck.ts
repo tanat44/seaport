@@ -8,6 +8,7 @@ import {
   Vector3,
 } from "three";
 import { TruckDriveEndEvent } from "../Event/types";
+import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
 import { Terminal } from "../Terminal/Terminal";
 import {
@@ -18,7 +19,6 @@ import {
 import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
 import { TEST_PATH } from "./TestPath";
-import { TruckJob } from "./TruckJob";
 
 const WHEEL_DIAMETER = 0.8;
 const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
@@ -97,6 +97,8 @@ export class Truck {
 
   private onDriveEnd(e: TruckDriveEndEvent) {
     if (e.truckId !== this.id) return;
+
+    e.job.completed = true;
     this.currentJob = null;
     this.pathPhysics = null;
   }

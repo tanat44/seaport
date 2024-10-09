@@ -1,4 +1,5 @@
 import {
+  QcJobFinishEvent,
   QcMoveEndEvent,
   RtgMoveEndEvent,
   TruckDriveEndEvent,
@@ -9,9 +10,9 @@ import { Terminal } from "../Terminal/Terminal";
 import { TruckManager } from "../Truck/TruckManager";
 import { YardManager } from "../Yard/YardManager";
 import { JobSequence } from "./Definition/JobSequence";
-import { QcJob } from "./Definition/QcJob";
-import { RtgJob } from "./Definition/RtgJob";
-import { TruckJob } from "./Definition/TruckJob";
+import { QcJob, QcPickContainerFromVesselJob } from "./Definition/QcJob";
+import { RtgJob, RtgPickContainerFromTruckJob } from "./Definition/RtgJob";
+import { TruckContainerMoveToYardJob, TruckJob } from "./Definition/TruckJob";
 
 export class JobRunner {
   terminal: Terminal;
@@ -57,78 +58,84 @@ export class JobRunner {
   }
 
   private runSequence() {
-    if (this.completedJobIds.size !== this.jobSequences.length) {
+    if (this.completedJobIds.size === this.jobSequences.length) {
       console.log("JobRunner: all sequence completed");
       return;
     }
     for (const sequence of this.jobSequences) {
+      console.log("d");
       if (sequence.completed) {
         this.completedJobIds.add(sequence.id);
         continue;
       }
 
-      let executeSucceed = false;
-
+      let oneExecuted = false;
       for (const job of sequence.canStartJobs()) {
         if (QcJob.prototype.isPrototypeOf(job)) {
-          executeSucceed =
-            executeSucceed || this.qcManager.execute(job as QcJob);
+          oneExecuted = oneExecuted || this.qcManager.execute(job as QcJob);
         } else if (RtgJob.prototype.isPrototypeOf(job)) {
-          executeSucceed =
-            executeSucceed || this.rtgManager.execute(job as RtgJob);
+          const rtgJob = job as RtgJob;
+
+          if (rtgJob.reason === "rtgpickcontainerfromtruck") {
+          } else if (rtgJob.reason === "rtgdropcontainerinyard") {
+            // unload container from truck
+            const truckId = (rtgJob as RtgPickContainerFromTruckJob).truckId;
+            const truck = this.truckManager.getTruck(truckId);
+            const container = truck.unload();
+            this.truckManager.releaseTruck(truckId);
+
+            // load container to rtg
+            const rtg = this.rtgManager.getRtg(rtgJob.rtgId);
+            rtg.pickContainer(container);
+          }
+
+          oneExecuted = oneExecuted || this.rtgManager.execute(rtgJob);
         } else if (TruckJob.prototype.isPrototypeOf(job)) {
           const truckJob = job as TruckJob;
           if (truckJob.reason === "truckemptymove") {
             const truck = this.truckManager.getAvailableTruck(truckJob.to);
             if (truck) {
-              executeSucceed = true;
               sequence.assignTruck(truck.id);
               truck.execute(truckJob);
+              oneExecuted = true;
             }
+          } else if (truckJob.reason === "truckmovecontainertoyard") {
+            // unload container from qc
+            const qcId = (truckJob as TruckContainerMoveToYardJob).qcId;
+            const qc = this.qcManager.getQuayCrane(qcId);
+            const container = qc.dropContainer();
+            this.qcManager.releaseQc(qcId);
+
+            // load container to truck
+            const truck = this.truckManager.getTruck(truckJob.truckId);
+            truck.load(container);
+            truck.execute(truckJob);
+            oneExecuted = true;
           }
         } else {
           throw new Error("Unknown job type");
         }
       }
 
-      if (!executeSucceed) {
+      if (!oneExecuted) {
+        console.log("JobRunner: resource depleted wait for next chance");
         return;
       }
     }
   }
 
-  private onQcMoveEnd(e: QcMoveEndEvent) {
+  private onQcMoveEnd(e: QcJobFinishEvent) {
     // console.log(`QC#${e.quayCraneId} - Finished <${e.job.reason}>`);
-    const qc = this.qcManager.getQuayCrane(e.quayCraneId);
+    const qc = this.qcManager.getQuayCrane(e.qcId);
     if (!qc) throw new Error("Cannot move unknown quay crane");
 
     if (e.job.reason === "qcpickcontainerfromvessel") {
       const job = e.job as QcPickContainerFromVesselJob;
-      const vessel = this.qcManager.getAssignedVessel(e.quayCraneId);
+      const vessel = this.qcManager.getAssignedVessel(e.qcId);
       const container = vessel.unload(job.cargoCoordinate);
       qc.pickContainer(container);
-
-      // qc moved to drop position on truck
-    } else if (e.job.reason === "qcdropcontainertotruck") {
-      const job = e.job as QcDropContainerToTruckJob;
-
-      // load container on truck
-      const container = qc.dropContainer();
-      const truck = this.truckManager.getTruck(job.truckId);
-      truck.load(container);
-
-      // rtg job 1: move to container handling point
-      const yard = this.yardManager.getYard(yardCoordinate.yardId);
-      const handlingPosition = yard.getContainerHandlingPoint(yardCoordinate);
-
-      this.rtgManager.queueRtgJob(rtgJob);
-
-      // rtg job 2: unload container to yard
-
-      this.rtgManager.queueRtgJob(storageJob);
     }
-
-    this.executeNextQuayCraneJob(qc);
+    this.runSequence();
   }
 
   private onRtgMoveEnd(e: RtgMoveEndEvent) {
@@ -150,6 +157,6 @@ export class JobRunner {
   }
 
   private onTruckDriveEnd(e: TruckDriveEndEvent) {
-    // do nothing for now
+    this.runSequence();
   }
 }

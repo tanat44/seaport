@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { RtgEmptyMoveJob } from "../Job/Definition/RtgJob";
+import { RtgEmptyMoveJob, RtgJob } from "../Job/Definition/RtgJob";
 import { CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Terminal } from "../Terminal/Terminal";
 import { YardBlock } from "../Yard/YardBlock";
@@ -38,6 +38,16 @@ export class RtgManager {
       job.position = new Vector3(0, 0, rtg.height);
       rtg.execute(job);
     }
+  }
+
+  execute(job: RtgJob): boolean {
+    const rtg = this.getRtg(job.rtgId);
+    if (rtg.idle) {
+      rtg.execute(job);
+      return true;
+    }
+
+    return false;
   }
 
   findRtg(yardId: string): string | undefined {

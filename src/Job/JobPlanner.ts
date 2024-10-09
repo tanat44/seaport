@@ -86,6 +86,7 @@ export class JobPlanner {
         qcDropJob.id,
         truckEmptyMoveJob.id,
       ]);
+      truckMoveContainerJob.qcId = qc.id;
       truckMoveContainerJob.to = handlingPos.clone();
       containerJob.addJob(truckMoveContainerJob);
 
