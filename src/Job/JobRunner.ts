@@ -8,7 +8,10 @@ import { RtgManager } from "../RTG/RtgManager";
 import { Terminal } from "../Terminal/Terminal";
 import { TruckManager } from "../Truck/TruckManager";
 import { YardManager } from "../Yard/YardManager";
-import { ContainerJob } from "./ContainerJob";
+import { JobSequence } from "./Definition/JobSequence";
+import { QcJob } from "./Definition/QcJob";
+import { RtgJob } from "./Definition/RtgJob";
+import { TruckJob } from "./Definition/TruckJob";
 
 export class JobRunner {
   terminal: Terminal;
@@ -17,7 +20,8 @@ export class JobRunner {
   truckManager: TruckManager;
   yardManager: YardManager;
 
-  jobs: ContainerJob[];
+  jobSequences: JobSequence[];
+  completedJobIds: Set<number>;
 
   constructor(
     terminal: Terminal,
@@ -32,7 +36,8 @@ export class JobRunner {
     this.truckManager = truckManager;
     this.yardManager = yardManager;
 
-    this.jobs = [];
+    this.jobSequences = [];
+    this.completedJobIds = new Set();
 
     // register event handler
     this.terminal.visualizer.onEvent<QcMoveEndEvent>("qcmoveend", (e) =>
@@ -46,7 +51,51 @@ export class JobRunner {
     );
   }
 
-  run(jobs: ContainerJob[]) {}
+  run(jobs: JobSequence[]) {
+    this.jobSequences = jobs;
+    this.runSequence();
+  }
+
+  private runSequence() {
+    if (this.completedJobIds.size !== this.jobSequences.length) {
+      console.log("JobRunner: all sequence completed");
+      return;
+    }
+    for (const sequence of this.jobSequences) {
+      if (sequence.completed) {
+        this.completedJobIds.add(sequence.id);
+        continue;
+      }
+
+      let executeSucceed = false;
+
+      for (const job of sequence.canStartJobs()) {
+        if (QcJob.prototype.isPrototypeOf(job)) {
+          executeSucceed =
+            executeSucceed || this.qcManager.execute(job as QcJob);
+        } else if (RtgJob.prototype.isPrototypeOf(job)) {
+          executeSucceed =
+            executeSucceed || this.rtgManager.execute(job as RtgJob);
+        } else if (TruckJob.prototype.isPrototypeOf(job)) {
+          const truckJob = job as TruckJob;
+          if (truckJob.reason === "truckemptymove") {
+            const truck = this.truckManager.getAvailableTruck(truckJob.to);
+            if (truck) {
+              executeSucceed = true;
+              sequence.assignTruck(truck.id);
+              truck.execute(truckJob);
+            }
+          }
+        } else {
+          throw new Error("Unknown job type");
+        }
+      }
+
+      if (!executeSucceed) {
+        return;
+      }
+    }
+  }
 
   private onQcMoveEnd(e: QcMoveEndEvent) {
     // console.log(`QC#${e.quayCraneId} - Finished <${e.job.reason}>`);

@@ -13,12 +13,12 @@ import {
   RtgMoveEndEvent,
   RtgMoveStartEvent,
 } from "../Event/types";
+import { RtgJob } from "../Job/Definition/RtgJob";
 import { Container } from "../StorageBlock/StorageBlock";
 import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { RtgControl } from "./RtgControl";
-import { RtgJob } from "./RtgJob";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
@@ -103,7 +103,7 @@ export class Rtg {
     return this.model.position.clone();
   }
 
-  get busy(): boolean {
+  get idle(): boolean {
     return this.currentJob && true;
   }
 

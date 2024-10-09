@@ -1,4 +1,5 @@
 import { Vector2, Vector3 } from "three";
+import { QcJob } from "../Job/Definition/QcJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Vessel } from "../Vessel/Vessel";
 import { Qc } from "./Qc";
@@ -36,6 +37,16 @@ export class QcManager {
     if (!qc) throw new Error("Cannot get vessel of undefined quay crane");
 
     return this.vessels.get(qc);
+  }
+
+  execute(job: QcJob): boolean {
+    const qc = this.getQuayCrane(job.qcId);
+    if (qc.idle) {
+      qc.execute(job);
+      return true;
+    }
+
+    return false;
   }
 
   private addQuayCrane(position: Vector3): Qc {

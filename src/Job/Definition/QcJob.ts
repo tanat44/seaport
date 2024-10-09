@@ -1,8 +1,9 @@
 import { Vector3 } from "three";
-import { JobBase } from "../Event/types";
-import { StorageCoordinate } from "../StorageBlock/StorageCoordinate";
+import { StorageCoordinate } from "../../StorageBlock/StorageCoordinate";
+import { JobBase } from "./JobBase";
 
 export abstract class QcJob extends JobBase {
+  qcId: string;
   position: Vector3;
   reason: "qcpickcontainerfromvessel" | "qcdropcontainertotruck";
 }

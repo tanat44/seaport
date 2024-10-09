@@ -1,8 +1,8 @@
 import { Vector2, Vector3 } from "three";
 import { TruckReleaseEvent } from "../Event/types";
+import { TruckJob } from "../Job/Definition/TruckJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "./Truck";
-import { TruckJob } from "./TruckJob";
 
 const TRUCK_COUNT = 10;
 
@@ -38,7 +38,7 @@ export class TruckManager {
     this.terminal.visualizer.emit(releaseEvent);
   }
 
-  getAvailableTruck(jobPosition: Vector2): Promise<Truck> {
+  getAvailableTruckAsync(jobPosition: Vector2): Promise<Truck> {
     return new Promise((resolve, reject) => {
       const truck = this.getClosestTruck(jobPosition);
       if (truck) resolve(truck);
@@ -52,6 +52,10 @@ export class TruckManager {
         }
       );
     });
+  }
+
+  getAvailableTruck(jobPosition: Vector2): Truck | null {
+    return this.getClosestTruck(jobPosition);
   }
 
   execute(job: TruckJob) {

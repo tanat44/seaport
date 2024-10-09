@@ -1,26 +1,26 @@
 import { Vector2, Vector3 } from "three";
 import { Qc } from "../QC/Qc";
-import {
-  QcDropContainerToTruckJob,
-  QcPickContainerFromVesselJob,
-} from "../QC/QcJob";
 import { QcManager } from "../QC/QcManager";
-import {
-  RtgDropContainerInYardJob,
-  RtgPickContainerFromTruckJob,
-} from "../RTG/RtgJob";
 import { RtgManager } from "../RTG/RtgManager";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "../Truck/Truck";
-import {
-  TruckContainerMoveToYardJob,
-  TruckEmptyMoveJob,
-} from "../Truck/TruckJob";
 import { TruckManager } from "../Truck/TruckManager";
 import { CargoOrder } from "../Vessel/types";
 import { Vessel } from "../Vessel/Vessel";
 import { YardManager } from "../Yard/YardManager";
-import { ContainerJob } from "./ContainerJob";
+import { JobSequence } from "./Definition/JobSequence";
+import {
+  QcDropContainerToTruckJob,
+  QcPickContainerFromVesselJob,
+} from "./Definition/QcJob";
+import {
+  RtgDropContainerInYardJob,
+  RtgPickContainerFromTruckJob,
+} from "./Definition/RtgJob";
+import {
+  TruckContainerMoveToYardJob,
+  TruckEmptyMoveJob,
+} from "./Definition/TruckJob";
 
 export class JobPlanner {
   terminal: Terminal;
@@ -43,20 +43,17 @@ export class JobPlanner {
     this.yardManager = yardManager;
   }
 
-  planUnloadJob(
-    unloadPlan: CargoOrder,
-    qc: Qc,
-    vessel: Vessel
-  ): ContainerJob[] {
-    const jobs: ContainerJob[] = [];
+  planUnloadJob(unloadPlan: CargoOrder, qc: Qc, vessel: Vessel): JobSequence[] {
+    const jobs: JobSequence[] = [];
     for (const cargo of unloadPlan) {
-      const containerJob = new ContainerJob(cargo.containerId);
+      const containerJob = new JobSequence(cargo.containerId);
 
       // qc pick container
       const containerPosition = cargo.coordinate.relativePosition.add(
         vessel.position
       );
       const qcPickJob = new QcPickContainerFromVesselJob([]);
+      qcPickJob.qcId = qc.id;
       qcPickJob.position = new Vector3(
         containerPosition.x,
         containerPosition.y - qc.position.y,
@@ -67,6 +64,7 @@ export class JobPlanner {
 
       // qc drop off container
       const qcDropJob = new QcDropContainerToTruckJob([qcPickJob.id]);
+      qcDropJob.qcId = qc.id;
       const qcDropPosition = new Vector3(
         containerPosition.x,
         0,

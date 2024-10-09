@@ -1,21 +1,10 @@
 import { Box2 } from "three";
-import { QcJob } from "../QC/QcJob";
-import { RtgJob } from "../RTG/RtgJob";
-import { TruckJob } from "../Truck/TruckJob";
+import { QcJob } from "../Job/Definition/QcJob";
+import { RtgJob } from "../Job/Definition/RtgJob";
+import { TruckJob } from "../Job/Definition/TruckJob";
 
 export interface EventBase {
   type: EventType;
-}
-
-export abstract class JobBase {
-  private static count = 0;
-  id: number;
-  dependencies: number[];
-
-  constructor(dependencies: number[]) {
-    this.id = JobBase.count++;
-    this.dependencies = [...dependencies];
-  }
 }
 
 export type EventType =

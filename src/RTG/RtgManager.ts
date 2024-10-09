@@ -1,9 +1,9 @@
 import { Vector3 } from "three";
+import { RtgEmptyMoveJob } from "../Job/Definition/RtgJob";
 import { CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Terminal } from "../Terminal/Terminal";
 import { YardBlock } from "../Yard/YardBlock";
 import { Rtg } from "./Rtg";
-import { RtgEmptyMoveJob } from "./RtgJob";
 
 type RtgId = string;
 export class RtgManager {

@@ -9,12 +9,12 @@ import {
   Vector3,
 } from "three";
 import { AnimateEvent, QcMoveEndEvent } from "../Event/types";
+import { QcJob } from "../Job/Definition/QcJob";
 import { Container } from "../StorageBlock/StorageBlock";
 import { CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { QcControl } from "./QcControl";
-import { QcJob } from "./QcJob";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
@@ -69,7 +69,7 @@ export class Qc {
     this.listenToEvents();
   }
 
-  public executeJob(job: QcJob) {
+  public execute(job: QcJob) {
     if (this.currentJob)
       throw new Error("Cannot assign job to busy quay crane");
 
@@ -113,6 +113,10 @@ export class Qc {
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
     return container;
+  }
+
+  public get idle(): boolean {
+    return this.currentJob !== undefined;
   }
 
   private buildModel(initialPosition: Vector3) {

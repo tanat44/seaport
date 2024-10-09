@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
-import { JobBase } from "../Event/types";
-import { Container } from "../StorageBlock/StorageBlock";
-import { YardCoordinate } from "../Yard/YardCoordinate";
+import { Container } from "../../StorageBlock/StorageBlock";
+import { YardCoordinate } from "../../Yard/YardCoordinate";
+import { JobBase } from "./JobBase";
 
 export abstract class TruckJob extends JobBase {
   truckId: string | undefined;

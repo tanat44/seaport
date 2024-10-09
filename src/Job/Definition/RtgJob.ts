@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
-import { JobBase } from "../Event/types";
-import { Container } from "../StorageBlock/StorageBlock";
-import { YardCoordinate } from "../Yard/YardCoordinate";
+import { Container } from "../../StorageBlock/StorageBlock";
+import { YardCoordinate } from "../../Yard/YardCoordinate";
+import { JobBase } from "./JobBase";
 
 export abstract class RtgJob extends JobBase {
   rtgId: string;
