@@ -1,13 +1,29 @@
+import { HandoverJobReason } from "./HanoverJob";
+import { QcJobReason } from "./QcJob";
+import { RtgJobReason } from "./RtgJob";
+import { TruckJobReason } from "./TruckJob";
+
+export enum JobStatus {
+  NotStarted = "NotStarted",
+  Working = "Working",
+  WaitForRelease = "WaitForRelease",
+  Completed = "Completed",
+}
 export abstract class JobBase {
   private static count = 0;
   id: number;
   sequenceId: number | undefined;
   dependencies: number[];
-  completed: boolean;
+  status: JobStatus;
+  reason: QcJobReason | RtgJobReason | TruckJobReason | HandoverJobReason;
 
   constructor(dependencies: number[]) {
     this.id = JobBase.count++;
     this.dependencies = [...dependencies];
-    this.completed = false;
+    this.status = JobStatus.NotStarted;
+  }
+
+  toString() {
+    return `[${this.sequenceId ?? "?"}.${this.id} <${this.reason}>]`;
   }
 }

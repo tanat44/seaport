@@ -9,10 +9,15 @@ import { RtgManager } from "../RTG/RtgManager";
 import { Terminal } from "../Terminal/Terminal";
 import { TruckManager } from "../Truck/TruckManager";
 import { YardManager } from "../Yard/YardManager";
+import {
+  HandoverContainerQcUnloadTruckLoad,
+  HandoverJob,
+} from "./Definition/HanoverJob";
+import { JobStatus } from "./Definition/JobBase";
 import { JobSequence } from "./Definition/JobSequence";
 import { QcJob, QcPickContainerFromVesselJob } from "./Definition/QcJob";
 import { RtgJob, RtgPickContainerFromTruckJob } from "./Definition/RtgJob";
-import { TruckContainerMoveToYardJob, TruckJob } from "./Definition/TruckJob";
+import { TruckJob } from "./Definition/TruckJob";
 
 export class JobRunner {
   terminal: Terminal;
@@ -53,7 +58,7 @@ export class JobRunner {
   }
 
   run(jobs: JobSequence[]) {
-    this.jobSequences = jobs;
+    this.jobSequences = [jobs[0]];
     this.runSequence();
   }
 
@@ -68,10 +73,11 @@ export class JobRunner {
         continue;
       }
 
-      let oneExecuted = false;
+      let someExecuteSuccess = false;
       for (const job of sequence.canStartJobs()) {
         if (QcJob.prototype.isPrototypeOf(job)) {
-          oneExecuted = oneExecuted || this.qcManager.execute(job as QcJob);
+          someExecuteSuccess =
+            someExecuteSuccess || this.qcManager.execute(job as QcJob);
         } else if (RtgJob.prototype.isPrototypeOf(job)) {
           const rtgJob = job as RtgJob;
 
@@ -88,7 +94,8 @@ export class JobRunner {
             rtg.pickContainer(container);
           }
 
-          oneExecuted = oneExecuted || this.rtgManager.execute(rtgJob);
+          someExecuteSuccess =
+            someExecuteSuccess || this.rtgManager.execute(rtgJob);
         } else if (TruckJob.prototype.isPrototypeOf(job)) {
           const truckJob = job as TruckJob;
           if (truckJob.reason === "truckemptymove") {
@@ -96,27 +103,39 @@ export class JobRunner {
             if (truck) {
               sequence.assignTruck(truck.id);
               this.truckManager.execute(truckJob);
-              oneExecuted = true;
+              someExecuteSuccess = true;
             }
           } else if (truckJob.reason === "truckmovecontainertoyard") {
-            // unload container from qc
-            const qcId = (truckJob as TruckContainerMoveToYardJob).qcId;
-            const qc = this.qcManager.getQuayCrane(qcId);
-            const container = qc.dropContainer();
-            this.qcManager.releaseQc(qcId);
-
-            // load container to truck
-            const truck = this.truckManager.getTruck(truckJob.truckId);
-            truck.load(container);
             this.truckManager.execute(truckJob);
-            oneExecuted = true;
+            someExecuteSuccess = true;
+          }
+        } else if (HandoverJob.prototype.isPrototypeOf(job)) {
+          if (job.reason === "handovercontainerqctotruck") {
+            console.log("Handover");
+            const handoverJob = job as HandoverContainerQcUnloadTruckLoad;
+
+            // qc drop container
+            const qc = this.qcManager.getQuayCrane(handoverJob.qcId);
+            const container = qc.dropContainer();
+            this.qcManager.releaseQc(qc.id);
+
+            // truck load container
+            const truck = this.truckManager.getTruck(handoverJob.truckId);
+            truck.load(container);
+
+            sequence.completeParentJob(job);
+            job.status = JobStatus.Completed;
+
+            this.runSequence();
           }
         } else {
           throw new Error("Unknown job type");
         }
       }
 
-      if (!oneExecuted) {
+      console.log(sequence);
+
+      if (!someExecuteSuccess) {
         console.log("JobRunner: resource depleted wait for next chance");
         return;
       }

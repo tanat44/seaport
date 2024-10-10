@@ -8,6 +8,7 @@ import {
   Vector3,
 } from "three";
 import { TruckDriveEndEvent } from "../Event/types";
+import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
 import { Terminal } from "../Terminal/Terminal";
@@ -33,12 +34,13 @@ const TRAILER_REAR_AXLE_POSITION = -CONTAINER_SIZE_X / 2 + 1;
 const TRAILER_KINGPIN_DISTANCE = CONTAINER_SIZE_X;
 const TRACTOR_WHEEL_BASE = 3;
 
+export type TruckId = string;
 export class Truck {
   static count = 0;
 
   terminal: Terminal;
 
-  id: string;
+  id: TruckId;
   trailerModel: Object3D;
   tractorModel: Object3D;
   pathPhysics: PathPhysics | null;
@@ -64,7 +66,7 @@ export class Truck {
   }
 
   execute(job: TruckJob) {
-    console.log("Truck: execute", job);
+    console.log("Truck: execute", job.toString());
     if (this.currentJob) {
       throw new Error(
         `Truck ${this.id} has ongoing job. Cannot execute duplicate job`
@@ -73,6 +75,7 @@ export class Truck {
 
     const path = this.terminal.pathPlanner.plan(this.position, job.to);
     this.drive(path);
+    job.status = JobStatus.Working;
     this.currentJob = job;
   }
 
@@ -98,10 +101,12 @@ export class Truck {
 
   private onDriveEnd(e: TruckDriveEndEvent) {
     if (e.truckId !== this.id) return;
-
-    e.job.completed = true;
-    this.currentJob = null;
     this.pathPhysics = null;
+
+    if (this.currentJob.reason === "truckemptymove") {
+      this.currentJob.status = JobStatus.Completed;
+      this.currentJob = null;
+    }
   }
 
   private update(
@@ -131,6 +136,10 @@ export class Truck {
     this.container = null;
     container.mesh.material = Render.containerMaterial;
     this.containerPlaceholder.remove(container.mesh);
+
+    this.currentJob.status = JobStatus.Completed;
+    this.currentJob = null;
+
     return container;
   }
 

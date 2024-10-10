@@ -13,6 +13,7 @@ import {
   RtgMoveEndEvent,
   RtgMoveStartEvent,
 } from "../Event/types";
+import { JobStatus } from "../Job/Definition/JobBase";
 import { RtgJob } from "../Job/Definition/RtgJob";
 import { Container } from "../StorageBlock/StorageBlock";
 import { CONTAINER_SIZE_Z } from "../Terminal/const";
@@ -23,11 +24,12 @@ import { RtgControl } from "./RtgControl";
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
+export type RtgId = string;
 export class Rtg {
   static count = 0;
 
   visualizer: Visualizer;
-  id: string;
+  id: RtgId;
 
   // physics
   width: number;
@@ -68,7 +70,7 @@ export class Rtg {
   }
 
   public execute(job: RtgJob) {
-    // console.log("Rtg: execute", job);
+    console.log("Rtg: execute", job.toString());
     if (this.currentJob) throw new Error("Cannot assign job to busy rtg");
 
     // check if it's a valid job
@@ -80,6 +82,8 @@ export class Rtg {
       throw new Error("Cannot move spreader under ground");
     if (job.position.z > this.height)
       throw new Error("Cannot move spreader above height");
+
+    job.status = JobStatus.Working;
 
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
@@ -113,12 +117,19 @@ export class Rtg {
     this.containerPlaceholder.add(this.container.mesh);
     this.container.mesh.position.set(0, 0, 0);
     this.container.mesh.material = Render.containerTransitMaterial;
+
+    this.currentJob.status = JobStatus.Completed;
+    this.currentJob = null;
   }
 
   public dropContainer(): Container {
     const container = this.container;
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
+
+    this.currentJob.status = JobStatus.Completed;
+    this.currentJob = null;
+
     return container;
   }
 
@@ -209,8 +220,10 @@ export class Rtg {
       rtgId: this.id,
       job: this.currentJob,
     });
-    this.currentJob.completed = true;
-    this.currentJob = null;
+    if (this.currentJob.reason === "rtgemptymove") {
+      this.currentJob.status = JobStatus.Completed;
+      this.currentJob = null;
+    }
   }
 
   private animate(deltaTime: number) {

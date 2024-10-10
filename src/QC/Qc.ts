@@ -9,6 +9,7 @@ import {
   Vector3,
 } from "three";
 import { AnimateEvent, QcMoveEndEvent } from "../Event/types";
+import { JobStatus } from "../Job/Definition/JobBase";
 import { QcJob } from "../Job/Definition/QcJob";
 import { Container } from "../StorageBlock/StorageBlock";
 import { CONTAINER_SIZE_Z } from "../Terminal/const";
@@ -19,11 +20,13 @@ import { QcControl } from "./QcControl";
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
+export type QcId = string;
+
 export class Qc {
   static count = 0;
 
   visualizer: Visualizer;
-  id: string;
+  id: QcId;
 
   // physics
   width: number;
@@ -70,7 +73,7 @@ export class Qc {
   }
 
   public execute(job: QcJob) {
-    console.log("Qc: execute", job);
+    console.log("Qc: execute", job.toString());
     if (this.currentJob)
       throw new Error("Cannot assign job to busy quay crane");
 
@@ -84,6 +87,7 @@ export class Qc {
     if (job.position.z > this.height)
       throw new Error("Cannot move spreader above height");
 
+    job.status = JobStatus.Working;
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
     this.currentJob = job;
@@ -107,12 +111,17 @@ export class Qc {
     this.containerPlaceholder.add(this.container.mesh);
     this.container.mesh.position.set(0, 0, 0);
     this.container.mesh.material = Render.containerTransitMaterial;
+    this.currentJob.status = JobStatus.Completed;
+    this.currentJob = null;
   }
 
   public dropContainer(): Container {
     const container = this.container;
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
+    this.currentJob.status = JobStatus.Completed;
+    this.currentJob = null;
+
     return container;
   }
 
@@ -219,13 +228,12 @@ export class Qc {
   }
 
   private onArrive() {
+    this.currentJob.status = JobStatus.WaitForRelease;
     this.visualizer.emit<QcMoveEndEvent>({
       type: "qcmoveend",
       qcId: this.id,
       job: this.currentJob,
     });
-    this.currentJob.completed = true;
-    this.currentJob = null;
   }
 
   private animate(deltaTime: number) {

@@ -3,10 +3,10 @@ import { Container } from "../../StorageBlock/StorageBlock";
 import { YardCoordinate } from "../../Yard/YardCoordinate";
 import { JobBase } from "./JobBase";
 
+export type TruckJobReason = "truckmovecontainertoyard" | "truckemptymove";
 export abstract class TruckJob extends JobBase {
   truckId: string | undefined;
   to: Vector2;
-  reason: "truckmovecontainertoyard" | "truckemptymove";
 }
 
 export class TruckEmptyMoveJob extends TruckJob {

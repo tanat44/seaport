@@ -8,6 +8,7 @@ import { TruckManager } from "../Truck/TruckManager";
 import { CargoOrder } from "../Vessel/types";
 import { Vessel } from "../Vessel/Vessel";
 import { YardManager } from "../Yard/YardManager";
+import { HandoverContainerQcUnloadTruckLoad } from "./Definition/HanoverJob";
 import { JobSequence } from "./Definition/JobSequence";
 import {
   QcDropContainerToTruckJob,
@@ -44,9 +45,9 @@ export class JobPlanner {
   }
 
   planUnloadJob(unloadPlan: CargoOrder, qc: Qc, vessel: Vessel): JobSequence[] {
-    const jobs: JobSequence[] = [];
+    const sequences: JobSequence[] = [];
     for (const cargo of unloadPlan) {
-      const containerJob = new JobSequence(cargo.containerId);
+      const sequence = new JobSequence(cargo.containerId);
 
       // qc pick container
       const containerPosition = cargo.coordinate.relativePosition.add(
@@ -60,7 +61,7 @@ export class JobPlanner {
         containerPosition.z
       );
       qcPickJob.cargoCoordinate = cargo.coordinate;
-      containerJob.addJob(qcPickJob);
+      sequence.addJob(qcPickJob);
 
       // qc drop off container
       const qcDropJob = new QcDropContainerToTruckJob([qcPickJob.id]);
@@ -71,24 +72,31 @@ export class JobPlanner {
         Truck.containerLoadHeight()
       );
       qcDropJob.position = qcDropPosition;
-      containerJob.addJob(qcDropJob);
+      sequence.addJob(qcDropJob);
 
       // truck standby under qc
       const truckEmptyMoveJob = new TruckEmptyMoveJob([]);
       truckEmptyMoveJob.to = new Vector2(qcDropPosition.x, qc.position.y);
-      containerJob.addJob(truckEmptyMoveJob);
+      sequence.addJob(truckEmptyMoveJob);
+
+      // handover qc unload truck load
+      const handoverJob = new HandoverContainerQcUnloadTruckLoad([
+        qcDropJob.id,
+        truckEmptyMoveJob.id,
+      ]);
+      handoverJob.qcId = qc.id;
+      sequence.addJob(handoverJob);
 
       // truck drive container to yard
       const storageCoor = this.yardManager.findStorage();
       const handlingPos =
         this.yardManager.getContainerHandlingPoint(storageCoor);
       const truckMoveContainerJob = new TruckContainerMoveToYardJob([
-        qcDropJob.id,
-        truckEmptyMoveJob.id,
+        handoverJob.id,
       ]);
       truckMoveContainerJob.qcId = qc.id;
       truckMoveContainerJob.to = handlingPos.clone();
-      containerJob.addJob(truckMoveContainerJob);
+      sequence.addJob(truckMoveContainerJob);
 
       // rtg move to standby position
       const rtgPickContainerJob = new RtgPickContainerFromTruckJob([
@@ -98,7 +106,7 @@ export class JobPlanner {
       rtgPickContainerJob.rtgId = rtgId;
       rtgPickContainerJob.position = new Vector3(handlingPos.x, handlingPos.y);
       rtgPickContainerJob.yardCoordinate = storageCoor;
-      containerJob.addJob(rtgPickContainerJob);
+      sequence.addJob(rtgPickContainerJob);
 
       // rtg store container in yard
       const yard = this.yardManager.getYard(storageCoor.yardId);
@@ -108,11 +116,12 @@ export class JobPlanner {
       ]);
       rtgStorageJob.rtgId = rtgId;
       rtgStorageJob.position = yard.coordinateToRtgPosition(storageCoor);
-      containerJob.addJob(rtgStorageJob);
+      sequence.addJob(rtgStorageJob);
 
-      jobs.push(containerJob);
+      // add to sequences
+      sequences.push(sequence);
     }
 
-    return jobs;
+    return sequences;
   }
 }

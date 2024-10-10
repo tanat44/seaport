@@ -3,13 +3,13 @@ import { Container } from "../../StorageBlock/StorageBlock";
 import { YardCoordinate } from "../../Yard/YardCoordinate";
 import { JobBase } from "./JobBase";
 
+export type RtgJobReason =
+  | "rtgpickcontainerfromtruck"
+  | "rtgdropcontainerinyard"
+  | "rtgemptymove";
 export abstract class RtgJob extends JobBase {
   rtgId: string;
   position: Vector3;
-  reason:
-    | "rtgpickcontainerfromtruck"
-    | "rtgdropcontainerinyard"
-    | "rtgemptymove";
 }
 
 export class RtgEmptyMoveJob extends RtgJob {

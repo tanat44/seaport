@@ -1,4 +1,5 @@
 import { Vector3 } from "three";
+import { SequenceId } from "../Job/Definition/JobSequence";
 import { RtgEmptyMoveJob, RtgJob } from "../Job/Definition/RtgJob";
 import { CONTAINER_SIZE_Y, CONTAINER_SIZE_Z } from "../Terminal/const";
 import { Terminal } from "../Terminal/Terminal";
@@ -11,10 +12,13 @@ export class RtgManager {
   private rtgs: Map<RtgId, Rtg>;
   private rtgYardAssignment: Map<Rtg, YardBlock>;
 
+  private activeSequences: Map<RtgId, SequenceId | undefined>;
+
   constructor(terminal: Terminal, yards: YardBlock[]) {
     this.terminal = terminal;
     this.rtgs = new Map();
     this.rtgYardAssignment = new Map();
+    this.activeSequences = new Map();
 
     // create one rtg per yard
     for (const yard of yards) {
@@ -28,10 +32,10 @@ export class RtgManager {
         yard.height + CONTAINER_SIZE_Z,
         yard.depth + truckLaneSize
       );
-      this.rtgs.set(rtg.id, rtg);
 
-      // assign rtg to yard
+      this.rtgs.set(rtg.id, rtg);
       this.rtgYardAssignment.set(rtg, yard);
+      this.activeSequences.set(rtg.id, undefined);
 
       // move to yard origin
       const job = new RtgEmptyMoveJob([]);
@@ -41,8 +45,13 @@ export class RtgManager {
   }
 
   execute(job: RtgJob): boolean {
+    const activeSequenceId = this.activeSequences.get(job.rtgId);
+    if (activeSequenceId !== undefined && activeSequenceId !== job.sequenceId)
+      return false;
+
     const rtg = this.getRtg(job.rtgId);
     if (rtg.idle) {
+      this.activeSequences.set(job.rtgId, job.sequenceId);
       rtg.execute(job);
       return true;
     }
@@ -68,5 +77,9 @@ export class RtgManager {
 
   getRtg(rtgId: string): Rtg {
     return this.rtgs.get(rtgId);
+  }
+
+  releaseRtg(rtgId: string) {
+    this.activeSequences.set(rtgId, undefined);
   }
 }

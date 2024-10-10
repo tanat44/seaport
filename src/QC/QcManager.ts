@@ -1,27 +1,28 @@
 import { Vector2, Vector3 } from "three";
+import { SequenceId } from "../Job/Definition/JobSequence";
 import { QcJob } from "../Job/Definition/QcJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Vessel } from "../Vessel/Vessel";
-import { Qc } from "./Qc";
+import { Qc, QcId } from "./Qc";
 
 export class QcManager {
   private terminal: Terminal;
   private quayCranes: Map<string, Qc>;
 
   // operation
-  private lockedQc: Map<string, boolean>;
-  private qcToVessel: Map<Qc, Vessel>;
+  private activeSequences: Map<QcId, SequenceId | undefined>;
+  private vesselAssignment: Map<Qc, Vessel>;
 
   constructor(terminal: Terminal, origins: Vector3[]) {
     this.terminal = terminal;
     this.quayCranes = new Map();
-    this.lockedQc = new Map();
+    this.activeSequences = new Map();
     for (const qcOrigin of origins) {
       const qc = this.addQuayCrane(qcOrigin);
       this.quayCranes.set(qc.id, qc);
-      this.lockedQc.set(qc.id, false);
+      this.activeSequences.set(qc.id, undefined);
     }
-    this.qcToVessel = new Map();
+    this.vesselAssignment = new Map();
   }
 
   getQuayCrane(id: string) {
@@ -30,7 +31,7 @@ export class QcManager {
 
   assignQuayCrane(vessel: Vessel): Qc {
     const qc = this.findQuayCraneForVessel(vessel);
-    this.qcToVessel.set(qc, vessel);
+    this.vesselAssignment.set(qc, vessel);
     return qc;
   }
 
@@ -38,14 +39,18 @@ export class QcManager {
     const qc = this.getQuayCrane(quayCraneId);
     if (!qc) throw new Error("Cannot get vessel of undefined quay crane");
 
-    return this.qcToVessel.get(qc);
+    return this.vesselAssignment.get(qc);
   }
 
   execute(job: QcJob): boolean {
+    const activeSequenceId = this.activeSequences.get(job.qcId);
+    if (activeSequenceId !== undefined && activeSequenceId !== job.sequenceId)
+      return false;
+
     const qc = this.getQuayCrane(job.qcId);
-    if (qc.idle && !this.lockedQc.get(qc.id)) {
+    if (qc.idle) {
+      this.activeSequences.set(job.qcId, job.sequenceId);
       qc.execute(job);
-      this.lockedQc.set(qc.id, true);
       return true;
     }
 
@@ -53,7 +58,7 @@ export class QcManager {
   }
 
   releaseQc(qcId: string) {
-    this.lockedQc.set(qcId, false);
+    this.activeSequences.set(qcId, undefined);
   }
 
   private addQuayCrane(position: Vector3): Qc {

@@ -1,8 +1,10 @@
-import { JobBase } from "./JobBase";
+import { HandoverJob } from "./HanoverJob";
+import { JobBase, JobStatus } from "./JobBase";
 import { TruckJob } from "./TruckJob";
 
+export type SequenceId = number;
 export class JobSequence {
-  id: number;
+  id: SequenceId;
   containerId: string;
   jobSequence: JobBase[];
 
@@ -23,26 +25,44 @@ export class JobSequence {
     for (const job of this.jobSequence) {
       if (TruckJob.prototype.isPrototypeOf(job)) {
         (job as TruckJob).truckId = truckId;
+      } else if (HandoverJob.prototype.isPrototypeOf(job)) {
+        (job as HandoverJob).truckId = truckId;
       }
     }
   }
 
   get completed(): boolean {
     for (const job of this.jobSequence) {
-      if (!job.completed) return false;
+      if (job.status !== JobStatus.Completed) return false;
     }
     return true;
   }
 
   canStartJobs(): JobBase[] {
     if (this.completed) return [];
-    return this.jobSequence.filter((job) => this.canStartJob(job));
+    const jobs = this.jobSequence.filter((job) => this.canStartJob(job));
+    // console.log("can", jobs);
+    return jobs;
+  }
+
+  completeParentJob(job: JobBase) {
+    for (const parentId of job.dependencies) {
+      const parentJob = this.findJob(parentId);
+      parentJob.status = JobStatus.Completed;
+    }
   }
 
   private canStartJob(job: JobBase) {
+    if (job.status !== JobStatus.NotStarted) return false;
+
     for (const parentId of job.dependencies) {
       const parentJob = this.findJob(parentId);
-      if (!parentJob.completed) return false;
+      if (
+        parentJob.status === JobStatus.Completed ||
+        parentJob.status === JobStatus.WaitForRelease
+      )
+        continue;
+      return false;
     }
     return true;
   }
