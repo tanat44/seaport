@@ -8,6 +8,7 @@ import {
   Vector2,
   Vector3,
 } from "three";
+import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { QcMoveEndEvent } from "../Event/QcEvent";
 import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
@@ -113,6 +114,7 @@ export class Qc {
     this.container.mesh.position.set(0, 0, 0);
     this.container.mesh.material = Render.containerTransitMaterial;
     this.currentJob.status = JobStatus.Completed;
+    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
     this.currentJob = null;
   }
 
@@ -121,6 +123,7 @@ export class Qc {
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
     this.currentJob.status = JobStatus.Completed;
+    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
     this.currentJob = null;
 
     return container;
@@ -229,11 +232,16 @@ export class Qc {
   }
 
   private onArrive() {
-    this.currentJob.status = JobStatus.WaitForRelease;
+    // move event
     const event = new QcMoveEndEvent();
     event.qcId = this.id;
     event.job = this.currentJob;
     this.visualizer.emit(event);
+
+    // job event
+    this.currentJob.status = JobStatus.WaitForRelease;
+    const jobEvent = new JobStatusChangeEvent(this.currentJob);
+    this.visualizer.emit(jobEvent);
   }
 
   private animate(deltaTime: number) {

@@ -3,12 +3,22 @@ import { StorageCoordinate } from "../../StorageBlock/StorageCoordinate";
 import { JobBase } from "./JobBase";
 
 export type HandoverJobReason =
+  | "handovervesseltoqc"
   | "handoverqctotruck"
   | "handovertrucktortg"
   | "handoverrtgtoyard";
 
 export abstract class HandoverJob extends JobBase {}
 
+export class HandoverVesselToQcJob extends HandoverJob {
+  cargoCoordinate: StorageCoordinate;
+  qcId: string;
+
+  constructor(dependencies: number[]) {
+    super(dependencies);
+    this.reason = "handovervesseltoqc";
+  }
+}
 export class HandoverQcToTruckJob extends HandoverJob {
   qcId: string;
   truckId: string;

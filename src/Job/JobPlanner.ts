@@ -7,6 +7,7 @@ import {
   HandoverQcToTruckJob,
   HandoverRtgToYardJob,
   HandoverTruckToRtgJob,
+  HandoverVesselToQcJob,
 } from "./Definition/HanoverJob";
 import { JobSequence } from "./Definition/JobSequence";
 import {
@@ -43,8 +44,14 @@ export class JobPlanner extends TerminalControl {
       qcPickJob.cargoCoordinate = cargo.coordinate;
       sequence.addJob(qcPickJob);
 
+      // handover vessel to qc
+      const handoverVessel = new HandoverVesselToQcJob([qcPickJob.id]);
+      handoverVessel.cargoCoordinate = cargo.coordinate;
+      handoverVessel.qcId = qc.id;
+      sequence.addJob(handoverVessel);
+
       // qc drop off container
-      const qcDropJob = new QcDropContainerToTruckJob([qcPickJob.id]);
+      const qcDropJob = new QcDropContainerToTruckJob([handoverVessel.id]);
       qcDropJob.qcId = qc.id;
       const qcDropPosition = new Vector3(
         containerPosition.x,

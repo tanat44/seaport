@@ -52,7 +52,9 @@ export class TruckManager {
     let bestTruck: Truck = null;
     const closestDistance = Infinity;
     for (const [truckId, truck] of this.trucks) {
-      if (this.activeSequences.get(truckId)) continue;
+      if (this.activeSequences.get(truckId) !== undefined) {
+        continue;
+      }
       const pos = truck.position;
       const distance = new Vector2(pos.x, pos.y).distanceTo(jobPosition);
       if (distance < closestDistance) {

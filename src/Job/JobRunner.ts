@@ -1,5 +1,4 @@
 import { JobStatusChangeEvent } from "../Event/JobEvent";
-import { QcMoveEndEvent } from "../Event/QcEvent";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
 import { Terminal } from "../Terminal/Terminal";
@@ -8,7 +7,7 @@ import { YardManager } from "../Yard/YardManager";
 import { HandoverJob } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
 import { JobSequence } from "./Definition/JobSequence";
-import { QcJob, QcPickContainerFromVesselJob } from "./Definition/QcJob";
+import { QcJob } from "./Definition/QcJob";
 import { RtgJob } from "./Definition/RtgJob";
 import { TruckJob } from "./Definition/TruckJob";
 import { Handover } from "./Handover";
@@ -43,9 +42,6 @@ export class JobRunner extends TerminalControl {
       "jobstatuschange",
       (e) => this.onJobStatusChange(e)
     );
-    this.terminal.visualizer.onEvent<QcMoveEndEvent>("qcmoveend", (e) =>
-      this.onQcMoveEnd(e)
-    );
   }
 
   run(jobs: JobSequence[]) {
@@ -58,9 +54,12 @@ export class JobRunner extends TerminalControl {
       console.log("JobRunner: all sequence completed");
       return;
     }
-    for (const sequence of this.jobSequences) {
+
+    for (let i = 0; i < this.jobSequences.length; ++i) {
+      const sequence = this.jobSequences[i];
       if (sequence.completed) {
         this.completedJobIds.add(sequence.id);
+        this.jobSequences.slice(0, 1);
         continue;
       }
 
@@ -107,18 +106,5 @@ export class JobRunner extends TerminalControl {
       e.job.status === JobStatus.WaitForRelease
     )
       this.runSequence();
-  }
-
-  private onQcMoveEnd(e: QcMoveEndEvent) {
-    const qc = this.qcManager.getQuayCrane(e.qcId);
-    if (!qc) throw new Error("Cannot move unknown quay crane");
-
-    if (e.job.reason === "qcpickcontainerfromvessel") {
-      const job = e.job as QcPickContainerFromVesselJob;
-      const vessel = this.qcManager.getAssignedVessel(e.qcId);
-      const container = vessel.remove(job.cargoCoordinate);
-      qc.pickContainer(container);
-    }
-    this.runSequence();
   }
 }

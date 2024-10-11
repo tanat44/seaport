@@ -4,6 +4,7 @@ import {
   HandoverQcToTruckJob,
   HandoverRtgToYardJob,
   HandoverTruckToRtgJob,
+  HandoverVesselToQcJob,
 } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
 import { JobSequence } from "./Definition/JobSequence";
@@ -14,7 +15,17 @@ export class Handover extends TerminalControl {
     console.log(job.toString(), "Execute");
     job.status = JobStatus.Working;
 
-    if (job.reason === "handoverqctotruck") {
+    if (job.reason === "handovervesseltoqc") {
+      const handoverJob = job as HandoverVesselToQcJob;
+
+      // vessel unload
+      const vessel = this.qcManager.getAssignedVessel(handoverJob.qcId);
+      const container = vessel.remove(handoverJob.cargoCoordinate);
+
+      // qc pick container
+      const qc = this.qcManager.getQuayCrane(handoverJob.qcId);
+      qc.pickContainer(container);
+    } else if (job.reason === "handoverqctotruck") {
       const handoverJob = job as HandoverQcToTruckJob;
 
       // qc drop container
