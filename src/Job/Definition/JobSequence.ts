@@ -25,8 +25,8 @@ export class JobSequence {
     for (const job of this.jobSequence) {
       if (TruckJob.prototype.isPrototypeOf(job)) {
         (job as TruckJob).truckId = truckId;
-      } else if (HandoverJob.prototype.isPrototypeOf(job)) {
-        (job as HandoverJob).truckId = truckId;
+      } else if (HandoverJob.prototype.isPrototypeOf(job) && "truckId" in job) {
+        job.truckId = truckId;
       }
     }
   }

@@ -1,4 +1,5 @@
 import { Vector3 } from "three";
+import { QcGantryEvent } from "../Event/QcEvent";
 import { PhysicsState3D } from "../Physics/PhysicsState3D";
 import { Trajectory } from "../Physics/types";
 import { Visualizer } from "../Visualizer/Visualizer";
@@ -27,11 +28,10 @@ export class QcControl extends PhysicsState3D {
     const id = quayCrane.id;
 
     this.visualizer.onEvent(`physicsstatechange${id}.x`, () => {
-      this.visualizer.emit({
-        type: "qcgantry",
-        quayCraneId: id,
-        absoluteSpace: quayCrane.absoluteSpace,
-      });
+      const event = new QcGantryEvent();
+      event.qcId = id;
+      event.absoluteSpace = quayCrane.absoluteSpace;
+      this.visualizer.emit(event);
     });
   }
 

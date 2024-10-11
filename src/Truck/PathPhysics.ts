@@ -1,5 +1,6 @@
 import { Object3D, Vector2 } from "three";
-import { AnimateEvent, TruckDriveEndEvent } from "../Event/types";
+import { TruckDriveEndEvent } from "../Event/TruckEvent";
+import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Truck } from "./Truck";
@@ -97,11 +98,12 @@ export class PathPhysics {
       this.acceleration = 0;
       this.meshes.forEach((mesh) => mesh.removeFromParent());
       this.arrived = true;
-      this.visualizer.emit<TruckDriveEndEvent>({
-        type: `truckdriveend`,
-        truckId: this.truck.id,
-        job: this.truck.currentJob,
-      });
+
+      // emit event
+      const event = new TruckDriveEndEvent();
+      event.truckId = this.truck.id;
+      event.job = this.truck.currentJob;
+      this.visualizer.emit(event);
 
       return;
     }

@@ -1,57 +1,28 @@
-import { Box2 } from "three";
-import { QcJob } from "../Job/Definition/QcJob";
-import { RtgJob } from "../Job/Definition/RtgJob";
-import { TruckJob } from "../Job/Definition/TruckJob";
-
-export interface EventBase {
-  type: EventType;
-}
+import { JobEventType } from "./JobEvent";
+import { QcEventType } from "./QcEvent";
+import { RtgEventType } from "./RtgEvent";
+import { TruckEventType } from "./TruckEvent";
 
 export type EventType =
+  | "undefined"
   | "animate"
-  | "qcmoveend"
-  | "qcjobfinish"
-  | "qcgantry"
-  | "rtgmovestart"
-  | "rtgmoveend"
-  | "truckdriveend"
-  | "truckrelease"
-  | `physicsstatechange${string}`;
+  | `physicsstatechange${string}`
+  | QcEventType
+  | RtgEventType
+  | TruckEventType
+  | JobEventType;
 
-export interface AnimateEvent extends EventBase {
+export abstract class EventBase {
+  readonly type: EventType;
+
+  constructor(type: EventType = "undefined") {
+    this.type = type;
+  }
+}
+export class AnimateEvent extends EventBase {
   deltaTime: number;
-}
 
-export interface QcMoveEndEvent extends EventBase {
-  qcId: string;
-  job: QcJob;
-}
-
-export interface QcJobFinishEvent extends EventBase {
-  qcId: string;
-  job: QcJob;
-}
-
-export interface QcGantryEvent extends EventBase {
-  qcId: string;
-  absoluteSpace: Box2;
-}
-
-export interface RtgMoveStartEvent extends EventBase {
-  rtgId: string;
-  job: RtgJob;
-}
-
-export interface RtgMoveEndEvent extends EventBase {
-  rtgId: string;
-  job: RtgJob;
-}
-
-export interface TruckDriveEndEvent extends EventBase {
-  truckId: string;
-  job: TruckJob;
-}
-
-export interface TruckReleaseEvent extends EventBase {
-  truckId: string;
+  constructor() {
+    super("animate");
+  }
 }

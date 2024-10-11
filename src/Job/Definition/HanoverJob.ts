@@ -1,18 +1,44 @@
 import { Container } from "../../StorageBlock/StorageBlock";
+import { StorageCoordinate } from "../../StorageBlock/StorageCoordinate";
 import { JobBase } from "./JobBase";
 
-export type HandoverJobReason = "handovercontainerqctotruck";
+export type HandoverJobReason =
+  | "handoverqctotruck"
+  | "handovertrucktortg"
+  | "handoverrtgtoyard";
 
-export abstract class HandoverJob extends JobBase {
-  truckId: string;
-}
+export abstract class HandoverJob extends JobBase {}
 
-export class HandoverContainerQcUnloadTruckLoad extends HandoverJob {
+export class HandoverQcToTruckJob extends HandoverJob {
   qcId: string;
+  truckId: string;
   container: Container;
 
   constructor(dependencies: number[]) {
     super(dependencies);
-    this.reason = "handovercontainerqctotruck";
+    this.reason = "handoverqctotruck";
+  }
+}
+
+export class HandoverTruckToRtgJob extends HandoverJob {
+  truckId: string;
+  rtgId: string;
+  container: Container;
+
+  constructor(dependencies: number[]) {
+    super(dependencies);
+    this.reason = "handovertrucktortg";
+  }
+}
+
+export class HandoverRtgToYardJob extends HandoverJob {
+  rtgId: string;
+  yardId: string;
+  container: Container;
+  yardCoordinate: StorageCoordinate;
+
+  constructor(dependencies: number[]) {
+    super(dependencies);
+    this.reason = "handoverrtgtoyard";
   }
 }

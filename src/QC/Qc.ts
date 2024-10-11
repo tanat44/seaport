@@ -8,7 +8,8 @@ import {
   Vector2,
   Vector3,
 } from "three";
-import { AnimateEvent, QcMoveEndEvent } from "../Event/types";
+import { QcMoveEndEvent } from "../Event/QcEvent";
+import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { QcJob } from "../Job/Definition/QcJob";
 import { Container } from "../StorageBlock/StorageBlock";
@@ -229,11 +230,10 @@ export class Qc {
 
   private onArrive() {
     this.currentJob.status = JobStatus.WaitForRelease;
-    this.visualizer.emit<QcMoveEndEvent>({
-      type: "qcmoveend",
-      qcId: this.id,
-      job: this.currentJob,
-    });
+    const event = new QcMoveEndEvent();
+    event.qcId = this.id;
+    event.job = this.currentJob;
+    this.visualizer.emit(event);
   }
 
   private animate(deltaTime: number) {

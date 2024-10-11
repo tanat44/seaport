@@ -7,7 +7,8 @@ import {
   Vector2,
   Vector3,
 } from "three";
-import { TruckDriveEndEvent } from "../Event/types";
+import { JobStatusChangeEvent } from "../Event/JobEvent";
+import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
@@ -103,10 +104,14 @@ export class Truck {
     if (e.truckId !== this.id) return;
     this.pathPhysics = null;
 
-    if (this.currentJob.reason === "truckemptymove") {
-      this.currentJob.status = JobStatus.Completed;
+    const job = this.currentJob;
+    if (job.reason === "truckemptymove") {
+      job.status = JobStatus.Completed;
       this.currentJob = null;
+    } else if (job.reason === "truckmovecontainertoyard") {
+      job.status = JobStatus.WaitForRelease;
     }
+    this.terminal.visualizer.emit(new JobStatusChangeEvent(job));
   }
 
   private update(
@@ -138,6 +143,7 @@ export class Truck {
     this.containerPlaceholder.remove(container.mesh);
 
     this.currentJob.status = JobStatus.Completed;
+    this.terminal.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
     this.currentJob = null;
 
     return container;

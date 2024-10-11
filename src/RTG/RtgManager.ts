@@ -55,7 +55,6 @@ export class RtgManager {
       rtg.execute(job);
       return true;
     }
-
     return false;
   }
 

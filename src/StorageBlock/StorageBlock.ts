@@ -75,7 +75,7 @@ export class StorageBlock {
     return container.id;
   }
 
-  unload(coordinate: StorageCoordinate): Container {
+  remove(coordinate: StorageCoordinate): Container {
     const bay = this.bays[coordinate.bay];
     const row = bay[coordinate.row];
 
@@ -87,6 +87,19 @@ export class StorageBlock {
     const container = row.pop();
     this.mesh.remove(container.mesh);
     return container;
+  }
+
+  store(container: Container, coordinate: StorageCoordinate) {
+    const bay = this.bays[coordinate.bay];
+    const row = bay[coordinate.row];
+
+    if (coordinate.tier === row.length) {
+      throw new Error(
+        "Unable to store container because there are other containers on the top"
+      );
+    }
+    row.push(container);
+    this.mesh.add(container.mesh);
   }
 
   planFullUnload(): CargoOrder {

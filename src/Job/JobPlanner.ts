@@ -1,14 +1,13 @@
 import { Vector2, Vector3 } from "three";
 import { Qc } from "../QC/Qc";
-import { QcManager } from "../QC/QcManager";
-import { RtgManager } from "../RTG/RtgManager";
-import { Terminal } from "../Terminal/Terminal";
 import { Truck } from "../Truck/Truck";
-import { TruckManager } from "../Truck/TruckManager";
 import { CargoOrder } from "../Vessel/types";
 import { Vessel } from "../Vessel/Vessel";
-import { YardManager } from "../Yard/YardManager";
-import { HandoverContainerQcUnloadTruckLoad } from "./Definition/HanoverJob";
+import {
+  HandoverQcToTruckJob,
+  HandoverRtgToYardJob,
+  HandoverTruckToRtgJob,
+} from "./Definition/HanoverJob";
 import { JobSequence } from "./Definition/JobSequence";
 import {
   QcDropContainerToTruckJob,
@@ -22,28 +21,9 @@ import {
   TruckContainerMoveToYardJob,
   TruckEmptyMoveJob,
 } from "./Definition/TruckJob";
+import { TerminalControl } from "./TerminalControl";
 
-export class JobPlanner {
-  terminal: Terminal;
-  qcManager: QcManager;
-  rtgManager: RtgManager;
-  truckManager: TruckManager;
-  yardManager: YardManager;
-
-  constructor(
-    terminal: Terminal,
-    qcManager: QcManager,
-    rtgManager: RtgManager,
-    truckManager: TruckManager,
-    yardManager: YardManager
-  ) {
-    this.terminal = terminal;
-    this.qcManager = qcManager;
-    this.rtgManager = rtgManager;
-    this.truckManager = truckManager;
-    this.yardManager = yardManager;
-  }
-
+export class JobPlanner extends TerminalControl {
   planUnloadJob(unloadPlan: CargoOrder, qc: Qc, vessel: Vessel): JobSequence[] {
     const sequences: JobSequence[] = [];
     for (const cargo of unloadPlan) {
@@ -80,43 +60,59 @@ export class JobPlanner {
       sequence.addJob(truckEmptyMoveJob);
 
       // handover qc unload truck load
-      const handoverJob = new HandoverContainerQcUnloadTruckLoad([
+      const handoverQcJob = new HandoverQcToTruckJob([
         qcDropJob.id,
         truckEmptyMoveJob.id,
       ]);
-      handoverJob.qcId = qc.id;
-      sequence.addJob(handoverJob);
+      handoverQcJob.qcId = qc.id;
+      sequence.addJob(handoverQcJob);
 
       // truck drive container to yard
       const storageCoor = this.yardManager.findStorage();
       const handlingPos =
         this.yardManager.getContainerHandlingPoint(storageCoor);
-      const truckMoveContainerJob = new TruckContainerMoveToYardJob([
-        handoverJob.id,
+      const truckDriveToRtgJob = new TruckContainerMoveToYardJob([
+        handoverQcJob.id,
       ]);
-      truckMoveContainerJob.qcId = qc.id;
-      truckMoveContainerJob.to = handlingPos.clone();
-      sequence.addJob(truckMoveContainerJob);
+      truckDriveToRtgJob.qcId = qc.id;
+      truckDriveToRtgJob.to = handlingPos.clone();
+      sequence.addJob(truckDriveToRtgJob);
 
       // rtg move to standby position
       const rtgPickContainerJob = new RtgPickContainerFromTruckJob([
-        qcDropJob.id,
+        handoverQcJob.id,
       ]);
       const rtgId = this.rtgManager.findRtg(storageCoor.yardId);
+      const yard = this.yardManager.getYard(storageCoor.yardId);
       rtgPickContainerJob.rtgId = rtgId;
-      rtgPickContainerJob.position = new Vector3(handlingPos.x, handlingPos.y);
+      rtgPickContainerJob.position = yard.globalPositionToRtgPosition(
+        new Vector3(handlingPos.x, handlingPos.y)
+      );
       rtgPickContainerJob.yardCoordinate = storageCoor;
       sequence.addJob(rtgPickContainerJob);
 
-      // rtg store container in yard
-      const yard = this.yardManager.getYard(storageCoor.yardId);
-      const rtgStorageJob = new RtgDropContainerInYardJob([
+      // handover truck to rtg
+      const handoverTruckJob = new HandoverTruckToRtgJob([
         rtgPickContainerJob.id,
-        truckMoveContainerJob.id,
+        truckDriveToRtgJob.id,
+      ]);
+      handoverTruckJob.rtgId = rtgId;
+      sequence.addJob(handoverTruckJob);
+
+      // rtg store container in yard
+      const rtgStorageJob = new RtgDropContainerInYardJob([
+        handoverTruckJob.id,
       ]);
       rtgStorageJob.rtgId = rtgId;
       rtgStorageJob.position = yard.coordinateToRtgPosition(storageCoor);
       sequence.addJob(rtgStorageJob);
+
+      // handover rtg to yard
+      const handoverRtgJob = new HandoverRtgToYardJob([rtgStorageJob.id]);
+      handoverRtgJob.rtgId = rtgId;
+      handoverRtgJob.yardId = yard.id;
+      handoverRtgJob.yardCoordinate = storageCoor;
+      sequence.addJob(handoverRtgJob);
 
       // add to sequences
       sequences.push(sequence);

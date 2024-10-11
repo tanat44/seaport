@@ -1,5 +1,5 @@
 import { Vector2 } from "three";
-import { QcGantryEvent } from "../Event/types";
+import { QcGantryEvent } from "../Event/QcEvent";
 import { QcSpace } from "../QC/QcSpace";
 import { Terminal } from "../Terminal/Terminal";
 import { AStar } from "./AStar";

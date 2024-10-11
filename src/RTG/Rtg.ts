@@ -8,11 +8,9 @@ import {
   Vector2,
   Vector3,
 } from "three";
-import {
-  AnimateEvent,
-  RtgMoveEndEvent,
-  RtgMoveStartEvent,
-} from "../Event/types";
+import { JobStatusChangeEvent } from "../Event/JobEvent";
+import { RtgMoveEndEvent, RtgMoveStartEvent } from "../Event/RtgEvent";
+import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { RtgJob } from "../Job/Definition/RtgJob";
 import { Container } from "../StorageBlock/StorageBlock";
@@ -74,24 +72,29 @@ export class Rtg {
     if (this.currentJob) throw new Error("Cannot assign job to busy rtg");
 
     // check if it's a valid job
-    if (job.position.y < 0)
-      throw new Error(`Cannot move trolley too far back ${this.id}`);
-    if (job.position.y > this.legSpan)
-      throw new Error("Cannot move trolley too far forward");
-    if (job.position.z < 0)
-      throw new Error("Cannot move spreader under ground");
-    if (job.position.z > this.height)
-      throw new Error("Cannot move spreader above height");
+    try {
+      if (job.position.y < 0)
+        throw new Error(`Cannot move trolley too far back`);
+      if (job.position.y > this.legSpan)
+        throw new Error("Cannot move trolley too far forward");
+      if (job.position.z < 0)
+        throw new Error("Cannot move spreader under ground");
+      if (job.position.z > this.height)
+        throw new Error("Cannot move spreader above height");
+    } catch (error) {
+      console.error(error);
+      console.log("Failed job", job);
+      throw error;
+    }
 
     job.status = JobStatus.Working;
 
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
-    this.visualizer.emit<RtgMoveStartEvent>({
-      type: "rtgmovestart",
-      rtgId: this.id,
-      job,
-    });
+    const event = new RtgMoveStartEvent();
+    event.rtgId = this.id;
+    event.job = job;
+    this.visualizer.emit(event);
     this.currentJob = job;
   }
 
@@ -109,7 +112,7 @@ export class Rtg {
   }
 
   get idle(): boolean {
-    return this.currentJob && true;
+    return !this.currentJob && true;
   }
 
   public pickContainer(container: Container) {
@@ -119,6 +122,7 @@ export class Rtg {
     this.container.mesh.material = Render.containerTransitMaterial;
 
     this.currentJob.status = JobStatus.Completed;
+    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
     this.currentJob = null;
   }
 
@@ -128,6 +132,7 @@ export class Rtg {
     this.containerPlaceholder.remove(container.mesh);
 
     this.currentJob.status = JobStatus.Completed;
+    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
     this.currentJob = null;
 
     return container;
@@ -215,15 +220,26 @@ export class Rtg {
   }
 
   private onArrive() {
-    this.visualizer.emit<RtgMoveEndEvent>({
-      type: "rtgmoveend",
-      rtgId: this.id,
-      job: this.currentJob,
-    });
-    if (this.currentJob.reason === "rtgemptymove") {
-      this.currentJob.status = JobStatus.Completed;
+    // move event
+    const event = new RtgMoveEndEvent();
+    event.rtgId = this.id;
+    event.job = this.currentJob;
+    this.visualizer.emit(event);
+
+    // job event
+    const job = this.currentJob;
+    if (job.reason === "rtgemptymove") {
+      job.status = JobStatus.Completed;
       this.currentJob = null;
+    } else if (
+      job.reason === "rtgpickcontainerfromtruck" ||
+      job.reason === "rtgdropcontainerinyard"
+    ) {
+      job.status = JobStatus.WaitForRelease;
+    } else {
+      throw new Error("Rtg arrive but doesn't change job status");
     }
+    this.visualizer.emit(new JobStatusChangeEvent(job));
   }
 
   private animate(deltaTime: number) {

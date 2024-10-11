@@ -55,7 +55,7 @@ export class Visualizer {
     this.event.on(eventType, callback);
   }
 
-  emit<T extends EventBase>(event: T) {
+  emit(event: EventBase) {
     this.event.emit(event);
   }
 
