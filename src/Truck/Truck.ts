@@ -67,7 +67,7 @@ export class Truck {
   }
 
   execute(job: TruckJob) {
-    console.log("Truck: execute", job.toString());
+    console.log(job.toString(), "Execute");
     if (this.currentJob) {
       throw new Error(
         `Truck ${this.id} has ongoing job. Cannot execute duplicate job`

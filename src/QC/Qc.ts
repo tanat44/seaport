@@ -74,7 +74,7 @@ export class Qc {
   }
 
   public execute(job: QcJob) {
-    console.log("Qc: execute", job.toString());
+    console.log(job.toString(), "Execute");
     if (this.currentJob)
       throw new Error("Cannot assign job to busy quay crane");
 

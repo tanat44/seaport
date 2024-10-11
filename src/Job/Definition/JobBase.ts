@@ -24,6 +24,6 @@ export abstract class JobBase {
   }
 
   toString() {
-    return `[${this.sequenceId ?? "?"}.${this.id} <${this.reason}>]`;
+    return `<${this.reason}.${this.sequenceId ?? "?"}.${this.id}>`;
   }
 }

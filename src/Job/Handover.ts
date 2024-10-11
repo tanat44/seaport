@@ -6,11 +6,13 @@ import {
   HandoverTruckToRtgJob,
 } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
+import { JobSequence } from "./Definition/JobSequence";
 import { TerminalControl } from "./TerminalControl";
 
 export class Handover extends TerminalControl {
-  execute(job: HandoverJob) {
-    console.log("Handover:", job.reason);
+  execute(job: HandoverJob, sequence: JobSequence) {
+    console.log(job.toString(), "Execute");
+    job.status = JobStatus.Working;
 
     if (job.reason === "handoverqctotruck") {
       const handoverJob = job as HandoverQcToTruckJob;
@@ -50,6 +52,7 @@ export class Handover extends TerminalControl {
     }
 
     job.status = JobStatus.Completed;
+    sequence.completeParentJob(job);
 
     // emit event
     this.terminal.visualizer.emit(new JobStatusChangeEvent(job));

@@ -5,7 +5,7 @@ import { Terminal } from "../Terminal/Terminal";
 import { CONTAINER_SIZE_Y } from "../Terminal/const";
 
 const HANDLING_POINT_ROW_OFFSET = -1; // handling at same bay, row -1, tier 0
-
+const RTG_OFFSET_Y = CONTAINER_SIZE_Y * 2;
 export class YardBlock extends StorageBlock {
   static yardBlockCount = 0;
 
@@ -33,13 +33,14 @@ export class YardBlock extends StorageBlock {
   }
 
   globalPositionToRtgPosition(global: Vector3) {
-    const rtgOffset = new Vector3(0, -CONTAINER_SIZE_Y, 0);
-    const rtgOrigin = this.position.clone().add(rtgOffset);
-    return global.clone().sub(rtgOrigin);
+    const global_origin = global.clone().sub(this.position);
+    global_origin.y += RTG_OFFSET_Y;
+    return global_origin;
   }
 
   coordinateToRtgPosition(coordinate: StorageCoordinate): Vector3 {
-    const rtgOffset = new Vector3(0, -CONTAINER_SIZE_Y, 0);
-    return coordinate.relativePosition.add(rtgOffset);
+    const position = coordinate.relativePosition;
+    position.y += RTG_OFFSET_Y;
+    return position;
   }
 }

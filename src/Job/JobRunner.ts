@@ -9,7 +9,7 @@ import { HandoverJob } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
 import { JobSequence } from "./Definition/JobSequence";
 import { QcJob, QcPickContainerFromVesselJob } from "./Definition/QcJob";
-import { RtgJob, RtgPickContainerFromTruckJob } from "./Definition/RtgJob";
+import { RtgJob } from "./Definition/RtgJob";
 import { TruckJob } from "./Definition/TruckJob";
 import { Handover } from "./Handover";
 import { TerminalControl } from "./TerminalControl";
@@ -49,7 +49,7 @@ export class JobRunner extends TerminalControl {
   }
 
   run(jobs: JobSequence[]) {
-    this.jobSequences = [jobs[0]];
+    this.jobSequences = jobs;
     this.runSequence();
   }
 
@@ -70,23 +70,8 @@ export class JobRunner extends TerminalControl {
           someExecuteSuccess =
             someExecuteSuccess || this.qcManager.execute(job as QcJob);
         } else if (RtgJob.prototype.isPrototypeOf(job)) {
-          const rtgJob = job as RtgJob;
-
-          if (rtgJob.reason === "rtgpickcontainerfromtruck") {
-          } else if (rtgJob.reason === "rtgdropcontainerinyard") {
-            // unload container from truck
-            const truckId = (rtgJob as RtgPickContainerFromTruckJob).truckId;
-            const truck = this.truckManager.getTruck(truckId);
-            const container = truck.unload();
-            this.truckManager.releaseTruck(truckId);
-
-            // load container to rtg
-            const rtg = this.rtgManager.getRtg(rtgJob.rtgId);
-            rtg.pickContainer(container);
-          }
-
           someExecuteSuccess =
-            someExecuteSuccess || this.rtgManager.execute(rtgJob);
+            someExecuteSuccess || this.rtgManager.execute(job as RtgJob);
         } else if (TruckJob.prototype.isPrototypeOf(job)) {
           const truckJob = job as TruckJob;
           if (truckJob.reason === "truckemptymove") {
@@ -101,26 +86,22 @@ export class JobRunner extends TerminalControl {
             someExecuteSuccess = true;
           }
         } else if (HandoverJob.prototype.isPrototypeOf(job)) {
-          this.handover.execute(job);
-          sequence.completeParentJob(job);
-          job.status = JobStatus.Completed;
-          this.runSequence();
+          this.handover.execute(job, sequence);
           someExecuteSuccess = true;
         } else {
           throw new Error("Unknown job type");
         }
       }
 
-      // console.log(sequence);
-
       if (!someExecuteSuccess) {
-        console.log("JobRunner: depleted");
+        // console.log("JobRunner: depleted");
         return;
       }
     }
   }
 
   private onJobStatusChange(e: JobStatusChangeEvent) {
+    console.log(e.job.toString(), e.job.status);
     if (
       e.job.status === JobStatus.Completed ||
       e.job.status === JobStatus.WaitForRelease

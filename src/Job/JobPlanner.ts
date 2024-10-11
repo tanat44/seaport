@@ -84,10 +84,12 @@ export class JobPlanner extends TerminalControl {
       ]);
       const rtgId = this.rtgManager.findRtg(storageCoor.yardId);
       const yard = this.yardManager.getYard(storageCoor.yardId);
-      rtgPickContainerJob.rtgId = rtgId;
-      rtgPickContainerJob.position = yard.globalPositionToRtgPosition(
+      const rtgPickPosition = yard.globalPositionToRtgPosition(
         new Vector3(handlingPos.x, handlingPos.y)
       );
+      if (rtgPickPosition.y < 0) rtgPickPosition.y = 0;
+      rtgPickContainerJob.rtgId = rtgId;
+      rtgPickContainerJob.position = rtgPickPosition;
       rtgPickContainerJob.yardCoordinate = storageCoor;
       sequence.addJob(rtgPickContainerJob);
 

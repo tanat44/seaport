@@ -93,13 +93,21 @@ export class StorageBlock {
     const bay = this.bays[coordinate.bay];
     const row = bay[coordinate.row];
 
-    if (coordinate.tier === row.length) {
-      throw new Error(
+    if (coordinate.tier !== row.length) {
+      console.error(
         "Unable to store container because there are other containers on the top"
       );
     }
     row.push(container);
+    const newCoordinate = new StorageCoordinate(
+      coordinate.bay,
+      coordinate.row,
+      row.length - 1
+    );
+
+    // visualize
     this.mesh.add(container.mesh);
+    container.mesh.position.copy(newCoordinate.relativePosition);
   }
 
   planFullUnload(): CargoOrder {

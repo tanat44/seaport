@@ -48,6 +48,12 @@ export class JobSequence {
   completeParentJob(job: JobBase) {
     for (const parentId of job.dependencies) {
       const parentJob = this.findJob(parentId);
+      if (parentJob.status === JobStatus.NotStarted)
+        throw new Error("Trying to complete NotStart parent job");
+      else if (parentJob.status === JobStatus.Working)
+        throw new Error("Trying to complete Working parent job");
+      else if (parentJob.status === JobStatus.Completed) continue;
+
       parentJob.status = JobStatus.Completed;
     }
   }
