@@ -96,7 +96,7 @@ export class EquipmentPanel extends UiBase {
     // update card on waiting
     if (job.status === JobStatus.WaitForRelease) {
       const card = this.equipmentCard.get(equipmentId);
-      card.className = "element equipmentWaiting";
+      card.className = "element center equipmentWaiting";
     } else if (job.status === JobStatus.Completed) {
       jobDom.innerHTML = "-";
     }
