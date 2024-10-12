@@ -17,7 +17,7 @@ export class LayoutManager {
     this.yardBlockMaterial = Render.createBasicMaterial(0xbbbbbb);
   }
 
-  async load(layoutPath: string = "/layout.svg") {
+  async load(layoutPath: string = "layout.svg") {
     const res = await fetch(layoutPath);
     const text = await res.text();
 

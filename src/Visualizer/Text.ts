@@ -13,7 +13,7 @@ export class Text {
     this.loader = new FontLoader();
   }
 
-  load(url: string = "/helvetiker_bold.typeface.json"): Promise<void> {
+  load(url: string = "helvetiker_bold.typeface.json"): Promise<void> {
     return new Promise(
       (resolve: () => void, reject: (reason: Error) => void) => {
         this.loader.load(
