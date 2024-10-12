@@ -25,12 +25,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Use Node.Js 22.x
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
-          cache: 'npm'
-      - run: npm ci
+          node-version: 22
+      - run: npm i
       - name: Build web application
         run: npm run build
       - name: Upload artifact
