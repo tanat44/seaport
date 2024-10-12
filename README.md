@@ -25,8 +25,8 @@ Web based seaport simulator (container terminal simulator). This code is written
 1. JobSequence defines the order of the process of a given sequence (e.g. container unload operation from vessel to yard). JobSequence contains ordered Jobs and the dependencies between Jobs, if any.
 1. JobRunner takes all sequences and execute them in order. JobRunner reacts to state change of the system and find the next dependencies resolved job and tell the job corresponding equipment to execute.
 
-## Layout
-Building a layout designing tool is time consuming and it would deviate the project from focusing on event based simulation. That's the reason why the current solution adopted for annotated (object with naming convention) SVG created by external editor.
+## Drawing Layout
+Building a layout designing tool is time consuming and it would deviate the focus from building event based simulation. That's the reason why this project assumed that the layout is created by external tools. At the current state we adopted for annotated SVG (object with naming convention) created by external editor, such as Inkscape.
 
 This is an example of SVG create and edited using Inkscape (Vector graphic software).
 

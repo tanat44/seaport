@@ -1,0 +1,46 @@
+body {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.controlPanel {
+  position: absolute;
+  z-index: 999;
+  padding: 1rem;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.element {
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  padding: 0.2rem 0.5rem;
+  flex: 0 0 auto;
+  align-self:flex-start;
+}
+
+.row{
+  display: flex;
+  flex-direction: row;
+  gap: 5px
+}
+
+#speedValue {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  text-align: right;
+  width: 30px;
+}
+
+.speedButton {
+  width: 30px;
+}
+
+button {
+  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  background-color: transparent;
+}
