@@ -8,8 +8,13 @@ import {
   Vector2,
   Vector3,
 } from "three";
+import {
+  EquipmentCreateEvent,
+  EquipmentMoveEndEvent,
+  EquipmentMoveStartEvent,
+  EquipmentType,
+} from "../Event/EquipmentEvent";
 import { JobStatusChangeEvent } from "../Event/JobEvent";
-import { QcMoveEndEvent } from "../Event/QcEvent";
 import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { QcJob } from "../Job/Definition/QcJob";
@@ -72,6 +77,7 @@ export class Qc {
 
     this.buildModel(initialPosition);
     this.listenToEvents();
+    this.visualizer.emit(new EquipmentCreateEvent(this.id, EquipmentType.Qc));
   }
 
   public execute(job: QcJob) {
@@ -89,10 +95,18 @@ export class Qc {
     if (job.position.z > this.height)
       throw new Error("Cannot move spreader above height");
 
-    job.status = JobStatus.Working;
+    // change job status
+    this.currentJob = job;
+    this.currentJob.status = JobStatus.Working;
+    const jobEvent = new JobStatusChangeEvent(this.currentJob);
+    this.visualizer.emit(jobEvent);
+
+    // execute move
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
-    this.currentJob = job;
+    this.visualizer.emit(
+      new EquipmentMoveStartEvent(this.id, EquipmentType.Qc)
+    );
   }
 
   public get absoluteSpace(): Box2 {
@@ -233,10 +247,7 @@ export class Qc {
 
   private onArrive() {
     // move event
-    const event = new QcMoveEndEvent();
-    event.qcId = this.id;
-    event.job = this.currentJob;
-    this.visualizer.emit(event);
+    this.visualizer.emit(new EquipmentMoveEndEvent(this.id, EquipmentType.Qc));
 
     // job event
     this.currentJob.status = JobStatus.WaitForRelease;

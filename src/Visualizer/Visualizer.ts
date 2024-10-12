@@ -11,6 +11,7 @@ import {
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Event } from "../Event/Event";
+import { SpeedChangeEvent } from "../Event/SimulationEvent";
 import { EventBase, EventType } from "../Event/types";
 import { Ui } from "../Ui/Ui";
 import { Text } from "./Text";
@@ -35,7 +36,6 @@ export class Visualizer {
 
   constructor() {
     this.raycaster = new Raycaster();
-    this.speed = SPEED_DEFAULT;
     this.setupScene();
     this.setupLighting();
     this.setupControl();
@@ -46,6 +46,7 @@ export class Visualizer {
 
     this.createObjects();
     this.animate();
+    this.setSpeed(SPEED_DEFAULT);
   }
 
   onEvent<T extends EventBase>(
@@ -61,6 +62,17 @@ export class Visualizer {
 
   setSpeed(speed: number) {
     this.speed = speed;
+    const event = new SpeedChangeEvent();
+    event.speed = speed;
+    this.emit(event);
+  }
+
+  increaseSpeed() {
+    this.setSpeed(this.speed * SPEED_MULTIPLIER);
+  }
+
+  decreaseSpeed() {
+    this.setSpeed(this.speed / SPEED_MULTIPLIER);
   }
 
   private async createObjects() {
@@ -132,11 +144,9 @@ export class Visualizer {
 
   private onKeyDown(e: KeyboardEvent) {
     if (e.code === "Equal") {
-      this.setSpeed(this.speed * SPEED_MULTIPLIER);
-      this.ui.messageBox.showMessage(`Simulation speed ${this.speed}x`);
+      this.increaseSpeed();
     } else if (e.code === "Minus") {
-      this.setSpeed(this.speed / SPEED_MULTIPLIER);
-      this.ui.messageBox.showMessage(`Simulation speed ${this.speed}x`);
+      this.decreaseSpeed();
     }
   }
 

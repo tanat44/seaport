@@ -7,6 +7,12 @@ import {
   Vector2,
   Vector3,
 } from "three";
+import {
+  EquipmentCreateEvent,
+  EquipmentMoveEndEvent,
+  EquipmentMoveStartEvent,
+  EquipmentType,
+} from "../Event/EquipmentEvent";
 import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
@@ -60,7 +66,9 @@ export class Truck {
     if (initialPosition) {
       this.trailerModel.position.copy(initialPosition);
     }
-
+    this.terminal.visualizer.emit(
+      new EquipmentCreateEvent(this.id, EquipmentType.Truck)
+    );
     this.terminal.visualizer.onEvent<TruckDriveEndEvent>(`truckdriveend`, (e) =>
       this.onDriveEnd(e)
     );
@@ -74,10 +82,17 @@ export class Truck {
       );
     }
 
+    // update job
+    this.currentJob = job;
+    this.currentJob.status = JobStatus.Working;
+    this.terminal.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+
+    // execute move
     const path = this.terminal.pathPlanner.plan(this.position, job.to);
     this.drive(path);
-    job.status = JobStatus.Working;
-    this.currentJob = job;
+    this.terminal.visualizer.emit(
+      new EquipmentMoveStartEvent(this.id, EquipmentType.Truck)
+    );
   }
 
   drive(controlPoints: Vector2[]) {
@@ -104,14 +119,19 @@ export class Truck {
     if (e.truckId !== this.id) return;
     this.pathPhysics = null;
 
+    // update job status
     const job = this.currentJob;
     if (job.reason === "truckemptymove") {
       job.status = JobStatus.Completed;
       this.currentJob = null;
-    } else if (job.reason === "truckmovecontainertoyard") {
+    } else {
       job.status = JobStatus.WaitForRelease;
     }
     this.terminal.visualizer.emit(new JobStatusChangeEvent(job));
+
+    this.terminal.visualizer.emit(
+      new EquipmentMoveEndEvent(this.id, EquipmentType.Truck)
+    );
   }
 
   private update(

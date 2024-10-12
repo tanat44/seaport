@@ -1,16 +1,19 @@
+import { EquipmentEventType } from "./EquipmentEvent";
 import { JobEventType } from "./JobEvent";
 import { QcEventType } from "./QcEvent";
 import { RtgEventType } from "./RtgEvent";
+import { SimulationEventType } from "./SimulationEvent";
 import { TruckEventType } from "./TruckEvent";
 
 export type EventType =
   | "undefined"
   | "animate"
-  | `physicsstatechange${string}`
   | QcEventType
   | RtgEventType
   | TruckEventType
-  | JobEventType;
+  | JobEventType
+  | SimulationEventType
+  | EquipmentEventType;
 
 export abstract class EventBase {
   readonly type: EventType;

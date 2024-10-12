@@ -2,7 +2,14 @@ body {
   font-family: 'Courier New', Courier, monospace;
 }
 
-.controlPanel {
+button {
+  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  background-color: transparent;
+}
+
+#controlPanel {
   position: absolute;
   z-index: 999;
   padding: 1rem;
@@ -10,6 +17,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+#equipmentPanel {
+  position: absolute;
+  bottom: 0;
+  z-index: 999;
+  padding: 1rem;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
 }
 
 .element {
@@ -21,10 +38,15 @@ body {
   align-self:flex-start;
 }
 
+
 .row{
   display: flex;
   flex-direction: row;
   gap: 5px
+}
+
+.center{
+  text-align: center;
 }
 
 #speedValue {
@@ -38,9 +60,28 @@ body {
   width: 30px;
 }
 
-button {
-  border: none;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  border-radius: 5px;
-  background-color: transparent;
+
+.equipmentIdling{
+  background-color: none;
+}
+.equipmentWaiting{
+  background-color:sandybrown;
+}
+.equipmentMoving{
+  animation: blinker 1s linear infinite;
+  background-color: lightgreen;
+}
+
+.job {
+  font-size: 10px;
+  width: 100px;
+  height: 2lh;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0.5;
+  }
 }

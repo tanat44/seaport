@@ -1,20 +1,32 @@
+import { SpeedChangeEvent } from "../Event/SimulationEvent";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { EquipmentPanel } from "./EquipmentPanel";
 import { MessageBox } from "./MessageBox";
+import { UiBase } from "./UiBase";
 
-export class Ui {
-  visualizer: Visualizer;
-  canvasElement: HTMLElement;
+export class Ui extends UiBase {
+  equipmentPanel: EquipmentPanel;
   messageBox: MessageBox;
 
   constructor(visualizer: Visualizer, canvasElement: HTMLElement) {
-    this.visualizer = visualizer;
-    this.canvasElement = canvasElement;
+    super(visualizer, canvasElement);
+    this.equipmentPanel = new EquipmentPanel(visualizer, canvasElement);
     this.messageBox = new MessageBox(this.canvasElement);
 
-    document.getElementById("speedMinus").onclick = () => this.onSpeedMinus();
+    // handle user interaction
+    document.getElementById("speedMinus").onclick = () =>
+      this.visualizer.decreaseSpeed();
+    document.getElementById("speedPlus").onclick = () =>
+      this.visualizer.increaseSpeed();
+
+    // handle internal event
+    this.visualizer.onEvent<SpeedChangeEvent>("speedchange", (e) =>
+      this.onSpeedChange(e)
+    );
   }
 
-  onSpeedMinus() {
-    console.log(this.visualizer);
+  private onSpeedChange(e: SpeedChangeEvent) {
+    this.messageBox.showMessage(`Simulation speed ${e.speed}x`);
+    document.getElementById("speedValue").innerHTML = `${e.speed}x`;
   }
 }

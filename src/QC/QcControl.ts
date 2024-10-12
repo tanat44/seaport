@@ -28,8 +28,7 @@ export class QcControl extends PhysicsState3D {
     const id = quayCrane.id;
 
     this.visualizer.onEvent(`physicsstatechange${id}.x`, () => {
-      const event = new QcGantryEvent();
-      event.qcId = id;
+      const event = new QcGantryEvent(id);
       event.absoluteSpace = quayCrane.absoluteSpace;
       this.visualizer.emit(event);
     });

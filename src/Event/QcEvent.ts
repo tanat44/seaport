@@ -1,23 +1,21 @@
 import { Box2 } from "three";
-import { QcJob } from "../Job/Definition/QcJob";
 import { EventBase } from "./types";
 
-export type QcEventType = "qcmoveend" | "qcgantry";
+export type QcEventType = "qcgantry";
 
-export class QcMoveEndEvent extends EventBase {
+export abstract class QcBaseEvent extends EventBase {
   qcId: string;
-  job: QcJob;
 
-  constructor() {
-    super("qcmoveend");
+  constructor(type: QcEventType, qcId: string) {
+    super(type);
+    this.qcId = qcId;
   }
 }
 
-export class QcGantryEvent extends EventBase {
-  qcId: string;
+export class QcGantryEvent extends QcBaseEvent {
   absoluteSpace: Box2;
 
-  constructor() {
-    super("qcgantry");
+  constructor(qcId: string) {
+    super("qcgantry", qcId);
   }
 }

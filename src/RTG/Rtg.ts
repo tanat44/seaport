@@ -8,8 +8,13 @@ import {
   Vector2,
   Vector3,
 } from "three";
+import {
+  EquipmentCreateEvent,
+  EquipmentMoveEndEvent,
+  EquipmentMoveStartEvent,
+  EquipmentType,
+} from "../Event/EquipmentEvent";
 import { JobStatusChangeEvent } from "../Event/JobEvent";
-import { RtgMoveEndEvent, RtgMoveStartEvent } from "../Event/RtgEvent";
 import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { RtgJob } from "../Job/Definition/RtgJob";
@@ -65,6 +70,7 @@ export class Rtg {
 
     this.buildModel(origin);
     this.listenToEvents();
+    this.visualizer.emit(new EquipmentCreateEvent(this.id, EquipmentType.Rtg));
   }
 
   public execute(job: RtgJob) {
@@ -87,15 +93,17 @@ export class Rtg {
       throw error;
     }
 
-    job.status = JobStatus.Working;
+    // update job status
+    this.currentJob = job;
+    this.currentJob.status = JobStatus.Working;
+    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
 
+    // execute move
     const trajectory = this.control.planTrajectory(job.position);
     this.control.execute(trajectory);
-    const event = new RtgMoveStartEvent();
-    event.rtgId = this.id;
-    event.job = job;
-    this.visualizer.emit(event);
-    this.currentJob = job;
+    this.visualizer.emit(
+      new EquipmentMoveStartEvent(this.id, EquipmentType.Rtg)
+    );
   }
 
   public get absoluteSpace(): Box2 {
@@ -221,10 +229,7 @@ export class Rtg {
 
   private onArrive() {
     // move event
-    const event = new RtgMoveEndEvent();
-    event.rtgId = this.id;
-    event.job = this.currentJob;
-    this.visualizer.emit(event);
+    this.visualizer.emit(new EquipmentMoveEndEvent(this.id, EquipmentType.Rtg));
 
     // job event
     const job = this.currentJob;
