@@ -3,7 +3,10 @@ import {
   JobStatusChangeEvent,
 } from "../Event/JobEvent";
 import { JobBase, JobStatus } from "../Job/Definition/JobBase";
-import { JobSequence, SequenceStatus } from "../Job/Definition/JobSequence";
+import { SequenceStatus } from "../Job/Definition/JobSequence";
+import { QcJob } from "../Job/Definition/QcJob";
+import { RtgJob } from "../Job/Definition/RtgJob";
+import { TruckJob } from "../Job/Definition/TruckJob";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { UiBase } from "./UiBase";
 
@@ -26,21 +29,36 @@ export class JobDisplay extends UiBase {
     );
   }
 
-  private createSequenceCard(sequence: JobSequence) {
+  private createSequenceCard(sequenceId: number) {
     const card = document.createElement("div");
-    card.innerHTML = sequence.id.toFixed(0);
+    card.innerHTML = sequenceId.toFixed(0);
     card.className = "elementSmall center row";
     const panel = document.getElementById("sequencePanel");
     panel.appendChild(card);
-    this.sequenceCard.set(sequence.id, card);
+    this.sequenceCard.set(sequenceId, card);
   }
 
   private createJobCard(job: JobBase) {
+    if (!job.sequenceId) return;
+
+    if (!this.sequenceCard.has(job.sequenceId))
+      this.createSequenceCard(job.sequenceId);
+
     const sequenceCard = this.sequenceCard.get(job.sequenceId);
-    if (!sequenceCard) return;
+
+    let equipmentId: string = undefined;
+    if (QcJob.prototype.isPrototypeOf(job)) {
+      equipmentId = (job as QcJob).qcId;
+    } else if (RtgJob.prototype.isPrototypeOf(job)) {
+      equipmentId = (job as RtgJob).rtgId;
+    } else if (TruckJob.prototype.isPrototypeOf(job)) {
+      equipmentId = (job as TruckJob).truckId;
+    } else {
+      return;
+    }
 
     const card = document.createElement("div");
-    card.innerHTML = job.reason;
+    card.innerHTML = `${equipmentId}: ${job.reason}`;
     card.className = "elementSmall jobCard center";
     this.jobCard.set(job.id, card);
 
@@ -50,7 +68,8 @@ export class JobDisplay extends UiBase {
 
   private onSequenceStatusChange(e: JobSequenceStatusChangeEvent) {
     const sequence = e.sequence;
-    if (!this.sequenceCard.has(sequence.id)) this.createSequenceCard(sequence);
+    if (!this.sequenceCard.has(sequence.id))
+      this.createSequenceCard(sequence.id);
 
     const card = this.sequenceCard.get(sequence.id);
     if (sequence.status === SequenceStatus.Complete) {
@@ -62,6 +81,7 @@ export class JobDisplay extends UiBase {
 
   private onJobStatusChange(e: JobStatusChangeEvent) {
     const job = e.job;
+
     if (!this.jobCard.has(job.id)) this.createJobCard(job);
 
     // update job card

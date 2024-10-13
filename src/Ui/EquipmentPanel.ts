@@ -1,8 +1,4 @@
-import {
-  EquipmentCreateEvent,
-  EquipmentMoveEndEvent,
-  EquipmentMoveStartEvent,
-} from "../Event/EquipmentEvent";
+import { EquipmentCreateEvent } from "../Event/EquipmentEvent";
 import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { QcJob } from "../Job/Definition/QcJob";
@@ -24,13 +20,6 @@ export class EquipmentPanel extends UiBase {
     this.visualizer.onEvent<EquipmentCreateEvent>("equipmentcreate", (e) =>
       this.onEquipmentCreate(e)
     );
-    this.visualizer.onEvent<EquipmentMoveStartEvent>(
-      "equipmentmovestart",
-      (e) => this.onEquipmentMoveStart(e)
-    );
-    this.visualizer.onEvent<EquipmentMoveEndEvent>("equipmentmoveend", (e) =>
-      this.onEquipmentMoveEnd(e)
-    );
     this.visualizer.onEvent<JobStatusChangeEvent>("jobstatuschange", (e) =>
       this.onJobStatusChange(e)
     );
@@ -48,20 +37,6 @@ export class EquipmentPanel extends UiBase {
 
   private onEquipmentCreate(e: EquipmentCreateEvent) {
     this.createEquipmentCard(e.id);
-  }
-
-  private onEquipmentMoveStart(e: EquipmentMoveStartEvent) {
-    if (!this.equipmentCard.has(e.id)) this.createEquipmentCard(e.id);
-
-    const card = this.equipmentCard.get(e.id);
-    card.className = "elementSmall center workingStatus";
-  }
-
-  private onEquipmentMoveEnd(e: EquipmentMoveEndEvent) {
-    if (!this.equipmentCard.has(e.id)) this.createEquipmentCard(e.id);
-
-    const card = this.equipmentCard.get(e.id);
-    card.className = "elementSmall center idlingStatus";
   }
 
   private onJobStatusChange(e: JobStatusChangeEvent) {
@@ -84,7 +59,9 @@ export class EquipmentPanel extends UiBase {
 
     // update card on waiting
     const card = this.equipmentCard.get(equipmentId);
-    if (job.status === JobStatus.WaitForRelease) {
+    if (job.status === JobStatus.Working) {
+      card.className = "elementSmall center workingStatus";
+    } else if (job.status === JobStatus.WaitForRelease) {
       card.className = "elementSmall center blockingStatus";
     } else if (job.status === JobStatus.Completed) {
       card.className = "elementSmall center idlingStatus";
