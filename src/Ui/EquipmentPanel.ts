@@ -31,8 +31,6 @@ export class EquipmentPanel extends UiBase {
     this.visualizer.onEvent<EquipmentMoveEndEvent>("equipmentmoveend", (e) =>
       this.onEquipmentMoveEnd(e)
     );
-
-    // register job event
     this.visualizer.onEvent<JobStatusChangeEvent>("jobstatuschange", (e) =>
       this.onJobStatusChange(e)
     );
@@ -42,17 +40,10 @@ export class EquipmentPanel extends UiBase {
     // create card
     const card = document.createElement("div");
     card.innerHTML = id;
-    card.className = "element center";
+    card.className = "elementSmall center";
     const panel = document.getElementById("equipmentPanel");
     panel.appendChild(card);
     this.equipmentCard.set(id, card);
-
-    // job
-    const jobDom = document.createElement("div");
-    jobDom.innerHTML = "-";
-    jobDom.className = "element job";
-    card.appendChild(jobDom);
-    this.jobCard.set(id, jobDom);
   }
 
   private onEquipmentCreate(e: EquipmentCreateEvent) {
@@ -63,14 +54,14 @@ export class EquipmentPanel extends UiBase {
     if (!this.equipmentCard.has(e.id)) this.createEquipmentCard(e.id);
 
     const card = this.equipmentCard.get(e.id);
-    card.className = "element center equipmentMoving";
+    card.className = "elementSmall center workingStatus";
   }
 
   private onEquipmentMoveEnd(e: EquipmentMoveEndEvent) {
     if (!this.equipmentCard.has(e.id)) this.createEquipmentCard(e.id);
 
     const card = this.equipmentCard.get(e.id);
-    card.className = "element center equipmentIdling";
+    card.className = "elementSmall center idlingStatus";
   }
 
   private onJobStatusChange(e: JobStatusChangeEvent) {
@@ -86,19 +77,17 @@ export class EquipmentPanel extends UiBase {
       return;
     }
 
-    if (!this.equipmentCard.has(equipmentId))
-      this.createEquipmentCard(equipmentId);
-
-    // update job reason
-    const jobDom = this.jobCard.get(equipmentId);
-    jobDom.innerHTML = job.reason;
+    if (!equipmentId) {
+      console.trace(job);
+      throw new Error("unknown equipment");
+    }
 
     // update card on waiting
+    const card = this.equipmentCard.get(equipmentId);
     if (job.status === JobStatus.WaitForRelease) {
-      const card = this.equipmentCard.get(equipmentId);
-      card.className = "element center equipmentWaiting";
+      card.className = "elementSmall center blockingStatus";
     } else if (job.status === JobStatus.Completed) {
-      jobDom.innerHTML = "-";
+      card.className = "elementSmall center idlingStatus";
     }
   }
 }

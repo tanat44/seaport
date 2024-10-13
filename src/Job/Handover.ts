@@ -61,6 +61,6 @@ export class Handover extends TerminalControl {
     }
 
     job.updateStatus(JobStatus.Completed, this.terminal.visualizer);
-    sequence.completeParentJob(job);
+    sequence.completeParentJob(job, this.terminal.visualizer);
   }
 }

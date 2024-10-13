@@ -1,16 +1,19 @@
 import { SpeedChangeEvent } from "../Event/SimulationEvent";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { EquipmentPanel } from "./EquipmentPanel";
+import { JobDisplay } from "./JobDisplay";
 import { MessageBox } from "./MessageBox";
 import { UiBase } from "./UiBase";
 
 export class Ui extends UiBase {
   equipmentPanel: EquipmentPanel;
+  jobDisplay: JobDisplay;
   messageBox: MessageBox;
 
   constructor(visualizer: Visualizer, canvasElement: HTMLElement) {
     super(visualizer, canvasElement);
     this.equipmentPanel = new EquipmentPanel(visualizer, canvasElement);
+    this.jobDisplay = new JobDisplay(visualizer, canvasElement);
     this.messageBox = new MessageBox(this.canvasElement);
 
     // handle user interaction

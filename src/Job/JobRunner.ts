@@ -1,4 +1,7 @@
-import { JobStatusChangeEvent } from "../Event/JobEvent";
+import {
+  JobSequenceStatusChangeEvent,
+  JobStatusChangeEvent,
+} from "../Event/JobEvent";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
 import { Terminal } from "../Terminal/Terminal";
@@ -6,7 +9,7 @@ import { TruckManager } from "../Truck/TruckManager";
 import { YardManager } from "../Yard/YardManager";
 import { HandoverJob } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
-import { JobSequence } from "./Definition/JobSequence";
+import { JobSequence, SequenceStatus } from "./Definition/JobSequence";
 import { QcJob } from "./Definition/QcJob";
 import { RtgJob } from "./Definition/RtgJob";
 import { TruckJob } from "./Definition/TruckJob";
@@ -16,7 +19,7 @@ import { TerminalControl } from "./TerminalControl";
 export class JobRunner extends TerminalControl {
   handover: Handover;
   jobSequences: JobSequence[];
-  completedJobIds: Set<number>;
+  completeSequences: JobSequence[];
 
   constructor(
     terminal: Terminal,
@@ -35,12 +38,16 @@ export class JobRunner extends TerminalControl {
       yardManager
     );
     this.jobSequences = [];
-    this.completedJobIds = new Set();
+    this.completeSequences = [];
 
     // register event handler
     this.terminal.visualizer.onEvent<JobStatusChangeEvent>(
       "jobstatuschange",
       (e) => this.onJobStatusChange(e)
+    );
+    this.terminal.visualizer.onEvent<JobSequenceStatusChangeEvent>(
+      "jobsequencestatuschange",
+      (e) => this.onJobSequenceStatusChange(e)
     );
   }
 
@@ -50,16 +57,21 @@ export class JobRunner extends TerminalControl {
   }
 
   private runSequence() {
-    if (this.completedJobIds.size === this.jobSequences.length) {
+    if (this.jobSequences.length === 0) {
       console.log("JobRunner: all sequence completed");
       return;
     }
 
-    for (let i = 0; i < this.jobSequences.length; ++i) {
+    let i = 0;
+    while (i < this.jobSequences.length) {
       const sequence = this.jobSequences[i];
-      if (sequence.completed) {
-        this.completedJobIds.add(sequence.id);
-        this.jobSequences.slice(0, 1);
+      if (sequence.isAllJobsCompleted) {
+        sequence.updateStatus(
+          SequenceStatus.Complete,
+          this.terminal.visualizer
+        );
+        const removeSequences = this.jobSequences.splice(i, 1);
+        this.completeSequences.push(...removeSequences);
         continue;
       }
 
@@ -92,19 +104,36 @@ export class JobRunner extends TerminalControl {
         }
       }
 
-      if (!someExecuteSuccess) {
-        // console.log("JobRunner: depleted");
-        return;
+      if (someExecuteSuccess) {
+        if (sequence.status === SequenceStatus.NotStarted)
+          sequence.updateStatus(
+            SequenceStatus.Working,
+            this.terminal.visualizer
+          );
       }
+
+      ++i;
     }
   }
 
   private onJobStatusChange(e: JobStatusChangeEvent) {
-    console.log(e.job.toString(), e.job.status);
+    // console.log(e.job.toString(), e.job.status);
     if (
       e.job.status === JobStatus.Completed ||
       e.job.status === JobStatus.WaitForRelease
     )
       this.runSequence();
+  }
+
+  private onJobSequenceStatusChange(e: JobSequenceStatusChangeEvent) {
+    const sequence = e.sequence;
+
+    if (sequence.status === SequenceStatus.Complete) {
+      const totalJobs =
+        this.jobSequences.length + this.completeSequences.length;
+      console.log(
+        `JobRunner: Remaining ${this.jobSequences.length}/${totalJobs} sequences`
+      );
+    }
   }
 }

@@ -40,6 +40,7 @@ export class RtgManager {
       // move to yard origin
       const job = new RtgEmptyMoveJob([]);
       job.position = new Vector3(0, 0, rtg.height);
+      job.rtgId = rtg.id;
       rtg.execute(job);
     }
   }

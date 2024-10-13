@@ -2,10 +2,7 @@ import { JobBase } from "../Job/Definition/JobBase";
 import { JobSequence } from "../Job/Definition/JobSequence";
 import { EventBase } from "./types";
 
-export type JobEventType =
-  | "jobstatuschange"
-  | "jobsequencestart"
-  | "jobsequencecomplete";
+export type JobEventType = "jobstatuschange" | "jobsequencestatuschange";
 
 export class JobStatusChangeEvent extends EventBase {
   job: JobBase;
@@ -16,20 +13,11 @@ export class JobStatusChangeEvent extends EventBase {
   }
 }
 
-export class JobSequenceStartEvent extends EventBase {
+export class JobSequenceStatusChangeEvent extends EventBase {
   sequence: JobSequence;
 
   constructor(sequence: JobSequence) {
-    super("jobsequencestart");
-    this.sequence = sequence;
-  }
-}
-
-export class JobSequenceCompleteEvent extends EventBase {
-  sequence: JobSequence;
-
-  constructor(sequence: JobSequence) {
-    super("jobsequencecomplete");
+    super("jobsequencestatuschange");
     this.sequence = sequence;
   }
 }
