@@ -13,7 +13,6 @@ import {
   EquipmentMoveStartEvent,
   EquipmentType,
 } from "../Event/EquipmentEvent";
-import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
@@ -84,8 +83,7 @@ export class Truck {
 
     // update job
     this.currentJob = job;
-    this.currentJob.status = JobStatus.Working;
-    this.terminal.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Working, this.terminal.visualizer);
 
     // execute move
     const path = this.terminal.pathPlanner.plan(this.position, job.to);
@@ -120,14 +118,18 @@ export class Truck {
     this.pathPhysics = null;
 
     // update job status
-    const job = this.currentJob;
-    if (job.reason === "truckemptymove") {
-      job.status = JobStatus.Completed;
+    if (this.currentJob.reason === "truckemptymove") {
+      this.currentJob.updateStatus(
+        JobStatus.Completed,
+        this.terminal.visualizer
+      );
       this.currentJob = null;
     } else {
-      job.status = JobStatus.WaitForRelease;
+      this.currentJob.updateStatus(
+        JobStatus.WaitForRelease,
+        this.terminal.visualizer
+      );
     }
-    this.terminal.visualizer.emit(new JobStatusChangeEvent(job));
 
     this.terminal.visualizer.emit(
       new EquipmentMoveEndEvent(this.id, EquipmentType.Truck)
@@ -162,8 +164,7 @@ export class Truck {
     container.mesh.material = Render.containerMaterial;
     this.containerPlaceholder.remove(container.mesh);
 
-    this.currentJob.status = JobStatus.Completed;
-    this.terminal.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Completed, this.terminal.visualizer);
     this.currentJob = null;
 
     return container;

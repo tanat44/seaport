@@ -127,8 +127,7 @@ export class Qc {
     this.containerPlaceholder.add(this.container.mesh);
     this.container.mesh.position.set(0, 0, 0);
     this.container.mesh.material = Render.containerTransitMaterial;
-    this.currentJob.status = JobStatus.Completed;
-    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Completed, this.visualizer);
     this.currentJob = null;
   }
 
@@ -136,8 +135,7 @@ export class Qc {
     const container = this.container;
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
-    this.currentJob.status = JobStatus.Completed;
-    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Completed, this.visualizer);
     this.currentJob = null;
 
     return container;
@@ -250,9 +248,7 @@ export class Qc {
     this.visualizer.emit(new EquipmentMoveEndEvent(this.id, EquipmentType.Qc));
 
     // job event
-    this.currentJob.status = JobStatus.WaitForRelease;
-    const jobEvent = new JobStatusChangeEvent(this.currentJob);
-    this.visualizer.emit(jobEvent);
+    this.currentJob.updateStatus(JobStatus.WaitForRelease, this.visualizer);
   }
 
   private animate(deltaTime: number) {

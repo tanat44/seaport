@@ -14,7 +14,6 @@ import {
   EquipmentMoveStartEvent,
   EquipmentType,
 } from "../Event/EquipmentEvent";
-import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { RtgJob } from "../Job/Definition/RtgJob";
@@ -95,8 +94,7 @@ export class Rtg {
 
     // update job status
     this.currentJob = job;
-    this.currentJob.status = JobStatus.Working;
-    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Working, this.visualizer);
 
     // execute move
     const trajectory = this.control.planTrajectory(job.position);
@@ -129,8 +127,7 @@ export class Rtg {
     this.container.mesh.position.set(0, 0, 0);
     this.container.mesh.material = Render.containerTransitMaterial;
 
-    this.currentJob.status = JobStatus.Completed;
-    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Completed, this.visualizer);
     this.currentJob = null;
   }
 
@@ -139,8 +136,7 @@ export class Rtg {
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
 
-    this.currentJob.status = JobStatus.Completed;
-    this.visualizer.emit(new JobStatusChangeEvent(this.currentJob));
+    this.currentJob.updateStatus(JobStatus.Completed, this.visualizer);
     this.currentJob = null;
 
     return container;
@@ -234,17 +230,16 @@ export class Rtg {
     // job event
     const job = this.currentJob;
     if (job.reason === "rtgemptymove") {
-      job.status = JobStatus.Completed;
+      this.currentJob.updateStatus(JobStatus.Completed, this.visualizer);
       this.currentJob = null;
     } else if (
       job.reason === "rtgpickcontainerfromtruck" ||
       job.reason === "rtgdropcontainerinyard"
     ) {
-      job.status = JobStatus.WaitForRelease;
+      this.currentJob.updateStatus(JobStatus.WaitForRelease, this.visualizer);
     } else {
       throw new Error("Rtg arrive but doesn't change job status");
     }
-    this.visualizer.emit(new JobStatusChangeEvent(job));
   }
 
   private animate(deltaTime: number) {

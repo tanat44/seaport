@@ -1,4 +1,3 @@
-import { JobStatusChangeEvent } from "../Event/JobEvent";
 import {
   HandoverJob,
   HandoverQcToTruckJob,
@@ -12,8 +11,7 @@ import { TerminalControl } from "./TerminalControl";
 
 export class Handover extends TerminalControl {
   execute(job: HandoverJob, sequence: JobSequence) {
-    console.log(job.toString(), "Execute");
-    job.status = JobStatus.Working;
+    job.updateStatus(JobStatus.Working, this.terminal.visualizer);
 
     if (job.reason === "handovervesseltoqc") {
       const handoverJob = job as HandoverVesselToQcJob;
@@ -62,10 +60,7 @@ export class Handover extends TerminalControl {
       throw new Error("Unhandle handover job");
     }
 
-    job.status = JobStatus.Completed;
+    job.updateStatus(JobStatus.Completed, this.terminal.visualizer);
     sequence.completeParentJob(job);
-
-    // emit event
-    this.terminal.visualizer.emit(new JobStatusChangeEvent(job));
   }
 }

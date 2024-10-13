@@ -1,3 +1,5 @@
+import { JobStatusChangeEvent } from "../../Event/JobEvent";
+import { Visualizer } from "../../Visualizer/Visualizer";
 import { HandoverJobReason } from "./HanoverJob";
 import { QcJobReason } from "./QcJob";
 import { RtgJobReason } from "./RtgJob";
@@ -25,5 +27,16 @@ export abstract class JobBase {
 
   toString() {
     return `<${this.reason}.${this.sequenceId ?? "?"}.${this.id}>`;
+  }
+
+  updateStatus(status: JobStatus, visualizer: Visualizer) {
+    if (this.status === JobStatus.Completed) {
+      throw new Error(
+        "Cannot update job status when job has already completed"
+      );
+    }
+
+    this.status = status;
+    visualizer.emit(new JobStatusChangeEvent(this));
   }
 }

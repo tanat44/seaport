@@ -1,28 +1,37 @@
+import { JobSequenceCompleteEvent } from "../../Event/JobEvent";
+import { Visualizer } from "../../Visualizer/Visualizer";
 import { HandoverJob } from "./HanoverJob";
 import { JobBase, JobStatus } from "./JobBase";
 import { TruckJob } from "./TruckJob";
 
 export type SequenceId = number;
+
+export enum SequenceStatus {
+  NotStarted,
+  Working,
+  Complete,
+}
 export class JobSequence {
   id: SequenceId;
   containerId: string;
-  jobSequence: JobBase[];
+  jobs: JobBase[];
+  status: SequenceStatus;
 
   private static count = 0;
 
   constructor(containerId: string) {
     this.id = JobSequence.count++;
     this.containerId = containerId;
-    this.jobSequence = [];
+    this.jobs = [];
   }
 
   addJob(job: JobBase) {
     job.sequenceId = this.id;
-    this.jobSequence.push(job);
+    this.jobs.push(job);
   }
 
   assignTruck(truckId: string) {
-    for (const job of this.jobSequence) {
+    for (const job of this.jobs) {
       if (TruckJob.prototype.isPrototypeOf(job)) {
         (job as TruckJob).truckId = truckId;
       } else if (HandoverJob.prototype.isPrototypeOf(job) && "truckId" in job) {
@@ -32,7 +41,7 @@ export class JobSequence {
   }
 
   get completed(): boolean {
-    for (const job of this.jobSequence) {
+    for (const job of this.jobs) {
       if (job.status !== JobStatus.Completed) return false;
     }
     return true;
@@ -40,7 +49,7 @@ export class JobSequence {
 
   canStartJobs(): JobBase[] {
     if (this.completed) return [];
-    const jobs = this.jobSequence.filter((job) => this.canStartJob(job));
+    const jobs = this.jobs.filter((job) => this.canStartJob(job));
     // console.log("can", jobs);
     return jobs;
   }
@@ -58,6 +67,20 @@ export class JobSequence {
     }
   }
 
+  updateStatus(status: SequenceStatus, visualizer: Visualizer) {
+    if (this.status === SequenceStatus.Complete)
+      throw new Error("Cannot update status of completed job sequence");
+
+    if (status === SequenceStatus.Complete && !this.isAllJobsCompleted) {
+      throw new Error(
+        "Cannot complete sequence. Some job is still not completed"
+      );
+    }
+
+    this.status = status;
+    visualizer.emit(new JobSequenceCompleteEvent(this));
+  }
+
   private canStartJob(job: JobBase) {
     if (job.status !== JobStatus.NotStarted) return false;
 
@@ -73,7 +96,14 @@ export class JobSequence {
     return true;
   }
 
-  findJob(id: number): JobBase | undefined {
-    return this.jobSequence.findLast((job) => job.id === id);
+  private findJob(id: number): JobBase | undefined {
+    return this.jobs.findLast((job) => job.id === id);
+  }
+
+  private isAllJobsCompleted(): boolean {
+    for (const job of this.jobs) {
+      if (job.status !== JobStatus.Completed) return false;
+    }
+    return true;
   }
 }
