@@ -4,7 +4,7 @@ import { TruckJob } from "../Job/Definition/TruckJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Truck, TruckId } from "./Truck";
 
-const TRUCK_COUNT = 4;
+const TRUCK_COUNT = 6;
 
 export class TruckManager {
   private terminal: Terminal;

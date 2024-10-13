@@ -3,7 +3,9 @@ import { Layout } from "../PathPlanner/types";
 import { StorageBlock } from "../StorageBlock/StorageBlock";
 import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
+import { CargoOrder } from "./types";
 
+export type QcPlan = CargoOrder[];
 export class Vessel extends StorageBlock {
   constructor(
     terminal: Terminal,
@@ -32,5 +34,37 @@ export class Vessel extends StorageBlock {
 
     // randomize cargo
     this.addRandomCargo();
+  }
+
+  planUnloadUsingQc(numberOfQc: number, qcWidth: number): QcPlan {
+    // group plan into each bay
+    const fullPlan = this.planFullUnload();
+    const bayPlans = new Map<number, CargoOrder>();
+    for (const cargo of fullPlan) {
+      const bay = cargo.coordinate.bay;
+
+      if (!bayPlans.has(bay)) bayPlans.set(bay, []);
+
+      const order = bayPlans.get(bay);
+      order.push(cargo);
+    }
+
+    // bays per qc
+    const numberOfBays = this.bays.length;
+    const baysPerQc = Math.ceil(numberOfBays / numberOfQc);
+
+    // give plan to qc
+    const qcPlans: QcPlan = [];
+    for (let i = 0; i < numberOfQc; ++i) {
+      qcPlans.push([]);
+    }
+
+    for (let i = 0; i < numberOfBays; ++i) {
+      const bayPlan = bayPlans.get(i);
+      const qcNumber = Math.floor(i / baysPerQc);
+      qcPlans[qcNumber].push(...bayPlan);
+    }
+
+    return qcPlans;
   }
 }

@@ -1,6 +1,7 @@
 import { JobPlanner } from "../Job/JobPlanner";
 import { JobRunner } from "../Job/JobRunner";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
+import { QC_WIDTH } from "../QC/Qc";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
 import { TruckManager } from "../Truck/TruckManager";
@@ -62,9 +63,8 @@ export class Terminal {
       this.yardManager
     );
     const vessel = this.vessels.get(VESSEL_NAME);
-    const quayCrane = this.qcManager.assignQuayCrane(vessel);
-    const unloadPlan = vessel.planFullUnload();
-    const jobs = planner.planUnloadJob(unloadPlan, quayCrane, vessel);
+    const qcPlans = vessel.planUnloadUsingQc(3, QC_WIDTH);
+    const jobs = planner.planUnloadJob(qcPlans, vessel);
 
     // run operation
     this.jobRunner = new JobRunner(

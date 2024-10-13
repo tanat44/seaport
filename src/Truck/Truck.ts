@@ -119,11 +119,9 @@ export class Truck {
 
     // update job status
     if (this.currentJob.reason === "truckemptymove") {
-      this.currentJob.updateStatus(
-        JobStatus.Completed,
-        this.terminal.visualizer
-      );
+      const job = this.currentJob;
       this.currentJob = null;
+      job.updateStatus(JobStatus.Completed, this.terminal.visualizer);
     } else {
       this.currentJob.updateStatus(
         JobStatus.WaitForRelease,

@@ -28,6 +28,7 @@ const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
 export type QcId = string;
+export const QC_WIDTH = 10;
 
 export class Qc {
   static count = 0;
@@ -55,7 +56,7 @@ export class Qc {
   constructor(
     visualizer: Visualizer,
     initialPosition: Vector3,
-    width: number = 10,
+    width: number = QC_WIDTH,
     height: number = 20,
     legSpan: number = 10,
     outReach: number = 20

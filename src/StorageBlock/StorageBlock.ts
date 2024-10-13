@@ -110,7 +110,7 @@ export class StorageBlock {
     container.mesh.position.copy(newCoordinate.relativePosition);
   }
 
-  planFullUnload(): CargoOrder {
+  protected planFullUnload(): CargoOrder {
     const plan: CargoOrder = [];
 
     // unload bay by bay, take the highest container off

@@ -29,6 +29,7 @@ export class Visualizer {
   private raycaster: Raycaster;
   private renderer: WebGLRenderer;
   private speed: number;
+  private pausing: boolean;
 
   scene: Scene;
   text: Text;
@@ -43,6 +44,7 @@ export class Visualizer {
     this.event = new Event(this.renderer.domElement);
     this.text = new Text();
     this.ui = new Ui(this, this.renderer.domElement);
+    this.pausing = false;
 
     this.createObjects();
     this.animate();
@@ -147,7 +149,14 @@ export class Visualizer {
       this.increaseSpeed();
     } else if (e.code === "Minus") {
       this.decreaseSpeed();
+    } else if (e.code === "Space") {
+      this.togglePause();
     }
+  }
+
+  private togglePause() {
+    this.pausing = !this.pausing;
+    this.ui.messageBox.showMessage(this.pausing ? "Paused" : "Resume");
   }
 
   private onWindowResize() {
@@ -164,10 +173,12 @@ export class Visualizer {
     requestAnimationFrame(() => this.animate());
     this.render();
     const deltaTime = this.clock.getDelta() * this.speed;
-    this.event.emit({
-      type: "animate",
-      deltaTime,
-    });
+
+    if (!this.pausing)
+      this.event.emit({
+        type: "animate",
+        deltaTime,
+      });
   }
 
   get dom(): HTMLElement {

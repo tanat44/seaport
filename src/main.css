@@ -52,6 +52,8 @@ button {
   overflow-wrap: anywhere;
   text-align: center;
   align-items: center;
+  flex: 0 0 auto;
+  align-self:flex-start;
 }
 
 .row{

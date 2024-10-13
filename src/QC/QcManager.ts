@@ -76,6 +76,8 @@ export class QcManager {
     let bestQc: Qc = null;
 
     for (const [_, qc] of this.quayCranes) {
+      if (this.vesselAssignment.has(qc)) continue;
+
       const qcSpace = qc.absoluteSpace;
       const center = new Vector2();
       qcSpace.getCenter(center);
