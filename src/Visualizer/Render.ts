@@ -42,6 +42,12 @@ export class Render {
     color: 0x47ff14,
   });
 
+  static safetyFieldMaterial = new MeshBasicMaterial({
+    color: 0xdea300,
+    opacity: 0.5,
+    transparent: true,
+  });
+
   static createPlane(box: Box2, material: Material, z: number) {
     const size = new Vector2();
     box.getSize(size);
@@ -51,6 +57,13 @@ export class Render {
     const plane = new Mesh(geometry, material);
     plane.position.set(center.x, center.y, z);
     return plane;
+  }
+
+  static createBox(size: Vector3, material: Material, z: number) {
+    const geometry = new BoxGeometry(size.x, size.y, size.z);
+    const box = new Mesh(geometry, material);
+    box.position.z = z;
+    return box;
   }
 
   static createBasicMaterial(color: number, opacity?: number) {

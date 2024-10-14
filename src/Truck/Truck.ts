@@ -1,4 +1,6 @@
 import {
+  Box2,
+  Box3,
   BoxGeometry,
   CylinderGeometry,
   Mesh,
@@ -13,7 +15,7 @@ import {
   EquipmentMoveStartEvent,
   EquipmentType,
 } from "../Event/EquipmentEvent";
-import { TruckDriveEndEvent } from "../Event/TruckEvent";
+import { TruckDriveEndEvent, TruckMoveEvent } from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
@@ -25,6 +27,7 @@ import {
 } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
+import { SafetyField } from "./SafetyField";
 import { TEST_PATH } from "./TestPath";
 
 const WHEEL_DIAMETER = 0.8;
@@ -32,13 +35,14 @@ const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
 const TRAILER_MATERIAL = new MeshBasicMaterial({ color: 0x7f86e3 });
 const TRACTOR_MATERIAL = new MeshBasicMaterial({ color: 0x544db0 });
 const KINGPIN_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
-const TRUCK_WIDTH = CONTAINER_SIZE_Y * 1.1;
+export const TRUCK_WIDTH = CONTAINER_SIZE_Y * 1.1;
 const MAX_VELOCITY = 8.3; // 30 kph
 const MAX_ACCELERATION = 2;
 
 const TRAILER_REAR_AXLE_POSITION = -CONTAINER_SIZE_X / 2 + 1;
 const TRAILER_KINGPIN_DISTANCE = CONTAINER_SIZE_X;
 const TRACTOR_WHEEL_BASE = 3;
+export const TRACTOR_LENGTH = TRACTOR_WHEEL_BASE + 2;
 
 export type TruckId = string;
 export class Truck {
@@ -50,6 +54,7 @@ export class Truck {
   trailerModel: Object3D;
   tractorModel: Object3D;
   pathPhysics: PathPhysics | null;
+  safetyField: SafetyField;
 
   currentJob: TruckJob | null;
   container: Container | null;
@@ -61,6 +66,7 @@ export class Truck {
     this.pathPhysics = null;
     this.container = null;
     this.createModel();
+    this.safetyField = new SafetyField(this, this.terminal);
 
     if (initialPosition) {
       this.trailerModel.position.copy(initialPosition);
@@ -86,7 +92,7 @@ export class Truck {
     this.currentJob.updateStatus(JobStatus.Working, this.terminal.visualizer);
 
     // execute move
-    const path = this.terminal.pathPlanner.plan(this.position, job.to);
+    const path = this.terminal.pathPlanner.plan(this.position, job);
     this.drive(path);
     this.terminal.visualizer.emit(
       new EquipmentMoveStartEvent(this.id, EquipmentType.Truck)
@@ -118,7 +124,7 @@ export class Truck {
     this.pathPhysics = null;
 
     // update job status
-    if (this.currentJob.reason === "truckemptymove") {
+    if (this.currentJob.reason === "truckmovetounderqc") {
       const job = this.currentJob;
       this.currentJob = null;
       job.updateStatus(JobStatus.Completed, this.terminal.visualizer);
@@ -142,6 +148,15 @@ export class Truck {
     this.trailerModel.position.set(positionTrailer.x, positionTrailer.y, 0);
     this.trailerModel.rotation.set(0, 0, rotationTrailer);
     this.tractorModel.rotation.set(0, 0, rotationTractor - rotationTrailer);
+    this.safetyField.update();
+
+    // publish truck move event
+    const box = new Box3().setFromObject(this.trailerModel);
+    const box2 = new Box2(
+      new Vector2(box.min.x, box.min.y),
+      new Vector2(box.max.x, box.max.y)
+    );
+    this.terminal.visualizer.emit(new TruckMoveEvent(this.id, box2));
   }
 
   load(container: Container) {
@@ -173,6 +188,14 @@ export class Truck {
       this.trailerModel.position.x,
       this.trailerModel.position.y
     );
+  }
+
+  get forward(): Vector3 {
+    const forward = new Vector3();
+    const right = new Vector3();
+    const up = new Vector3();
+    this.tractorModel.matrixWorld.extractBasis(forward, right, up);
+    return forward;
   }
 
   static containerLoadHeight(): number {
@@ -252,14 +275,9 @@ export class Truck {
     cabin.add(text);
 
     // cabin base
-    const cabinBaseLength = TRACTOR_WHEEL_BASE + 2;
-    const cabinBaseGeometry = new BoxGeometry(
-      cabinBaseLength,
-      TRUCK_WIDTH,
-      0.2
-    );
+    const cabinBaseGeometry = new BoxGeometry(TRACTOR_LENGTH, TRUCK_WIDTH, 0.2);
     const cabinBase = new Mesh(cabinBaseGeometry, TRACTOR_MATERIAL);
-    cabinBase.position.set(cabinBaseLength / 2 - 1, 0, WHEEL_DIAMETER);
+    cabinBase.position.set(TRACTOR_LENGTH / 2 - 1, 0, WHEEL_DIAMETER);
     this.tractorModel.add(cabinBase);
 
     // wheel RR

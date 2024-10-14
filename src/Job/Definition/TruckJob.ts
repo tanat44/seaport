@@ -3,20 +3,20 @@ import { Container } from "../../StorageBlock/StorageBlock";
 import { YardCoordinate } from "../../Yard/YardCoordinate";
 import { JobBase } from "./JobBase";
 
-export type TruckJobReason = "truckmovecontainertoyard" | "truckemptymove";
+export type TruckJobReason = "truckmovecontainertoyard" | "truckmovetounderqc";
 export abstract class TruckJob extends JobBase {
   truckId: string | undefined;
   to: Vector2;
 }
 
-export class TruckEmptyMoveJob extends TruckJob {
+export class TruckMoveToUnderQcJob extends TruckJob {
   constructor(dependencies: number[]) {
     super(dependencies);
-    this.reason = "truckemptymove";
+    this.reason = "truckmovetounderqc";
   }
 }
 
-export class TruckContainerMoveToYardJob extends TruckJob {
+export class TruckMoveContainerToYardJob extends TruckJob {
   qcId: string;
   container: Container;
   yardCoordinate: YardCoordinate;

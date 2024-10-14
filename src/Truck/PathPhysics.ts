@@ -29,6 +29,7 @@ export class PathPhysics {
   distance: number;
   velocity: number;
   acceleration: number;
+  safetyFieldDetection: boolean;
 
   // temporal
   lastIndex: number;
@@ -71,6 +72,7 @@ export class PathPhysics {
     this.distance = 0;
     this.velocity = 0;
     this.acceleration = 0;
+    this.safetyFieldDetection = false;
     this.lastIndex = 0;
     this.arrived = false;
 
@@ -87,6 +89,14 @@ export class PathPhysics {
 
   get totalDistance(): number {
     return this.pathTrailerDistances[this.pathTrailerDistances.length - 1];
+  }
+
+  get stoppingDistance(): number {
+    return (this.velocity * this.velocity) / 2 / this.maxAcceleration;
+  }
+
+  setSafetyFieldDetection(detection: boolean) {
+    this.safetyFieldDetection = detection;
   }
 
   private animate(deltaTime: number) {
@@ -118,7 +128,10 @@ export class PathPhysics {
     }
 
     // bound acceleration
-    if (this.maxAcceleration) {
+    if (this.safetyFieldDetection) {
+      this.acceleration =
+        this.velocity > 0 ? -this.maxAcceleration : this.maxAcceleration;
+    } else if (this.maxAcceleration) {
       if (this.acceleration > this.maxAcceleration)
         this.acceleration = this.maxAcceleration;
       else if (this.acceleration < -this.maxAcceleration)

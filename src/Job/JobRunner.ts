@@ -85,7 +85,7 @@ export class JobRunner extends TerminalControl {
             someExecuteSuccess || this.rtgManager.execute(job as RtgJob);
         } else if (TruckJob.prototype.isPrototypeOf(job)) {
           const truckJob = job as TruckJob;
-          if (truckJob.reason === "truckemptymove") {
+          if (truckJob.reason === "truckmovetounderqc") {
             const truck = this.truckManager.getAvailableTruck(truckJob.to);
             if (truck) {
               sequence.assignTruck(truck.id);

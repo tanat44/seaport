@@ -18,8 +18,8 @@ import {
   RtgPickContainerFromTruckJob,
 } from "./Definition/RtgJob";
 import {
-  TruckContainerMoveToYardJob,
-  TruckEmptyMoveJob,
+  TruckMoveContainerToYardJob,
+  TruckMoveToUnderQcJob,
 } from "./Definition/TruckJob";
 import { TerminalControl } from "./TerminalControl";
 
@@ -66,7 +66,7 @@ export class JobPlanner extends TerminalControl {
         sequence.addJob(qcDropJob);
 
         // truck standby under qc
-        const truckEmptyMoveJob = new TruckEmptyMoveJob([]);
+        const truckEmptyMoveJob = new TruckMoveToUnderQcJob([]);
         truckEmptyMoveJob.to = new Vector2(qcDropPosition.x, qc.position.y);
         sequence.addJob(truckEmptyMoveJob);
 
@@ -82,11 +82,12 @@ export class JobPlanner extends TerminalControl {
         const storageCoor = this.yardManager.findStorage();
         const handlingPos =
           this.yardManager.getContainerHandlingPoint(storageCoor);
-        const truckDriveToRtgJob = new TruckContainerMoveToYardJob([
+        const truckDriveToRtgJob = new TruckMoveContainerToYardJob([
           handoverQcJob.id,
         ]);
         truckDriveToRtgJob.qcId = qc.id;
         truckDriveToRtgJob.to = handlingPos.clone();
+        truckDriveToRtgJob.yardCoordinate = storageCoor;
         sequence.addJob(truckDriveToRtgJob);
 
         // rtg move to standby position
