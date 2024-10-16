@@ -21,7 +21,7 @@ export class TruckManager {
     this.footprints = new Map();
 
     for (let i = 0; i < TRUCK_COUNT; ++i) {
-      const initialPosition = new Vector3(20, 3 + 5 * i, 0);
+      const initialPosition = new Vector3(20 + 5 * i, 3 + 5 * i, 0);
       const truck = new Truck(this.terminal, initialPosition);
       this.trucks.set(truck.id, truck);
       this.activeSequences.set(truck.id, undefined);
@@ -34,6 +34,13 @@ export class TruckManager {
 
   getTruck(truckId: string): Truck {
     return this.trucks.get(truckId);
+  }
+
+  getTruckForSequence(sequenceId: number): Truck | null {
+    for (const [truckId, sequence] of this.activeSequences) {
+      if (sequenceId === sequence) return this.trucks.get(truckId);
+    }
+    return null;
   }
 
   getAvailableTruck(jobPosition: Vector2): Truck | null {

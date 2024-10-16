@@ -39,7 +39,7 @@ export class JobDisplay extends UiBase {
   }
 
   private createJobCard(job: JobBase) {
-    if (!job.sequenceId) return;
+    if (job.sequenceId === undefined) return;
 
     if (!this.sequenceCard.has(job.sequenceId))
       this.createSequenceCard(job.sequenceId);

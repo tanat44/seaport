@@ -36,7 +36,7 @@ const TRAILER_MATERIAL = new MeshBasicMaterial({ color: 0x7f86e3 });
 const TRACTOR_MATERIAL = new MeshBasicMaterial({ color: 0x544db0 });
 const KINGPIN_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
 export const TRUCK_WIDTH = CONTAINER_SIZE_Y * 1.1;
-const MAX_VELOCITY = 8.3; // 30 kph
+const MAX_VELOCITY = 13.8; // 50 kph
 const MAX_ACCELERATION = 2;
 
 const TRAILER_REAR_AXLE_POSITION = -CONTAINER_SIZE_X / 2 + 1;
@@ -81,11 +81,6 @@ export class Truck {
 
   execute(job: TruckJob) {
     // console.log(job.toString(), "Execute");
-    if (this.currentJob) {
-      throw new Error(
-        `Truck ${this.id} has ongoing job. Cannot execute duplicate job`
-      );
-    }
 
     // update job
     this.currentJob = job;
@@ -124,7 +119,7 @@ export class Truck {
     this.pathPhysics = null;
 
     // update job status
-    if (this.currentJob.reason === "truckmovetounderqc") {
+    if (this.currentJob.reason === "truckmove") {
       const job = this.currentJob;
       this.currentJob = null;
       job.updateStatus(JobStatus.Completed, this.terminal.visualizer);

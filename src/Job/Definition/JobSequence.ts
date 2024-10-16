@@ -56,7 +56,6 @@ export class JobSequence {
       else if (parentJob.status === JobStatus.Working)
         throw new Error("Trying to complete Working parent job");
       else if (parentJob.status === JobStatus.Completed) continue;
-
       parentJob.updateStatus(JobStatus.Completed, visualizer);
     }
   }

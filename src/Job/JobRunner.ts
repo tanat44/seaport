@@ -75,36 +75,42 @@ export class JobRunner extends TerminalControl {
         continue;
       }
 
-      let someExecuteSuccess = false;
+      let someJobSuccess = false;
       for (const job of sequence.canStartJobs()) {
+        let thisJobSuccess = false;
+
         if (QcJob.prototype.isPrototypeOf(job)) {
-          someExecuteSuccess =
-            someExecuteSuccess || this.qcManager.execute(job as QcJob);
+          thisJobSuccess =
+            thisJobSuccess || this.qcManager.execute(job as QcJob);
         } else if (RtgJob.prototype.isPrototypeOf(job)) {
-          someExecuteSuccess =
-            someExecuteSuccess || this.rtgManager.execute(job as RtgJob);
+          thisJobSuccess =
+            thisJobSuccess || this.rtgManager.execute(job as RtgJob);
         } else if (TruckJob.prototype.isPrototypeOf(job)) {
           const truckJob = job as TruckJob;
-          if (truckJob.reason === "truckmovetounderqc") {
-            const truck = this.truckManager.getAvailableTruck(truckJob.to);
-            if (truck) {
-              sequence.assignTruck(truck.id);
-              this.truckManager.execute(truckJob);
-              someExecuteSuccess = true;
-            }
-          } else if (truckJob.reason === "truckmovecontainertoyard") {
+          let truck = this.truckManager.getTruckForSequence(job.sequenceId);
+          if (!truck) {
+            truck = this.truckManager.getAvailableTruck(truckJob.to);
+            if (truck) sequence.assignTruck(truck.id);
+          }
+
+          if (truck) {
             this.truckManager.execute(truckJob);
-            someExecuteSuccess = true;
+            thisJobSuccess = true;
           }
         } else if (HandoverJob.prototype.isPrototypeOf(job)) {
           this.handover.execute(job, sequence);
-          someExecuteSuccess = true;
+          thisJobSuccess = true;
         } else {
           throw new Error("Unknown job type");
         }
+
+        if (thisJobSuccess) {
+          sequence.completeParentJob(job, this.terminal.visualizer);
+          someJobSuccess = true;
+        }
       }
 
-      if (someExecuteSuccess) {
+      if (someJobSuccess) {
         if (sequence.status === SequenceStatus.NotStarted)
           sequence.updateStatus(
             SequenceStatus.Working,

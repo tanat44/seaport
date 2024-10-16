@@ -4,11 +4,7 @@ import {
   QuadraticBezierCurve,
   Vector2,
 } from "three";
-import {
-  TruckJob,
-  TruckMoveContainerToYardJob,
-  TruckMoveToUnderQcJob,
-} from "../Job/Definition/TruckJob";
+import { TruckJob } from "../Job/Definition/TruckJob";
 import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
 import { GridPlanner } from "./GridPlanner";
@@ -42,26 +38,7 @@ export class PathPlanner {
     }
 
     // console.log("PathPlanner: from", from, "to", to);
-    let controlPoints: Vector2[];
-    if (job instanceof TruckMoveToUnderQcJob) {
-      const standbyPos: Vector2 = new Vector2(5, job.to.y);
-      controlPoints = [...this.gridPlanner.findPath(from, standbyPos), job.to];
-    } else if (job instanceof TruckMoveContainerToYardJob) {
-      const qcExitPos: Vector2 = new Vector2(
-        this.terminal.layoutManager.layout.terminalSize.x - 5,
-        from.y
-      );
-
-      // find yard bottom right position
-      // const storeJob = job as TruckMoveContainerToYardJob;
-      // const yard = this.terminal.yardManager.getYard(
-      //   storeJob.yardCoordinate.yardId
-      // );
-      // const yardBox = yard.absoluteSpace;
-      // const yardEntryPos = new Vector2(yardBox.max.x, yardBox.min.y);
-
-      controlPoints = [from, ...this.gridPlanner.findPath(qcExitPos, job.to)];
-    }
+    let controlPoints: Vector2[] = this.gridPlanner.findPath(from, job.to);
     const path = this.makeCurve(controlPoints);
     this.renderPath(controlPoints, path);
 

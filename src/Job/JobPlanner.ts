@@ -11,6 +11,7 @@ import {
 import { JobSequence } from "./Definition/JobSequence";
 import {
   QcDropContainerToTruckJob,
+  QcMoveJob,
   QcPickContainerFromVesselJob,
 } from "./Definition/QcJob";
 import {
@@ -19,6 +20,7 @@ import {
 } from "./Definition/RtgJob";
 import {
   TruckMoveContainerToYardJob,
+  TruckMoveJob,
   TruckMoveToUnderQcJob,
 } from "./Definition/TruckJob";
 import { TerminalControl } from "./TerminalControl";
@@ -38,15 +40,25 @@ export class JobPlanner extends TerminalControl {
         const containerPosition = cargo.coordinate.relativePosition.add(
           vessel.position
         );
-        const qcPickJob = new QcPickContainerFromVesselJob([]);
-        qcPickJob.qcId = qc.id;
-        qcPickJob.position = new Vector3(
+        const qcPickPosition = new Vector3(
           containerPosition.x,
           containerPosition.y - qc.position.y,
           containerPosition.z
         );
-        qcPickJob.cargoCoordinate = cargo.coordinate;
+        const qcPickJob = new QcPickContainerFromVesselJob(
+          [],
+          qc.id,
+          qcPickPosition,
+          cargo.coordinate
+        );
         sequence.addJob(qcPickJob);
+
+        // truck move to standby
+        const truckStandbyJob = new TruckMoveJob(
+          [],
+          new Vector2(2, qc.position.y)
+        );
+        sequence.addJob(truckStandbyJob);
 
         // handover vessel to qc
         const handoverVessel = new HandoverVesselToQcJob([qcPickJob.id]);
@@ -54,27 +66,36 @@ export class JobPlanner extends TerminalControl {
         handoverVessel.qcId = qc.id;
         sequence.addJob(handoverVessel);
 
-        // qc drop off container
-        const qcDropJob = new QcDropContainerToTruckJob([handoverVessel.id]);
-        qcDropJob.qcId = qc.id;
+        // qc standby above drop off
+        const qcStandbyJob = new QcMoveJob(
+          [handoverVessel.id],
+          qc.id,
+          new Vector3(containerPosition.x, 0, 10)
+        );
+        sequence.addJob(qcStandbyJob);
+
+        // truck move under qc
         const qcDropPosition = new Vector3(
           containerPosition.x,
           0,
           Truck.containerLoadHeight()
         );
-        qcDropJob.position = qcDropPosition;
+        const truckMoveUnderQc = new TruckMoveToUnderQcJob(
+          [truckStandbyJob.id, qcStandbyJob.id],
+          new Vector2(qcDropPosition.x, qc.position.y)
+        );
+        sequence.addJob(truckMoveUnderQc);
+
+        // qc drop off container
+        const qcDropJob = new QcDropContainerToTruckJob(
+          [truckMoveUnderQc.id],
+          qc.id,
+          qcDropPosition
+        );
         sequence.addJob(qcDropJob);
 
-        // truck standby under qc
-        const truckEmptyMoveJob = new TruckMoveToUnderQcJob([]);
-        truckEmptyMoveJob.to = new Vector2(qcDropPosition.x, qc.position.y);
-        sequence.addJob(truckEmptyMoveJob);
-
         // handover qc unload truck load
-        const handoverQcJob = new HandoverQcToTruckJob([
-          qcDropJob.id,
-          truckEmptyMoveJob.id,
-        ]);
+        const handoverQcJob = new HandoverQcToTruckJob([qcDropJob.id]);
         handoverQcJob.qcId = qc.id;
         sequence.addJob(handoverQcJob);
 
@@ -82,12 +103,12 @@ export class JobPlanner extends TerminalControl {
         const storageCoor = this.yardManager.findStorage();
         const handlingPos =
           this.yardManager.getContainerHandlingPoint(storageCoor);
-        const truckDriveToRtgJob = new TruckMoveContainerToYardJob([
-          handoverQcJob.id,
-        ]);
-        truckDriveToRtgJob.qcId = qc.id;
-        truckDriveToRtgJob.to = handlingPos.clone();
-        truckDriveToRtgJob.yardCoordinate = storageCoor;
+        const truckDriveToRtgJob = new TruckMoveContainerToYardJob(
+          [handoverQcJob.id],
+          handlingPos.clone(),
+          qc.id,
+          storageCoor
+        );
         sequence.addJob(truckDriveToRtgJob);
 
         // rtg move to standby position

@@ -41,6 +41,8 @@ export class SafetyField {
       new Vector2(box3.max.x, box3.max.y)
     );
 
+    // console.log(this.truck.id);
+
     const collideTruckId =
       this.terminal.truckManager.isSafetyFieldIntersectOtherTrucks(
         this.truck.id,
@@ -48,15 +50,9 @@ export class SafetyField {
       );
 
     let detection = false;
-    if (
-      collideTruckId !== null &&
-      this.terminal.truckManager.isMyTruckOnTheRight(
-        this.truck.id,
-        collideTruckId
-      )
-    ) {
-      detection = true;
-    }
+    // if (collideTruckId !== null) {
+    //   detection = true;
+    // }
     this.truck.pathPhysics.setSafetyFieldDetection(detection);
   }
 

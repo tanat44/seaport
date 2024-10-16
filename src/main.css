@@ -31,7 +31,9 @@ button {
 #sequencePanel {
   display: flex;
   flex-direction: column-reverse;
-  gap: 5px
+  gap: 5px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .element {

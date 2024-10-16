@@ -83,9 +83,10 @@ export class Qc {
 
   public execute(job: QcJob) {
     // console.log(job.toString(), "Execute");
-    if (this.currentJob)
+    if (this.currentJob) {
+      console.error(job);
       throw new Error("Cannot assign job to busy quay crane");
-
+    }
     // check if it's a valid job
     if (job.position.y < -(this.legSpan / 2))
       throw new Error("Cannot move trolley too far back");
@@ -248,8 +249,14 @@ export class Qc {
     // move event
     this.visualizer.emit(new EquipmentMoveEndEvent(this.id, EquipmentType.Qc));
 
-    // job event
-    this.currentJob.updateStatus(JobStatus.WaitForRelease, this.visualizer);
+    // update job status
+    if (this.currentJob.reason === "qcmove") {
+      const job = this.currentJob;
+      this.currentJob = null;
+      job.updateStatus(JobStatus.Completed, this.visualizer);
+    } else {
+      this.currentJob.updateStatus(JobStatus.WaitForRelease, this.visualizer);
+    }
   }
 
   private animate(deltaTime: number) {
