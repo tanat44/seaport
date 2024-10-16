@@ -1,3 +1,5 @@
+import { Vector2 } from "three";
+import { TruckMoveJob } from "../Job/Definition/TruckJob";
 import { JobPlanner } from "../Job/JobPlanner";
 import { JobRunner } from "../Job/JobRunner";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
@@ -75,5 +77,14 @@ export class Terminal {
       this.yardManager
     );
     this.jobRunner.run(jobs);
+    // this.testDrive();
+  }
+
+  private testDrive() {
+    const target = new Vector2(100, 50);
+    const truck = this.truckManager.getAvailableTruck(target);
+    const job = new TruckMoveJob([], target);
+    job.truckId = truck.id;
+    this.truckManager.execute(job);
   }
 }

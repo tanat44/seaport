@@ -56,7 +56,7 @@ export class PathPlanner {
 
   private makeCurve(path: Vector2[]): Vector2[] {
     const newControlPoints: Vector2[] = [];
-    const GAP = 5;
+    const GAP = 2;
 
     for (let i = 0; i < path.length; ++i) {
       if (i === 0 || i === path.length - 1) {

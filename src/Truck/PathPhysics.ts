@@ -1,4 +1,4 @@
-import { Object3D, Vector2 } from "three";
+import { Object3D, Vector2, Vector3 } from "three";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
@@ -208,7 +208,14 @@ export class PathPhysics {
   }
 
   private static vectorAngle(v: Vector2): number {
-    return Math.atan2(v.y, v.x);
+    const angle = Math.atan2(v.y, v.x);
+    return angle;
+  }
+
+  private static angleBetweenVector(v1: Vector3, v2: Vector3): number {
+    const cross = new Vector3();
+    cross.crossVectors(v1, v2);
+    return Math.asin(cross.length() / v1.length() / v2.length());
   }
 
   private static resampleEvenSpace(

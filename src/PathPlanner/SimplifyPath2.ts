@@ -1,8 +1,9 @@
 import { intraCombination } from "./Combination";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPlanner } from "./GridPlanner";
-import { Grid, GridPath } from "./types";
+import { Grid } from "./types";
 
+type GridCoordinatePath = GridCoordinate[];
 export class SimplifyPath2 {
   map: Grid;
 
@@ -10,11 +11,11 @@ export class SimplifyPath2 {
     this.map = map;
   }
 
-  simplify(originalPath: GridPath): GridPath {
+  simplify(originalPath: GridCoordinatePath): GridCoordinatePath {
     if (originalPath.length < 2) return [...originalPath];
 
     // find all simplify path combinations
-    const combinations: GridPath[] = [];
+    const combinations: GridCoordinatePath[] = [];
     intraCombination<GridCoordinate>(originalPath, combinations);
 
     // console.log(
@@ -26,7 +27,7 @@ export class SimplifyPath2 {
     // return originalPath;
 
     // check if path is drivable and has least control points
-    let simplestPath: GridPath = [...originalPath];
+    let simplestPath: GridCoordinatePath = [...originalPath];
     for (const newPath of combinations) {
       const drivable = this.drivablePath(newPath);
       if (drivable && newPath.length < simplestPath.length) {
@@ -37,7 +38,7 @@ export class SimplifyPath2 {
     return simplestPath;
   }
 
-  private drivablePath(path: GridPath): boolean {
+  private drivablePath(path: GridCoordinatePath): boolean {
     if (path.length < 2)
       throw new Error(
         "Invalid path because path has control points less than 2"

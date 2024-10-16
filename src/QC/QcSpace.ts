@@ -48,7 +48,7 @@ export class QcSpace {
 
     for (let y = newGridBox.miny; y < newGridBox.maxy; y += 1) {
       for (let x = newGridBox.minx; x < newGridBox.maxx; x += 1) {
-        const hash = new GridCoordinate(x, y).hash();
+        const hash = new GridCoordinate(x, y).hash;
         if (this.occupyCells.has(hash)) {
           toClearCells.delete(hash);
           continue;

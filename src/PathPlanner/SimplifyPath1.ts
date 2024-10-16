@@ -1,4 +1,4 @@
-import { GridCoordinate } from "./GridCoordinate";
+import { GridPose } from "./GridPose";
 
 enum Direction {
   Up = "Up",
@@ -9,10 +9,10 @@ enum Direction {
 }
 
 export class SimplifyPath1 {
-  static simplify(path: GridCoordinate[]): GridCoordinate[] {
+  static simplify(path: GridPose[]): GridPose[] {
     if (path.length < 2) return [...path];
 
-    const simplePath: GridCoordinate[] = [path[0]];
+    const simplePath: GridPose[] = [path[0]];
     let lastDirection = SimplifyPath1.getDirection(path[0], path[1]);
     for (let i = 1; i < path.length - 1; ++i) {
       const currentDirection = SimplifyPath1.getDirection(path[i], path[i + 1]);
@@ -25,10 +25,7 @@ export class SimplifyPath1 {
     return simplePath;
   }
 
-  private static getDirection(
-    from: GridCoordinate,
-    to: GridCoordinate
-  ): Direction {
+  private static getDirection(from: GridPose, to: GridPose): Direction {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     if (dx === 0 && dy === 1) {

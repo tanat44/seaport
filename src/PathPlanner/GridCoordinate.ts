@@ -16,7 +16,7 @@ export class GridCoordinate {
     );
   }
 
-  hash(): string {
+  get hash(): string {
     return `${this.x}-${this.y}`;
   }
 

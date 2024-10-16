@@ -4,8 +4,8 @@ import { QcSpace } from "../QC/QcSpace";
 import { Terminal } from "../Terminal/Terminal";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
+import { GridPose } from "./GridPose";
 import { SimplifyPath1 } from "./SimplifyPath1";
-import { SimplifyPath2 } from "./SimplifyPath2";
 import { CellType, Grid, Layout } from "./types";
 
 export const GRID_SIZE = 5;
@@ -30,7 +30,7 @@ export class GridPlanner {
       }
       this.grid.push(row);
     }
-
+    console.log(`Grid size ${this.grid[0].length}x${this.grid.length}`);
     this.quayCraneSpaces = new Map();
     this.terminal.visualizer.onEvent<QcGantryEvent>("qcgantry", (e) => {
       this.onQuayCraneGantry(e);
@@ -45,9 +45,11 @@ export class GridPlanner {
       throw new Error("Cannot find path to non drivable point");
 
     // find path
-    const fromGrid = GridCoordinate.fromVector2(from, GRID_SIZE);
-    const toGrid = GridCoordinate.fromVector2(to, GRID_SIZE);
-    const path = AStar.search(fromGrid, toGrid, this.grid);
+    const fromGrid = GridPose.poseToGridPose(from, "right", GRID_SIZE);
+    const nextGrid = fromGrid.nextGrid.nextGrid;
+    const toGrid = GridPose.poseToGridPose(to, "right", GRID_SIZE);
+    const path = AStar.search(nextGrid, toGrid, this.grid);
+    path.unshift(fromGrid); // insert original from at index 0
     // return path.map((pos) => pos.toVector2(GRID_SIZE));
 
     // simplify1
@@ -55,11 +57,11 @@ export class GridPlanner {
     // return simplePath1.map((pos) => pos.toVector2(GRID_SIZE));
 
     // simplify2
-    const simplify = new SimplifyPath2(this.grid);
-    const simplePath2 = simplify.simplify(simplePath1);
+    // const simplify = new SimplifyPath2(this.grid);
+    // const simplePath2 = simplify.simplify(simplePath1);
 
     // replace first and last with exact from and to position
-    const simplifiedPath = simplePath2.map((pos) => pos.toVector2(GRID_SIZE));
+    const simplifiedPath = simplePath1.map((pos) => pos.toVector2(GRID_SIZE));
     simplifiedPath[0].copy(from);
     simplifiedPath[simplifiedPath.length - 1].copy(to);
     return simplifiedPath;

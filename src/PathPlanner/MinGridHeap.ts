@@ -1,7 +1,7 @@
-import { GridCoordinate } from "./GridCoordinate";
+import { GridPose } from "./GridPose";
 import { MinHeap } from "./MinHeap";
 
-export class MinGridHeap extends MinHeap<GridCoordinate> {
+export class MinGridHeap extends MinHeap<GridPose> {
   set: Set<string>;
 
   constructor() {
@@ -9,18 +9,18 @@ export class MinGridHeap extends MinHeap<GridCoordinate> {
     this.set = new Set();
   }
 
-  has(item: GridCoordinate): boolean {
-    return this.set.has(item.hash());
+  has(item: GridPose): boolean {
+    return this.set.has(item.hash);
   }
 
-  add(value: number, item: GridCoordinate): void {
+  add(value: number, item: GridPose): void {
     super.add(value, item);
-    this.set.add(item.hash());
+    this.set.add(item.hash);
   }
 
-  remove(): GridCoordinate {
+  remove(): GridPose {
     const item = super.remove();
-    this.set.delete(item.hash());
+    this.set.delete(item.hash);
     return item;
   }
 }

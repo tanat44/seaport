@@ -142,7 +142,8 @@ export class Truck {
   ) {
     this.trailerModel.position.set(positionTrailer.x, positionTrailer.y, 0);
     this.trailerModel.rotation.set(0, 0, rotationTrailer);
-    this.tractorModel.rotation.set(0, 0, rotationTractor - rotationTrailer);
+    let tractorRotation = rotationTractor - rotationTrailer;
+    this.tractorModel.rotation.set(0, 0, tractorRotation);
     this.safetyField.update();
 
     // publish truck move event

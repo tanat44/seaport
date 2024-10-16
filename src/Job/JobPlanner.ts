@@ -56,7 +56,7 @@ export class JobPlanner extends TerminalControl {
         // truck move to standby
         const truckStandbyJob = new TruckMoveJob(
           [],
-          new Vector2(2, qc.position.y)
+          new Vector2(10, qc.position.y)
         );
         sequence.addJob(truckStandbyJob);
 
