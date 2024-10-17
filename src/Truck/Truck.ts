@@ -3,9 +3,11 @@ import {
   Box3,
   BoxGeometry,
   CylinderGeometry,
+  Euler,
   Mesh,
   MeshBasicMaterial,
   Object3D,
+  Quaternion,
   Vector2,
   Vector3,
 } from "three";
@@ -108,9 +110,9 @@ export class Truck {
       MAX_ACCELERATION,
       (
         positionTrailer: Vector2,
-        rotationTrailer: number,
-        rotationTractor: number
-      ) => this.update(positionTrailer, rotationTrailer, rotationTractor)
+        directionTrailer: Vector2,
+        directionTractor: Vector2
+      ) => this.update(positionTrailer, directionTrailer, directionTractor)
     );
   }
 
@@ -137,13 +139,17 @@ export class Truck {
 
   private update(
     positionTrailer: Vector2,
-    rotationTrailer: number,
-    rotationTractor: number
+    directionTrailer: Vector2,
+    directionTractor: Vector2
   ) {
     this.trailerModel.position.set(positionTrailer.x, positionTrailer.y, 0);
-    this.trailerModel.rotation.set(0, 0, rotationTrailer);
-    let tractorRotation = rotationTractor - rotationTrailer;
-    this.tractorModel.rotation.set(0, 0, tractorRotation);
+
+    const qTrailer = this.directionToQuaternion(directionTrailer);
+    this.trailerModel.rotation.setFromQuaternion(qTrailer);
+    const qTractor = this.directionToQuaternion(directionTractor).multiply(
+      qTrailer.clone().invert()
+    );
+    this.tractorModel.rotation.setFromQuaternion(qTractor);
     this.safetyField.update();
 
     // publish truck move event
@@ -296,5 +302,22 @@ export class Truck {
 
   private testDrive() {
     this.drive(TEST_PATH);
+  }
+
+  private directionToQuaternion(direction: Vector2) {
+    const q = new Quaternion();
+    q.setFromUnitVectors(
+      new Vector3(1, 0, 0),
+      new Vector3(direction.x, direction.y)
+    );
+
+    // make sure quaternion doesn't flip upside down
+    const euler = new Euler();
+    euler.setFromQuaternion(q);
+    if (euler.x === 0) return q;
+
+    const qFlip = new Quaternion();
+    qFlip.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI);
+    return q.multiply(qFlip);
   }
 }

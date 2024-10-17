@@ -1,4 +1,4 @@
-import { Object3D, Vector2, Vector3 } from "three";
+import { Object3D, Vector2 } from "three";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
@@ -7,8 +7,8 @@ import { Truck } from "./Truck";
 
 type UpdateCallback = (
   positionTrailer: Vector2,
-  rotationTrailer: number,
-  rotationTractor: number
+  directionTrailer: Vector2,
+  directionTractor: Vector2
 ) => void;
 
 export class PathPhysics {
@@ -155,11 +155,12 @@ export class PathPhysics {
       nextIndex < this.pathTrailerDistances.length &&
       this.pathTrailerDistances[nextIndex] < this.distance
     ) {
-      ++this.lastIndex;
-      if (this.lastIndex > this.pathTrailerDistances.length - 1) {
-        this.lastIndex = this.pathTrailerDistances.length - 1;
+      if (nextIndex > this.pathTrailerDistances.length - 1) {
+        nextIndex = this.pathTrailerDistances.length - 1;
         break;
-      } else nextIndex = this.lastIndex;
+      }
+      this.lastIndex = nextIndex;
+      ++nextIndex;
     }
 
     if (this.updateCallback)
@@ -181,41 +182,35 @@ export class PathPhysics {
     return p0.clone().add(v.multiplyScalar(this.distance - lastDistance));
   }
 
-  private rotation(path: Vector2[]): number {
+  private rotation(path: Vector2[]): Vector2 {
     if (this.lastIndex >= path.length - 2) {
       const p0 = path[this.lastIndex - 1];
       const p1 = path[this.lastIndex];
       const v = p1.clone().sub(p0);
-      return PathPhysics.vectorAngle(v);
+      return v.normalize();
     }
 
     // interpolate between two angles
     const p0 = path[this.lastIndex];
     const p1 = path[this.lastIndex + 1];
     const p2 = path[this.lastIndex + 2];
-    const v1 = p1.clone().sub(p0);
-    const v2 = p2.clone().sub(p1);
-    const theta1 = PathPhysics.vectorAngle(v1);
-    const theta2 = PathPhysics.vectorAngle(v2);
+    const v1 = p1.clone().sub(p0).normalize();
+    const v2 = p2.clone().sub(p1).normalize();
+    const deltaV = v2.clone().sub(v1);
 
     const lastDistance = this.pathTrailerDistances[this.lastIndex];
     const segmentDistance =
       this.pathTrailerDistances[this.lastIndex + 1] - lastDistance;
-    return (
-      theta1 +
-      ((theta2 - theta1) * (this.distance - lastDistance)) / segmentDistance
-    );
+    return v1
+      .add(
+        deltaV.multiplyScalar((this.distance - lastDistance) / segmentDistance)
+      )
+      .normalize();
   }
 
-  private static vectorAngle(v: Vector2): number {
+  static vectorAngle(v: Vector2): number {
     const angle = Math.atan2(v.y, v.x);
     return angle;
-  }
-
-  private static angleBetweenVector(v1: Vector3, v2: Vector3): number {
-    const cross = new Vector3();
-    cross.crossVectors(v1, v2);
-    return Math.asin(cross.length() / v1.length() / v2.length());
   }
 
   private static resampleEvenSpace(
@@ -268,7 +263,7 @@ export class PathPhysics {
     const p0 = pathTrailerAxle[pathTrailerAxle.length - 2];
     const p1 = pathTrailerAxle[pathTrailerAxle.length - 1];
     const v_norm = p1.clone().sub(p0).normalize();
-    const p = p0.clone().add(v_norm.multiplyScalar(trailerPivotDistance));
+    const p = p1.clone().add(v_norm.multiplyScalar(trailerPivotDistance));
     output.push(p);
 
     return output;
