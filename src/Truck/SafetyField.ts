@@ -3,6 +3,7 @@ import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
 import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
 
+const STEERING_FACTOR = 0.3;
 export class SafetyField {
   truck: Truck;
   terminal: Terminal;
@@ -26,13 +27,18 @@ export class SafetyField {
   }
 
   update() {
-    const stoppingDistance = this.truck.pathPhysics?.stoppingDistance;
-    if (!stoppingDistance) return;
+    let stoppingDistance = this.truck.pathPhysics?.stoppingDistance;
+    if (!stoppingDistance) stoppingDistance = 0;
 
     // update field size
     const baseLength = TRACTOR_LENGTH - 1;
-    const fieldLength = baseLength + stoppingDistance;
+    const fieldLength = baseLength * 2 + stoppingDistance;
+    let fieldWidth =
+      1 + this.truck.pathPhysics.steeringVelocity * STEERING_FACTOR;
     this.fieldModel.scale.x = fieldLength;
+    this.fieldModel.scale.y = fieldWidth;
+    let yOffset = fieldWidth - 0.5;
+    this.fieldModel.position.y = yOffset;
 
     // field box
     const box3 = new Box3().setFromObject(this.fieldModel);
@@ -50,9 +56,12 @@ export class SafetyField {
       );
 
     let detection = false;
-    // if (collideTruckId !== null) {
-    //   detection = true;
-    // }
+    if (collideTruckId !== null) {
+      // detection = true;
+      // console.log(this.truck.id, "collide", collideTruckId);
+    } else {
+      // console.log("no");
+    }
     this.truck.pathPhysics.setSafetyFieldDetection(detection);
   }
 

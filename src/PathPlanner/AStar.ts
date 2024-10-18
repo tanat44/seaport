@@ -1,7 +1,7 @@
 import { GridPlanner } from "./GridPlanner";
 import { GridPose } from "./GridPose";
 import { MinGridHeap } from "./MinGridHeap";
-import { Grid, GridPath } from "./types";
+import { Grid, GridDirection, GridPath } from "./types";
 
 export class AStar {
   public static search(start: GridPose, goal: GridPose, map: Grid): GridPath {
@@ -29,7 +29,8 @@ export class AStar {
 
       for (const neighbor of neighbors) {
         const score = gScore.get(current.hash) ?? Infinity;
-        const tentative_gScore = score + 1;
+        const tentative_gScore =
+          score + AStar.transitionScore(current.direction, neighbor.direction);
         const neighborHash = neighbor.hash;
         const scoreNeighbor = gScore.get(neighborHash) ?? Infinity;
         if (tentative_gScore < scoreNeighbor) {
@@ -45,6 +46,11 @@ export class AStar {
     }
 
     throw new Error("No solution found");
+  }
+
+  private static transitionScore(from: GridDirection, to: GridDirection) {
+    if (from === to) return 1;
+    return 2;
   }
 
   private static reconstructPath(

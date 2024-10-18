@@ -192,6 +192,13 @@ export class Truck {
     );
   }
 
+  get direction(): Vector2 {
+    const v = new Vector3(1, 0, 0).applyQuaternion(
+      this.trailerModel.quaternion
+    );
+    return new Vector2(v.x, v.y);
+  }
+
   get forward(): Vector3 {
     const forward = new Vector3();
     const right = new Vector3();

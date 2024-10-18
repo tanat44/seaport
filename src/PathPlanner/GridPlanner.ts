@@ -1,5 +1,6 @@
 import { Vector2 } from "three";
 import { QcGantryEvent } from "../Event/QcEvent";
+import { TruckMoveEvent } from "../Event/TruckEvent";
 import { QcSpace } from "../QC/QcSpace";
 import { Terminal } from "../Terminal/Terminal";
 import { AStar } from "./AStar";
@@ -35,9 +36,17 @@ export class GridPlanner {
     this.terminal.visualizer.onEvent<QcGantryEvent>("qcgantry", (e) => {
       this.onQuayCraneGantry(e);
     });
+    this.terminal.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) => {
+      this.onTruckMove(e);
+    });
   }
 
-  findPath(from: Vector2, to: Vector2): Vector2[] {
+  findPath(
+    from: Vector2,
+    fromDir: Vector2,
+    to: Vector2,
+    toDir: Vector2
+  ): Vector2[] {
     if (!this.isDrivable(from))
       throw new Error("Cannot find path from non drivable point");
 
@@ -45,12 +54,17 @@ export class GridPlanner {
       throw new Error("Cannot find path to non drivable point");
 
     // find path
-    const fromGrid = GridPose.poseToGridPose(from, "right", GRID_SIZE);
-    const nextGrid = fromGrid.nextGrid.nextGrid;
-    const toGrid = GridPose.poseToGridPose(to, "right", GRID_SIZE);
-    const path = AStar.search(nextGrid, toGrid, this.grid);
-    path.unshift(fromGrid); // insert original from at index 0
-    // return path.map((pos) => pos.toVector2(GRID_SIZE));
+    const fromGridDir = GridPose.snapToGridDirection(fromDir);
+    const fromGrid = GridPose.poseToGridPose(from, fromGridDir, GRID_SIZE);
+    const afterStartGrid = fromGrid.nextGrid.nextGrid;
+
+    const toGridDir = GridPose.snapToGridDirection(toDir);
+    const toGrid = GridPose.poseToGridPose(to, toGridDir, GRID_SIZE);
+    const beforeEndGrid = toGrid.beforeGrid.beforeGrid;
+
+    const path = AStar.search(afterStartGrid, beforeEndGrid, this.grid);
+    path.unshift(fromGrid); // insert original 'from' at index 0
+    path.push(toGrid); // add original 'to' at last index
 
     // simplify1
     const simplePath1 = SimplifyPath1.simplify(path);
@@ -98,4 +112,6 @@ export class GridPlanner {
     const space = this.quayCraneSpaces.get(quayCraneId);
     space.updateGrid(e.absoluteSpace, this.grid);
   }
+
+  private onTruckMove(e: TruckMoveEvent) {}
 }

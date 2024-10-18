@@ -1,4 +1,5 @@
 import {
+  CubicBezierCurve,
   MeshBasicMaterial,
   Object3D,
   QuadraticBezierCurve,
@@ -38,8 +39,20 @@ export class PathPlanner {
     }
 
     // console.log("PathPlanner: from", from, "to", to);
-    let controlPoints: Vector2[] = this.gridPlanner.findPath(from, job.to);
-    const path = this.makeCurve(controlPoints);
+    let fromDir = new Vector2(1, 0);
+    let toDir = new Vector2(1, 0);
+    if (job.reason === "truckmovecontainertoyard") {
+      toDir = new Vector2(-1, 0);
+    } else if (job.reason === "truckmove") {
+      fromDir = new Vector2(-1, 0);
+    }
+    let controlPoints: Vector2[] = this.gridPlanner.findPath(
+      from,
+      fromDir,
+      job.to,
+      toDir
+    );
+    const path = this.makeCurve(controlPoints, fromDir, toDir);
     this.renderPath(controlPoints, path);
 
     return path;
@@ -54,13 +67,42 @@ export class PathPlanner {
     throw new Error("Tried 100 randoms but cannot find a viable plan target");
   }
 
-  private makeCurve(path: Vector2[]): Vector2[] {
+  private makeCurve(
+    path: Vector2[],
+    fromDir: Vector2,
+    toDir: Vector2
+  ): Vector2[] {
     const newControlPoints: Vector2[] = [];
     const GAP = 2;
-
     for (let i = 0; i < path.length; ++i) {
-      if (i === 0 || i === path.length - 1) {
-        newControlPoints.push(path[i]);
+      if (i === 0) {
+        const dir = path[1].clone().sub(path[0]).normalize();
+        const p = path[1].clone().sub(dir.multiplyScalar(GAP));
+        const points = this.makeCurveWithDirection(
+          path[0],
+          fromDir,
+          0.6,
+          p,
+          dir,
+          0.2
+        );
+        newControlPoints.push(...points);
+        continue;
+      } else if (i === path.length - 1) {
+        const dir = path[i]
+          .clone()
+          .sub(path[i - 1])
+          .normalize();
+        const p = path[i - 1].clone().add(dir.multiplyScalar(GAP));
+        const points = this.makeCurveWithDirection(
+          p,
+          dir,
+          0.2,
+          path[i],
+          toDir,
+          0.6
+        );
+        newControlPoints.push(...points);
         continue;
       }
 
@@ -79,6 +121,22 @@ export class PathPlanner {
     }
 
     return newControlPoints;
+  }
+
+  private makeCurveWithDirection(
+    from: Vector2,
+    fromDir: Vector2,
+    weightFrom: number,
+    to: Vector2,
+    toDir: Vector2,
+    weightTo: number
+  ): Vector2[] {
+    const length = from.distanceTo(to);
+    const a = from.clone().add(fromDir.multiplyScalar(length * weightFrom));
+    const b = to.clone().sub(toDir.multiplyScalar(length * weightTo));
+    // console.log(from, a, b, to);
+    const curve = new CubicBezierCurve(from, a, b, to);
+    return curve.getPoints(10);
   }
 
   private tick() {}

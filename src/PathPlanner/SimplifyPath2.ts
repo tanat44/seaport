@@ -18,14 +18,6 @@ export class SimplifyPath2 {
     const combinations: GridCoordinatePath[] = [];
     intraCombination<GridCoordinate>(originalPath, combinations);
 
-    // console.log(
-    //   this.drivablePath([
-    //     new GridCoordinate(37, 20),
-    //     new GridCoordinate(21, 20),
-    //   ])
-    // );
-    // return originalPath;
-
     // check if path is drivable and has least control points
     let simplestPath: GridCoordinatePath = [...originalPath];
     for (const newPath of combinations) {

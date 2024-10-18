@@ -1,6 +1,7 @@
 import { Object3D, Vector2 } from "three";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { AnimateEvent } from "../Event/types";
+import { MathUtility } from "../MathUtility";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Truck } from "./Truck";
@@ -23,6 +24,7 @@ export class PathPhysics {
   // parameters
   maxVelocity: number;
   maxAcceleration: number;
+  maxDeceleration: number;
   updateCallback: UpdateCallback;
 
   // state
@@ -34,6 +36,8 @@ export class PathPhysics {
   // temporal
   lastIndex: number;
   arrived: boolean;
+  previousTractorDirection: Vector2;
+  steeringVelocity: number;
 
   // render
   meshes: Object3D[];
@@ -56,6 +60,7 @@ export class PathPhysics {
     );
     this.maxVelocity = maxVelocity;
     this.maxAcceleration = maxAcceleration;
+    this.maxDeceleration = -3 * maxAcceleration;
     this.updateCallback = onUpdate;
 
     // calculate control point distance
@@ -92,7 +97,7 @@ export class PathPhysics {
   }
 
   get stoppingDistance(): number {
-    return (this.velocity * this.velocity) / 2 / this.maxAcceleration;
+    return (this.velocity * this.velocity) / 2 / Math.abs(this.maxDeceleration);
   }
 
   setSafetyFieldDetection(detection: boolean) {
@@ -102,41 +107,27 @@ export class PathPhysics {
   private animate(deltaTime: number) {
     if (this.arrived) return;
 
-    if (this.lastIndex === this.pathTrailer.length - 1) {
-      this.distance = this.totalDistance;
-      this.velocity = 0;
-      this.acceleration = 0;
-      this.meshes.forEach((mesh) => mesh.removeFromParent());
-      this.arrived = true;
-
-      // emit event
-      const event = new TruckDriveEndEvent();
-      event.truckId = this.truck.id;
-      event.job = this.truck.currentJob;
-      this.visualizer.emit(event);
-
-      return;
-    }
-
-    const brakeDistance =
-      (this.velocity * this.velocity) / 2 / this.maxAcceleration;
-    const remainDistance = this.totalDistance - this.distance;
-    if (remainDistance < brakeDistance) {
-      this.acceleration = -this.maxAcceleration;
-    } else {
-      this.acceleration = this.maxAcceleration;
-    }
-
-    // bound acceleration
     if (this.safetyFieldDetection) {
-      this.acceleration =
-        this.velocity > 0 ? -this.maxAcceleration : this.maxAcceleration;
-    } else if (this.maxAcceleration) {
-      if (this.acceleration > this.maxAcceleration)
+      this.acceleration = this.velocity > 0 ? this.maxDeceleration : 0;
+    } else {
+      const brakeDistance =
+        (this.velocity * this.velocity) / 2 / this.maxAcceleration;
+      const remainDistance = this.totalDistance - this.distance;
+      if (remainDistance < brakeDistance) {
+        this.acceleration = this.maxDeceleration;
+      } else {
         this.acceleration = this.maxAcceleration;
-      else if (this.acceleration < -this.maxAcceleration)
-        this.acceleration = -this.maxAcceleration;
+      }
+
+      // bound acceleration
+      if (this.maxAcceleration) {
+        if (this.acceleration > this.maxAcceleration)
+          this.acceleration = this.maxAcceleration;
+        else if (this.acceleration < this.maxDeceleration)
+          this.acceleration = this.maxDeceleration;
+      }
     }
+
     // update velocity
     this.velocity += this.acceleration * deltaTime;
 
@@ -163,12 +154,39 @@ export class PathPhysics {
       ++nextIndex;
     }
 
+    // calculate steering velocity
+    const tractorDirection = this.rotation(this.pathTractor);
+    if (this.previousTractorDirection) {
+      const angle = MathUtility.signedAngleBetweenVector(
+        this.previousTractorDirection,
+        tractorDirection
+      );
+      this.steeringVelocity = angle / deltaTime;
+    } else {
+      this.steeringVelocity = 0;
+    }
+    this.previousTractorDirection = tractorDirection.clone();
+
     if (this.updateCallback)
       this.updateCallback(
         this.positionTrailer,
         this.rotation(this.pathTrailer),
-        this.rotation(this.pathTractor)
+        tractorDirection
       );
+
+    if (this.lastIndex === this.pathTrailer.length - 1) {
+      this.distance = this.totalDistance;
+      this.velocity = 0;
+      this.acceleration = 0;
+      this.meshes.forEach((mesh) => mesh.removeFromParent());
+      this.arrived = true;
+
+      // emit event
+      const event = new TruckDriveEndEvent();
+      event.truckId = this.truck.id;
+      event.job = this.truck.currentJob;
+      this.visualizer.emit(event);
+    }
   }
 
   private get positionTrailer(): Vector2 {
@@ -208,14 +226,9 @@ export class PathPhysics {
       .normalize();
   }
 
-  static vectorAngle(v: Vector2): number {
-    const angle = Math.atan2(v.y, v.x);
-    return angle;
-  }
-
   private static resampleEvenSpace(
     path: Vector2[],
-    space: number = 1
+    space: number = 0.5
   ): Vector2[] {
     const output: Vector2[] = [];
 
