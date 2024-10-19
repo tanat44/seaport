@@ -12,7 +12,10 @@ import {
 // @ts-ignore
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Event } from "../Event/Event";
-import { SpeedChangeEvent } from "../Event/SimulationEvent";
+import {
+  SimulationTimeUpdateEvent,
+  SpeedChangeEvent,
+} from "../Event/SimulationEvent";
 import { EventBase, EventType } from "../Event/types";
 import { CameraMoveEvent } from "../Event/VisualizationEvent";
 import { Ui } from "../Ui/Ui";
@@ -29,6 +32,7 @@ export class Visualizer {
   private orbitControl: OrbitControls;
   private raycaster: Raycaster;
   private renderer: WebGLRenderer;
+  private time: number;
   private speed: number;
   private pausing: boolean;
 
@@ -39,6 +43,7 @@ export class Visualizer {
 
   constructor() {
     this.raycaster = new Raycaster();
+    this.time = 0;
     this.setupScene();
     this.setupLighting();
     this.setupControl();
@@ -162,7 +167,7 @@ export class Visualizer {
     }
   }
 
-  private togglePause() {
+  togglePause() {
     this.pausing = !this.pausing;
     this.ui.messageBox.showMessage(this.pausing ? "Paused" : "Resume");
   }
@@ -180,13 +185,16 @@ export class Visualizer {
   private animate() {
     requestAnimationFrame(() => this.animate());
     this.render();
-    const deltaTime = this.clock.getDelta() * this.speed;
-
-    if (!this.pausing)
+    let deltaTime = this.clock.getDelta() * this.speed;
+    if (isNaN(deltaTime)) deltaTime = 0;
+    if (!this.pausing) {
+      this.time += deltaTime;
       this.event.emit({
         type: "animate",
         deltaTime,
       });
+    }
+    this.event.emit(new SimulationTimeUpdateEvent(this.time));
   }
 
   get dom(): HTMLElement {
