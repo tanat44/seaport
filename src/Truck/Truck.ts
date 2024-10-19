@@ -17,7 +17,11 @@ import {
   EquipmentMoveStartEvent,
   EquipmentType,
 } from "../Event/EquipmentEvent";
-import { TruckDriveEndEvent, TruckMoveEvent } from "../Event/TruckEvent";
+import {
+  TruckDriveEndEvent,
+  TruckMoveEvent,
+  TruckQueuingTrafficEvent,
+} from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
@@ -30,7 +34,6 @@ import {
 import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
 import { SafetyField } from "./SafetyField";
-import { TEST_PATH } from "./TestPath";
 
 const WHEEL_DIAMETER = 0.8;
 const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
@@ -159,6 +162,10 @@ export class Truck {
       new Vector2(box.max.x, box.max.y)
     );
     this.terminal.visualizer.emit(new TruckMoveEvent(this.id, box2));
+
+    if (this.pathPhysics.safetyFieldDetection) {
+      this.terminal.visualizer.emit(new TruckQueuingTrafficEvent(this.id));
+    }
   }
 
   load(container: Container) {
@@ -305,10 +312,6 @@ export class Truck {
     const wheelFL = wheel.clone();
     wheelFL.position.set(TRACTOR_WHEEL_BASE, halfWidth, 0);
     this.tractorModel.add(wheelFL);
-  }
-
-  private testDrive() {
-    this.drive(TEST_PATH);
   }
 
   private directionToQuaternion(direction: Vector2) {

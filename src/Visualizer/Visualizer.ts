@@ -6,6 +6,7 @@ import {
   Raycaster,
   Scene,
   SpotLight,
+  Vector3,
   WebGLRenderer,
 } from "three";
 // @ts-ignore
@@ -13,6 +14,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Event } from "../Event/Event";
 import { SpeedChangeEvent } from "../Event/SimulationEvent";
 import { EventBase, EventType } from "../Event/types";
+import { CameraMoveEvent } from "../Event/VisualizationEvent";
 import { Ui } from "../Ui/Ui";
 import { Text } from "./Text";
 
@@ -25,12 +27,12 @@ export class Visualizer {
   private clock: Clock;
   private event: Event;
   private orbitControl: OrbitControls;
-  private camera: PerspectiveCamera;
   private raycaster: Raycaster;
   private renderer: WebGLRenderer;
   private speed: number;
   private pausing: boolean;
 
+  camera: PerspectiveCamera;
   scene: Scene;
   text: Text;
   ui: Ui;
@@ -42,7 +44,7 @@ export class Visualizer {
     this.setupControl();
     this.clock = new Clock();
     this.event = new Event(this.renderer.domElement);
-    this.text = new Text();
+    this.text = new Text(this);
     this.ui = new Ui(this, this.renderer.domElement);
     this.pausing = false;
 
@@ -133,7 +135,13 @@ export class Visualizer {
       this.renderer.domElement
     );
     this.orbitControl.damping = 0.2;
-    this.orbitControl.addEventListener("change", () => this.render());
+    this.orbitControl.addEventListener("change", () => {
+      const direction = new Vector3(0, 0, -1).applyQuaternion(
+        this.camera.quaternion
+      );
+      this.emit(new CameraMoveEvent(this.camera.position.clone(), direction));
+      this.render();
+    });
 
     // initialize camera position
     this.camera.position.set(-40, -40, 100);

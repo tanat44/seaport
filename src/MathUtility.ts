@@ -35,4 +35,8 @@ export class MathUtility {
 
     return new Vector2(px, py);
   }
+
+  static vector3To2(v: Vector3) {
+    return new Vector2(v.x, v.y);
+  }
 }

@@ -4,6 +4,7 @@ import { QcEventType } from "./QcEvent";
 import { RtgEventType } from "./RtgEvent";
 import { SimulationEventType } from "./SimulationEvent";
 import { TruckEventType } from "./TruckEvent";
+import { VisualizationEventType } from "./VisualizationEvent";
 
 export type EventType =
   | "undefined"
@@ -13,7 +14,8 @@ export type EventType =
   | TruckEventType
   | JobEventType
   | SimulationEventType
-  | EquipmentEventType;
+  | EquipmentEventType
+  | VisualizationEventType;
 
 export abstract class EventBase {
   readonly type: EventType;

@@ -5,6 +5,7 @@ import { MathUtility } from "../MathUtility";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Truck } from "./Truck";
+import { TruckStatus } from "./types";
 
 type UpdateCallback = (
   positionTrailer: Vector2,
@@ -32,6 +33,7 @@ export class PathPhysics {
   velocity: number;
   acceleration: number;
   safetyFieldDetection: boolean;
+  status: TruckStatus;
 
   // temporal
   lastIndex: number;
@@ -78,6 +80,7 @@ export class PathPhysics {
     this.velocity = 0;
     this.acceleration = 0;
     this.safetyFieldDetection = false;
+    this.status = TruckStatus.Idle;
     this.lastIndex = 0;
     this.arrived = false;
 
@@ -108,7 +111,13 @@ export class PathPhysics {
     if (this.arrived) return;
 
     if (this.safetyFieldDetection) {
-      this.acceleration = this.velocity > 0 ? this.maxDeceleration : 0;
+      if (this.velocity > 0) {
+        this.acceleration = this.maxDeceleration;
+      } else {
+        this.acceleration = 0;
+        this.velocity = 0;
+        this.status = TruckStatus.QueueTraffic;
+      }
     } else {
       const brakeDistance =
         (this.velocity * this.velocity) / 2 / this.maxAcceleration;
@@ -137,6 +146,8 @@ export class PathPhysics {
       else if (this.velocity < -this.maxVelocity)
         this.velocity = -this.maxVelocity;
     }
+    if (Math.abs(this.velocity) > 0) this.status = TruckStatus.Move;
+
     // update position
     this.distance += this.velocity * deltaTime;
 
@@ -180,12 +191,12 @@ export class PathPhysics {
       this.acceleration = 0;
       this.meshes.forEach((mesh) => mesh.removeFromParent());
       this.arrived = true;
+      this.status = TruckStatus.Idle;
 
       // emit event
-      const event = new TruckDriveEndEvent();
-      event.truckId = this.truck.id;
-      event.job = this.truck.currentJob;
-      this.visualizer.emit(event);
+      this.visualizer.emit(
+        new TruckDriveEndEvent(this.truck.id, this.truck.currentJob)
+      );
     }
   }
 

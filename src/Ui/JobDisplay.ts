@@ -91,7 +91,7 @@ export class JobDisplay extends UiBase {
     if (job.status === JobStatus.Working) {
       card.className = "elementSmall jobCard center workingStatus";
     } else if (job.status === JobStatus.WaitForRelease) {
-      card.className = "elementSmall jobCard center blockingStatus";
+      card.className = "elementSmall jobCard center waitingStatus";
     } else if (job.status === JobStatus.Completed) {
       const sequenceCard = this.sequenceCard.get(job.sequenceId);
       sequenceCard.removeChild(card);

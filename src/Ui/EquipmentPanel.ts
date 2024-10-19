@@ -1,20 +1,18 @@
-import { EquipmentCreateEvent } from "../Event/EquipmentEvent";
+import { EquipmentCreateEvent, EquipmentType } from "../Event/EquipmentEvent";
 import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { QcJob } from "../Job/Definition/QcJob";
 import { RtgJob } from "../Job/Definition/RtgJob";
-import { TruckJob } from "../Job/Definition/TruckJob";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { UiBase } from "./UiBase";
 
+const CARD_CLASS = "elementSmall center";
 export class EquipmentPanel extends UiBase {
   equipmentCard: Map<string, HTMLElement>;
-  jobCard: Map<string, HTMLElement>;
 
   constructor(visualizer: Visualizer, canvasElement: HTMLElement) {
     super(visualizer, canvasElement);
     this.equipmentCard = new Map();
-    this.jobCard = new Map();
 
     // register equipment event
     this.visualizer.onEvent<EquipmentCreateEvent>("equipmentcreate", (e) =>
@@ -29,13 +27,14 @@ export class EquipmentPanel extends UiBase {
     // create card
     const card = document.createElement("div");
     card.innerHTML = id;
-    card.className = "elementSmall center";
+    card.className = CARD_CLASS;
     const panel = document.getElementById("equipmentPanel");
     panel.appendChild(card);
     this.equipmentCard.set(id, card);
   }
 
   private onEquipmentCreate(e: EquipmentCreateEvent) {
+    if (e.equipmentType === EquipmentType.Truck) return;
     this.createEquipmentCard(e.id);
   }
 
@@ -46,8 +45,6 @@ export class EquipmentPanel extends UiBase {
       equipmentId = (job as QcJob).qcId;
     } else if (RtgJob.prototype.isPrototypeOf(job)) {
       equipmentId = (job as RtgJob).rtgId;
-    } else if (TruckJob.prototype.isPrototypeOf(job)) {
-      equipmentId = (job as TruckJob).truckId;
     } else {
       return;
     }
@@ -60,11 +57,11 @@ export class EquipmentPanel extends UiBase {
     // update card on waiting
     const card = this.equipmentCard.get(equipmentId);
     if (job.status === JobStatus.Working) {
-      card.className = "elementSmall center workingStatus";
+      card.className = `${CARD_CLASS} workingStatus`;
     } else if (job.status === JobStatus.WaitForRelease) {
-      card.className = "elementSmall center blockingStatus";
+      card.className = `${CARD_CLASS} waitingStatus`;
     } else if (job.status === JobStatus.Completed) {
-      card.className = "elementSmall center idlingStatus";
+      card.className = `${CARD_CLASS} idlingStatus`;
     }
   }
 }

@@ -3,16 +3,19 @@ import { Visualizer } from "../Visualizer/Visualizer";
 import { EquipmentPanel } from "./EquipmentPanel";
 import { JobDisplay } from "./JobDisplay";
 import { MessageBox } from "./MessageBox";
+import { TruckPanel } from "./TruckPanel";
 import { UiBase } from "./UiBase";
 
 export class Ui extends UiBase {
   equipmentPanel: EquipmentPanel;
+  truckPanel: TruckPanel;
   jobDisplay: JobDisplay;
   messageBox: MessageBox;
 
   constructor(visualizer: Visualizer, canvasElement: HTMLElement) {
     super(visualizer, canvasElement);
     this.equipmentPanel = new EquipmentPanel(visualizer, canvasElement);
+    this.truckPanel = new TruckPanel(visualizer, canvasElement);
     this.jobDisplay = new JobDisplay(visualizer, canvasElement);
     this.messageBox = new MessageBox(this.canvasElement);
 
