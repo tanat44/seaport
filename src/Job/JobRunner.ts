@@ -4,8 +4,8 @@ import {
 } from "../Event/JobEvent";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
-import { Terminal } from "../Terminal/Terminal";
 import { TruckManager } from "../Truck/TruckManager";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
 import { HandoverJob } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
@@ -14,24 +14,24 @@ import { QcJob } from "./Definition/QcJob";
 import { RtgJob } from "./Definition/RtgJob";
 import { TruckJob } from "./Definition/TruckJob";
 import { Handover } from "./Handover";
-import { TerminalControl } from "./TerminalControl";
+import { JobControl } from "./JobControl";
 
-export class JobRunner extends TerminalControl {
+export class JobRunner extends JobControl {
   handover: Handover;
   jobSequences: JobSequence[];
   completeSequences: JobSequence[];
 
   constructor(
-    terminal: Terminal,
+    visualizer: Visualizer,
     qcManager: QcManager,
     rtgManager: RtgManager,
     truckManager: TruckManager,
     yardManager: YardManager
   ) {
-    super(terminal, qcManager, rtgManager, truckManager, yardManager);
+    super(visualizer, qcManager, rtgManager, truckManager, yardManager);
 
     this.handover = new Handover(
-      terminal,
+      visualizer,
       qcManager,
       rtgManager,
       truckManager,
@@ -41,11 +41,10 @@ export class JobRunner extends TerminalControl {
     this.completeSequences = [];
 
     // register event handler
-    this.terminal.visualizer.onEvent<JobStatusChangeEvent>(
-      "jobstatuschange",
-      (e) => this.onJobStatusChange(e)
+    this.visualizer.onEvent<JobStatusChangeEvent>("jobstatuschange", (e) =>
+      this.onJobStatusChange(e)
     );
-    this.terminal.visualizer.onEvent<JobSequenceStatusChangeEvent>(
+    this.visualizer.onEvent<JobSequenceStatusChangeEvent>(
       "jobsequencestatuschange",
       (e) => this.onJobSequenceStatusChange(e)
     );
@@ -66,10 +65,7 @@ export class JobRunner extends TerminalControl {
     while (i < this.jobSequences.length) {
       const sequence = this.jobSequences[i];
       if (sequence.isAllJobsCompleted) {
-        sequence.updateStatus(
-          SequenceStatus.Complete,
-          this.terminal.visualizer
-        );
+        sequence.updateStatus(SequenceStatus.Complete, this.visualizer);
         const removeSequences = this.jobSequences.splice(i, 1);
         this.completeSequences.push(...removeSequences);
         continue;
@@ -105,17 +101,14 @@ export class JobRunner extends TerminalControl {
         }
 
         if (thisJobSuccess) {
-          sequence.completeParentJob(job, this.terminal.visualizer);
+          sequence.completeParentJob(job, this.visualizer);
           someJobSuccess = true;
         }
       }
 
       if (someJobSuccess) {
         if (sequence.status === SequenceStatus.NotStarted)
-          sequence.updateStatus(
-            SequenceStatus.Working,
-            this.terminal.visualizer
-          );
+          sequence.updateStatus(SequenceStatus.Working, this.visualizer);
       }
 
       ++i;

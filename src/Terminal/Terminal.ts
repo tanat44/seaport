@@ -1,4 +1,4 @@
-import { JobPlanner } from "../Job/JobPlanner";
+import { TerminalPlanner } from "./TerminalPlanner";
 import { JobRunner } from "../Job/JobRunner";
 import { QC_WIDTH } from "../QC/Qc";
 import { QcManager } from "../QC/QcManager";
@@ -52,8 +52,8 @@ export class Terminal {
     this.truckManager = new TruckManager(this.visualizer, layout);
 
     // plan operation
-    const planner = new JobPlanner(
-      this,
+    const planner = new TerminalPlanner(
+      this.visualizer,
       this.qcManager,
       this.rtgManager,
       this.truckManager,
@@ -65,7 +65,7 @@ export class Terminal {
 
     // run operation
     this.jobRunner = new JobRunner(
-      this,
+      this.visualizer,
       this.qcManager,
       this.rtgManager,
       this.truckManager,

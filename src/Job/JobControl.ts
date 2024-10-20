@@ -1,24 +1,24 @@
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
-import { Terminal } from "../Terminal/Terminal";
 import { TruckManager } from "../Truck/TruckManager";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
 
-export abstract class TerminalControl {
-  terminal: Terminal;
+export abstract class JobControl {
+  visualizer: Visualizer;
   qcManager: QcManager;
   rtgManager: RtgManager;
   truckManager: TruckManager;
   yardManager: YardManager;
 
   constructor(
-    terminal: Terminal,
+    visualizer: Visualizer,
     qcManager: QcManager,
     rtgManager: RtgManager,
     truckManager: TruckManager,
     yardManager: YardManager
   ) {
-    this.terminal = terminal;
+    this.visualizer = visualizer;
     this.qcManager = qcManager;
     this.rtgManager = rtgManager;
     this.truckManager = truckManager;

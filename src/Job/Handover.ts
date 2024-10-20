@@ -7,11 +7,11 @@ import {
 } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
 import { JobSequence } from "./Definition/JobSequence";
-import { TerminalControl } from "./TerminalControl";
+import { JobControl } from "./JobControl";
 
-export class Handover extends TerminalControl {
+export class Handover extends JobControl {
   execute(job: HandoverJob, sequence: JobSequence) {
-    job.updateStatus(JobStatus.Working, this.terminal.visualizer);
+    job.updateStatus(JobStatus.Working, this.visualizer);
 
     if (job.reason === "handovervesseltoqc") {
       const handoverJob = job as HandoverVesselToQcJob;
@@ -60,7 +60,7 @@ export class Handover extends TerminalControl {
       throw new Error("Unhandle handover job");
     }
 
-    job.updateStatus(JobStatus.Completed, this.terminal.visualizer);
-    sequence.completeParentJob(job, this.terminal.visualizer);
+    job.updateStatus(JobStatus.Completed, this.visualizer);
+    sequence.completeParentJob(job, this.visualizer);
   }
 }

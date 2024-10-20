@@ -3,14 +3,9 @@ import { LayoutManager } from "../Layout/LayoutManager";
 import { TruckManager } from "../Truck/TruckManager";
 import { Visualizer } from "../Visualizer/Visualizer";
 
-export class Terminal {
+export class Traffic {
   visualizer: Visualizer;
-
-  // equipment
   truckManager: TruckManager;
-
-  // operation
-  jobRunner: JobRunner;
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
@@ -24,5 +19,15 @@ export class Terminal {
 
     // init truckplanner
     this.truckManager = new TruckManager(this.visualizer, layout);
+
+    // run operation
+    const jobRunner = new JobRunner(
+      this.visualizer,
+      null,
+      null,
+      this.truckManager,
+      null
+    );
+    jobRunner.run([]);
   }
 }

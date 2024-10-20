@@ -7,25 +7,25 @@ import {
   HandoverRtgToYardJob,
   HandoverTruckToRtgJob,
   HandoverVesselToQcJob,
-} from "./Definition/HanoverJob";
-import { JobSequence } from "./Definition/JobSequence";
+} from "../Job/Definition/HanoverJob";
+import { JobSequence } from "../Job/Definition/JobSequence";
 import {
   QcDropContainerToTruckJob,
   QcMoveJob,
   QcPickContainerFromVesselJob,
-} from "./Definition/QcJob";
+} from "../Job/Definition/QcJob";
 import {
   RtgDropContainerInYardJob,
   RtgPickContainerFromTruckJob,
-} from "./Definition/RtgJob";
+} from "../Job/Definition/RtgJob";
 import {
   TruckMoveContainerToYardJob,
   TruckMoveJob,
   TruckMoveToUnderQcJob,
-} from "./Definition/TruckJob";
-import { TerminalControl } from "./TerminalControl";
+} from "../Job/Definition/TruckJob";
+import { JobControl } from "../Job/JobControl";
 
-export class JobPlanner extends TerminalControl {
+export class TerminalPlanner extends JobControl {
   planUnloadJob(qcPlans: QcPlan, vessel: Vessel): JobSequence[] {
     // create job sequences for each qc
     const qcSequences = new Map<Qc, JobSequence[]>();
