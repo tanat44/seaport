@@ -13,9 +13,10 @@ export abstract class QcBaseEvent extends EventBase {
 }
 
 export class QcGantryEvent extends QcBaseEvent {
-  absoluteSpace: Box2;
+  footprint: Box2;
 
-  constructor(qcId: string) {
+  constructor(qcId: string, footprint: Box2) {
     super("qcgantry", qcId);
+    this.footprint = footprint;
   }
 }

@@ -1,7 +1,4 @@
 import { Vector2 } from "three";
-import { QcGantryEvent } from "../Event/QcEvent";
-import { TruckMoveEvent } from "../Event/TruckEvent";
-import { QcSpace } from "../QC/QcSpace";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPose } from "./GridPose";
@@ -9,6 +6,8 @@ import { SimplifyPath1 } from "./SimplifyPath1";
 import { CellType, Grid } from "./types";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Layout } from "../Layout/types";
+import { OccupySpaces } from "./OccupySpaces";
+import { TruckId } from "../Truck/Truck";
 
 export const GRID_SIZE = 5;
 
@@ -16,7 +15,7 @@ export class GridPlanner {
   visualizer: Visualizer;
   layout: Layout;
   grid: Grid;
-  quayCraneSpaces: Map<string, QcSpace>;
+  occupySpaces: OccupySpaces;
 
   constructor(visualizer: Visualizer, layout: Layout) {
     this.visualizer = visualizer;
@@ -28,32 +27,24 @@ export class GridPlanner {
       const row: CellType[] = [];
       for (let x = 0; x < Math.floor(layout.terminalSize.x); x += GRID_SIZE) {
         const pos = new Vector2(x, y);
-        row.push(this.isInYardBlock(pos) ? CellType.Yard : CellType.Road);
+        row.push(this.isInYardBlock(pos) ? "yard" : "road");
       }
       this.grid.push(row);
     }
     console.log(`Grid size ${this.grid[0].length}x${this.grid.length}`);
-    this.quayCraneSpaces = new Map();
-    this.visualizer.onEvent<QcGantryEvent>("qcgantry", (e) => {
-      this.onQuayCraneGantry(e);
-    });
-    this.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) => {
-      this.onTruckMove(e);
-    });
+    this.occupySpaces = new OccupySpaces(this.visualizer, this.grid);
   }
 
   findPath(
     from: Vector2,
     fromDir: Vector2,
     to: Vector2,
-    toDir: Vector2
+    toDir: Vector2,
+    truckId: TruckId
   ): Vector2[] {
-    if (!this.isDrivable(from))
+    if (!this.isDrivable(from, truckId)) {
       throw new Error("Cannot find path from non drivable point");
-
-    if (!this.isDrivable(to))
-      throw new Error("Cannot find path to non drivable point");
-
+    }
     // find path
     const fromGridDir = GridPose.snapToGridDirection(fromDir);
     const fromGrid = GridPose.poseToGridPose(from, fromGridDir, GRID_SIZE);
@@ -63,7 +54,13 @@ export class GridPlanner {
     const toGrid = GridPose.poseToGridPose(to, toGridDir, GRID_SIZE);
     const beforeEndGrid = toGrid.beforeGrid.beforeGrid;
 
-    const path = AStar.search(afterStartGrid, beforeEndGrid, this.grid);
+    const path = AStar.search(
+      afterStartGrid,
+      beforeEndGrid,
+      this.grid,
+      truckId,
+      true
+    );
     path.unshift(fromGrid); // insert original 'from' at index 0
     path.push(toGrid); // add original 'to' at last index
 
@@ -82,14 +79,20 @@ export class GridPlanner {
     return simplifiedPath;
   }
 
-  isDrivable(pos: Vector2): boolean {
+  isDrivable(pos: Vector2, truckId: TruckId): boolean {
     const coordinate = GridCoordinate.fromVector2(pos, GRID_SIZE);
     const type = this.grid[coordinate.y][coordinate.x];
-    return GridPlanner.isDrivableCell(type);
+    return GridPlanner.isDrivableCell(type, truckId);
   }
 
-  static isDrivableCell(type: CellType): boolean {
-    return type === CellType.Road || type === CellType.UnderQuayCrane;
+  static isDrivableCell(
+    type: CellType,
+    TruckId: TruckId,
+    ignoreTraffic: boolean = true
+  ): boolean {
+    if (type === "yard") return false;
+    if (ignoreTraffic) return true;
+    return type === TruckId;
   }
 
   private isInYardBlock(pos: Vector2): boolean {
@@ -98,18 +101,4 @@ export class GridPlanner {
     }
     return false;
   }
-
-  private onQuayCraneGantry(e: QcGantryEvent) {
-    if (!this.grid) return;
-
-    const quayCraneId = e.qcId;
-    if (!this.quayCraneSpaces.has(quayCraneId)) {
-      this.quayCraneSpaces.set(quayCraneId, new QcSpace(this.visualizer));
-    }
-
-    const space = this.quayCraneSpaces.get(quayCraneId);
-    space.updateGrid(e.absoluteSpace, this.grid);
-  }
-
-  private onTruckMove(e: TruckMoveEvent) {}
 }

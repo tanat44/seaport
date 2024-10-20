@@ -2,6 +2,7 @@ import { JobRunner } from "../Job/JobRunner";
 import { LayoutManager } from "../Layout/LayoutManager";
 import { TruckManager } from "../Truck/TruckManager";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { TrafficPlanner } from "./TrafficPlanner";
 
 export class Traffic {
   visualizer: Visualizer;
@@ -18,7 +19,17 @@ export class Traffic {
     const layout = await layoutManager.load();
 
     // init truckplanner
-    this.truckManager = new TruckManager(this.visualizer, layout);
+    this.truckManager = new TruckManager(this.visualizer, layout, 2);
+
+    // plan
+    const planner = new TrafficPlanner(
+      this.visualizer,
+      null,
+      null,
+      this.truckManager,
+      null
+    );
+    const sequences = planner.plan();
 
     // run operation
     const jobRunner = new JobRunner(
@@ -28,6 +39,6 @@ export class Traffic {
       this.truckManager,
       null
     );
-    jobRunner.run([]);
+    jobRunner.run(sequences);
   }
 }

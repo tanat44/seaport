@@ -10,6 +10,7 @@ import { Render } from "../Visualizer/Render";
 import { GridPlanner } from "./GridPlanner";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Layout } from "../Layout/types";
+import { TruckId } from "../Truck/Truck";
 
 export class PathPlanner {
   visualizer: Visualizer;
@@ -23,26 +24,26 @@ export class PathPlanner {
     this.pathMesh = [];
   }
 
-  plan(from: Vector2, job: TruckJob): Vector2[] {
+  plan(from: Vector2, fromDir: Vector2, job: TruckJob): Vector2[] {
+    // console.log("PathPlanner: from", from, "to", to);
     // delete old path
     if (this.pathMesh.length > 0) {
       this.pathMesh.forEach((mesh) => mesh.removeFromParent());
       this.pathMesh = [];
     }
 
-    // console.log("PathPlanner: from", from, "to", to);
-    let fromDir = new Vector2(1, 0);
     let toDir = new Vector2(1, 0);
     if (job.reason === "truckmovecontainertoyard") {
       toDir = new Vector2(-1, 0);
     } else if (job.reason === "truckmove") {
-      fromDir = new Vector2(-1, 0);
+      // fromDir = new Vector2(-1, 0);
     }
     let controlPoints: Vector2[] = this.gridPlanner.findPath(
       from,
       fromDir,
       job.to,
-      toDir
+      toDir,
+      job.truckId
     );
     const path = this.makeCurve(controlPoints, fromDir, toDir);
     this.renderPath(controlPoints, path);
@@ -50,11 +51,11 @@ export class PathPlanner {
     return path;
   }
 
-  randomDrivablePosition(): Vector2 {
+  randomDrivablePosition(truckId: TruckId): Vector2 {
     const { x: width, y: height } = this.gridPlanner.layout.terminalSize;
     for (let i = 0; i < 100; ++i) {
       const pos = this.randomVector(width, height);
-      if (this.gridPlanner.isDrivable(pos)) return pos;
+      if (this.gridPlanner.isDrivable(pos, truckId)) return pos;
     }
     throw new Error("Tried 100 randoms but cannot find a viable plan target");
   }

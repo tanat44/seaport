@@ -7,8 +7,6 @@ import { Visualizer } from "../Visualizer/Visualizer";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { Layout } from "../Layout/types";
 
-const TRUCK_COUNT = 6;
-
 export class TruckManager {
   private visualizer: Visualizer;
   pathPlanner: PathPlanner;
@@ -18,14 +16,14 @@ export class TruckManager {
   private activeSequences: Map<TruckId, SequenceId | undefined>;
   private footprints: Map<TruckId, Box2>;
 
-  constructor(visualizer: Visualizer, layout: Layout) {
+  constructor(visualizer: Visualizer, layout: Layout, numberOfTrucks: number) {
     this.visualizer = visualizer;
     this.pathPlanner = new PathPlanner(this.visualizer, layout);
     this.trucks = new Map();
     this.activeSequences = new Map();
     this.footprints = new Map();
 
-    for (let i = 0; i < TRUCK_COUNT; ++i) {
+    for (let i = 0; i < numberOfTrucks; ++i) {
       const initialPosition = new Vector3(20, 3 + 7 * i, 0);
       const truck = new Truck(this.visualizer, this, initialPosition);
       this.trucks.set(truck.id, truck);

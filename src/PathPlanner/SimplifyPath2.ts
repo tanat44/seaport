@@ -1,3 +1,4 @@
+import { TruckId } from "../Truck/Truck";
 import { intraCombination } from "./Combination";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPlanner } from "./GridPlanner";
@@ -11,7 +12,10 @@ export class SimplifyPath2 {
     this.map = map;
   }
 
-  simplify(originalPath: GridCoordinatePath): GridCoordinatePath {
+  simplify(
+    originalPath: GridCoordinatePath,
+    truckId: TruckId
+  ): GridCoordinatePath {
     if (originalPath.length < 2) return [...originalPath];
 
     // find all simplify path combinations
@@ -21,7 +25,7 @@ export class SimplifyPath2 {
     // check if path is drivable and has least control points
     let simplestPath: GridCoordinatePath = [...originalPath];
     for (const newPath of combinations) {
-      const drivable = this.drivablePath(newPath);
+      const drivable = this.drivablePath(newPath, truckId);
       if (drivable && newPath.length < simplestPath.length) {
         simplestPath = newPath;
       }
@@ -30,31 +34,35 @@ export class SimplifyPath2 {
     return simplestPath;
   }
 
-  private drivablePath(path: GridCoordinatePath): boolean {
+  private drivablePath(path: GridCoordinatePath, truckId: TruckId): boolean {
     if (path.length < 2)
       throw new Error(
         "Invalid path because path has control points less than 2"
       );
 
     if (path.length == 2) {
-      return this.drivable(path[0], path[1]);
+      return this.drivable(path[0], path[1], truckId);
     }
 
     for (let i = 0; i < path.length - 1; ++i) {
       const from = path[i];
       const to = path[i + 1];
 
-      const segmentDrivable = this.drivable(from, to);
+      const segmentDrivable = this.drivable(from, to, truckId);
       if (!segmentDrivable) return false;
     }
 
     return true;
   }
 
-  private drivable(from: GridCoordinate, to: GridCoordinate): boolean {
+  private drivable(
+    from: GridCoordinate,
+    to: GridCoordinate,
+    truckId: TruckId
+  ): boolean {
     const positions = SimplifyPath2.getPassingGrid(from, to);
     for (const pos of positions) {
-      if (!GridPlanner.isDrivableCell(this.map[pos.y][pos.x])) {
+      if (!GridPlanner.isDrivableCell(this.map[pos.y][pos.x], truckId)) {
         return false;
       }
     }

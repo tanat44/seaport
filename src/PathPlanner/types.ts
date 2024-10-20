@@ -1,10 +1,7 @@
+import { EquipmentId } from "../Event/EquipmentEvent";
 import { GridPose } from "./GridPose";
 
-export enum CellType {
-  UnderQuayCrane = "qc",
-  Road = "road",
-  Yard = "yard",
-}
+export type CellType = "road" | "yard" | EquipmentId;
 
 export type GridDirection = "up" | "left" | "down" | "right";
 

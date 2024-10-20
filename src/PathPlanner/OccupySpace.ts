@@ -1,18 +1,18 @@
 import { Box2, Mesh, Vector2 } from "three";
-import { GridBox } from "../PathPlanner/GridBox";
-import { GridCoordinate } from "../PathPlanner/GridCoordinate";
-import { GRID_SIZE } from "../PathPlanner/GridPlanner";
-import { CellType } from "../PathPlanner/types";
+import { GridBox } from "./GridBox";
+import { GridCoordinate } from "./GridCoordinate";
+import { GRID_SIZE } from "./GridPlanner";
+import { CellType } from "./types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 
 const HIGHLIGHT_MESH_HEIGHT = 0.5;
 
-export class QcSpace {
-  visualizer: Visualizer;
-  occupyCells: Set<string>;
-  gridBox: GridBox;
-  highlightMesh: Mesh;
+export class OccupySpace {
+  private visualizer: Visualizer;
+  private occupyCells: Set<string>;
+  private gridBox: GridBox;
+  private highlightMesh: Mesh;
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
@@ -27,7 +27,7 @@ export class QcSpace {
     this.visualizer.scene.add(this.highlightMesh);
   }
 
-  updateGrid(newBox: Box2, grid: CellType[][]) {
+  updateGrid(equipmentId: string, newBox: Box2, grid: CellType[][]) {
     const newGridBox: GridBox = new GridBox(
       Math.floor(newBox.min.x / GRID_SIZE),
       Math.floor(newBox.min.y / GRID_SIZE),
@@ -52,8 +52,8 @@ export class QcSpace {
         if (this.occupyCells.has(hash)) {
           toClearCells.delete(hash);
           continue;
-        } else {
-          grid[y][x] = CellType.UnderQuayCrane;
+        } else if (grid[y][x] === "road") {
+          grid[y][x] = equipmentId;
           this.occupyCells.add(hash);
         }
       }
@@ -62,7 +62,7 @@ export class QcSpace {
     // clear cells
     for (const cell of Array.from(toClearCells)) {
       const pos = GridCoordinate.fromHash(cell);
-      grid[pos.y][pos.x] = CellType.Road;
+      grid[pos.y][pos.x] = "road";
     }
 
     // cache gridbox

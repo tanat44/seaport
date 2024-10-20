@@ -103,14 +103,18 @@ export class Truck {
     this.currentJob.updateStatus(JobStatus.Working, this.visualizer);
 
     // execute move
-    const path = this.truckManager.pathPlanner.plan(this.position, job);
+    const path = this.truckManager.pathPlanner.plan(
+      this.position,
+      this.direction,
+      job
+    );
     this.drive(path);
     this.visualizer.emit(
       new EquipmentMoveStartEvent(this.id, EquipmentType.Truck)
     );
   }
 
-  drive(controlPoints: Vector2[]) {
+  private drive(controlPoints: Vector2[]) {
     if (this.pathPhysics) {
       console.warn("Abort driving on the current path to drive new path");
     }

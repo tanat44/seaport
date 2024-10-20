@@ -1,10 +1,17 @@
+import { TruckId } from "../Truck/Truck";
 import { GridPlanner } from "./GridPlanner";
 import { GridPose } from "./GridPose";
 import { MinGridHeap } from "./MinGridHeap";
 import { Grid, GridDirection, GridPath } from "./types";
 
 export class AStar {
-  public static search(start: GridPose, goal: GridPose, map: Grid): GridPath {
+  public static search(
+    start: GridPose,
+    goal: GridPose,
+    map: Grid,
+    truckId: TruckId,
+    ignoreTraffic: boolean
+  ): GridPath {
     const openSet = new MinGridHeap();
     openSet.add(start.distanceTo(goal), start);
 
@@ -25,7 +32,7 @@ export class AStar {
       if (current.equalTo(goal))
         return AStar.reconstructPath(cameFrom, current);
 
-      const neighbors = this.neighbors(current, map);
+      const neighbors = this.neighbors(current, map, truckId, ignoreTraffic);
 
       for (const neighbor of neighbors) {
         const score = gScore.get(current.hash) ?? Infinity;
@@ -70,7 +77,12 @@ export class AStar {
     return forward_path;
   }
 
-  private static neighbors(current: GridPose, map: Grid): GridPose[] {
+  private static neighbors(
+    current: GridPose,
+    map: Grid,
+    truckId: TruckId,
+    ignoreTraffic: boolean
+  ): GridPose[] {
     const width = map[0].length;
     const height = map.length;
 
@@ -80,7 +92,11 @@ export class AStar {
         pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height;
       if (outOfBound) continue;
 
-      const drivable = GridPlanner.isDrivableCell(map[pos.y][pos.x]);
+      const drivable = GridPlanner.isDrivableCell(
+        map[pos.y][pos.x],
+        truckId,
+        ignoreTraffic
+      );
       if (!drivable) {
         continue;
       }

@@ -1,3 +1,6 @@
+import { QcId } from "../QC/Qc";
+import { RtgId } from "../RTG/Rtg";
+import { TruckId } from "../Truck/Truck";
 import { EventBase } from "./types";
 
 export enum EquipmentType {
@@ -5,6 +8,8 @@ export enum EquipmentType {
   Rtg,
   Truck,
 }
+
+export type EquipmentId = QcId | RtgId | TruckId;
 
 export type EquipmentEventType =
   | "equipmentcreate"
@@ -16,7 +21,7 @@ export abstract class EquipmentBaseEvent extends EventBase {
   equipmentType: EquipmentType;
   constructor(
     type: EquipmentEventType,
-    id: string,
+    id: EquipmentId,
     equipmentType: EquipmentType
   ) {
     super(type);

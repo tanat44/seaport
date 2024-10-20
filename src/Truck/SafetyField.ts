@@ -62,7 +62,7 @@ export class SafetyField {
 
     let detection = false;
     if (collideTruckId !== null) {
-      // detection = true;
+      detection = true;
       // console.log(this.truck.id, "collide", collideTruckId);
     } else {
       // console.log("no");
