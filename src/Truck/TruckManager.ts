@@ -2,32 +2,37 @@ import { Box2, Vector2, Vector3 } from "three";
 import { TruckMoveEvent } from "../Event/TruckEvent";
 import { SequenceId } from "../Job/Definition/JobSequence";
 import { TruckJob } from "../Job/Definition/TruckJob";
-import { Terminal } from "../Terminal/Terminal";
 import { Truck, TruckId } from "./Truck";
+import { Visualizer } from "../Visualizer/Visualizer";
+import { PathPlanner } from "../PathPlanner/PathPlanner";
+import { Layout } from "../Layout/types";
 
 const TRUCK_COUNT = 6;
 
 export class TruckManager {
-  private terminal: Terminal;
+  private visualizer: Visualizer;
+  pathPlanner: PathPlanner;
   private trucks: Map<string, Truck>;
 
+  // operation
   private activeSequences: Map<TruckId, SequenceId | undefined>;
   private footprints: Map<TruckId, Box2>;
 
-  constructor(terminal: Terminal) {
-    this.terminal = terminal;
+  constructor(visualizer: Visualizer, layout: Layout) {
+    this.visualizer = visualizer;
+    this.pathPlanner = new PathPlanner(this.visualizer, layout);
     this.trucks = new Map();
     this.activeSequences = new Map();
     this.footprints = new Map();
 
     for (let i = 0; i < TRUCK_COUNT; ++i) {
       const initialPosition = new Vector3(20, 3 + 7 * i, 0);
-      const truck = new Truck(this.terminal, initialPosition);
+      const truck = new Truck(this.visualizer, this, initialPosition);
       this.trucks.set(truck.id, truck);
       this.activeSequences.set(truck.id, undefined);
     }
 
-    this.terminal.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) =>
+    this.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) =>
       this.onTruckMove(e)
     );
   }
@@ -99,15 +104,6 @@ export class TruckManager {
 
     // console.log("closest truck: ", bestTruck?.id ?? "-");
     return bestTruck;
-  }
-
-  private printAvailableTrucks() {
-    let text = "Available: ";
-    for (const [id, _] of this.trucks) {
-      if (this.activeSequences.get(id)) continue;
-      text += id + " ";
-    }
-    console.log(text);
   }
 
   private onTruckMove(e: TruckMoveEvent) {

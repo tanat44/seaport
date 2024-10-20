@@ -2,23 +2,24 @@ import { Vector2 } from "three";
 import { QcGantryEvent } from "../Event/QcEvent";
 import { TruckMoveEvent } from "../Event/TruckEvent";
 import { QcSpace } from "../QC/QcSpace";
-import { Terminal } from "../Terminal/Terminal";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPose } from "./GridPose";
 import { SimplifyPath1 } from "./SimplifyPath1";
-import { CellType, Grid, Layout } from "./types";
+import { CellType, Grid } from "./types";
+import { Visualizer } from "../Visualizer/Visualizer";
+import { Layout } from "../Layout/types";
 
 export const GRID_SIZE = 5;
 
 export class GridPlanner {
-  terminal: Terminal;
+  visualizer: Visualizer;
   layout: Layout;
   grid: Grid;
   quayCraneSpaces: Map<string, QcSpace>;
 
-  constructor(terminal: Terminal, layout: Layout) {
-    this.terminal = terminal;
+  constructor(visualizer: Visualizer, layout: Layout) {
+    this.visualizer = visualizer;
     this.layout = layout;
 
     // initialize grid
@@ -33,10 +34,10 @@ export class GridPlanner {
     }
     console.log(`Grid size ${this.grid[0].length}x${this.grid.length}`);
     this.quayCraneSpaces = new Map();
-    this.terminal.visualizer.onEvent<QcGantryEvent>("qcgantry", (e) => {
+    this.visualizer.onEvent<QcGantryEvent>("qcgantry", (e) => {
       this.onQuayCraneGantry(e);
     });
-    this.terminal.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) => {
+    this.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) => {
       this.onTruckMove(e);
     });
   }
@@ -103,10 +104,7 @@ export class GridPlanner {
 
     const quayCraneId = e.qcId;
     if (!this.quayCraneSpaces.has(quayCraneId)) {
-      this.quayCraneSpaces.set(
-        quayCraneId,
-        new QcSpace(this.terminal.visualizer)
-      );
+      this.quayCraneSpaces.set(quayCraneId, new QcSpace(this.visualizer));
     }
 
     const space = this.quayCraneSpaces.get(quayCraneId);

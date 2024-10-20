@@ -1,18 +1,24 @@
 import { Box2, Box3, Object3D, Vector2, Vector3 } from "three";
-import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
 import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
+import { Visualizer } from "../Visualizer/Visualizer";
+import { TruckManager } from "./TruckManager";
 
 const STEERING_FACTOR = 0.3;
 export class SafetyField {
+  visualizer: Visualizer;
+  truckManager: TruckManager;
   truck: Truck;
-  terminal: Terminal;
-
   fieldModel: Object3D;
 
-  constructor(truck: Truck, terminal: Terminal) {
+  constructor(
+    truck: Truck,
+    truckManager: TruckManager,
+    visualizer: Visualizer
+  ) {
+    this.visualizer = visualizer;
+    this.truckManager = truckManager;
     this.truck = truck;
-    this.terminal = terminal;
 
     // create 3d Object
     const fieldShape = Render.createBox(
@@ -49,11 +55,10 @@ export class SafetyField {
 
     // console.log(this.truck.id);
 
-    const collideTruckId =
-      this.terminal.truckManager.isSafetyFieldIntersectOtherTrucks(
-        this.truck.id,
-        safetyField
-      );
+    const collideTruckId = this.truckManager.isSafetyFieldIntersectOtherTrucks(
+      this.truck.id,
+      safetyField
+    );
 
     let detection = false;
     if (collideTruckId !== null) {
@@ -63,9 +68,5 @@ export class SafetyField {
       // console.log("no");
     }
     this.truck.pathPhysics.setSafetyFieldDetection(detection);
-  }
-
-  private boxToString(box: Box2) {
-    return `${box.min.x} ${box.min.y} ${box.max.x} ${box.max.y}`;
   }
 }

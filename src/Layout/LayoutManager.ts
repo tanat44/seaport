@@ -1,7 +1,7 @@
-import { Box2, Material, Vector2, Vector3 } from "three";
-import { Layout } from "../PathPlanner/types";
+import { Material, Vector2, Box2, Vector3 } from "three";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { Layout } from "./types";
 
 const SVG_SCALE_MULTIPLIER = 1;
 

@@ -1,9 +1,9 @@
 import { Box2, Vector2 } from "three";
-import { Layout } from "../PathPlanner/types";
 import { StorageBlock } from "../StorageBlock/StorageBlock";
 import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
 import { CargoOrder } from "./types";
+import { Layout } from "../Layout/types";
 
 export type QcPlan = CargoOrder[];
 export class Vessel extends StorageBlock {

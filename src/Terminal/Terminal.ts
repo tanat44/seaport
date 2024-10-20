@@ -1,8 +1,5 @@
-import { Vector2 } from "three";
-import { TruckMoveJob } from "../Job/Definition/TruckJob";
 import { JobPlanner } from "../Job/JobPlanner";
 import { JobRunner } from "../Job/JobRunner";
-import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { QC_WIDTH } from "../QC/Qc";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
@@ -10,13 +7,12 @@ import { TruckManager } from "../Truck/TruckManager";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
-import { LayoutManager } from "./LayoutManager";
+import { LayoutManager } from "../Layout/LayoutManager";
 
 const VESSEL_NAME = "Vessel-Polo";
 export class Terminal {
   visualizer: Visualizer;
   layoutManager: LayoutManager;
-  pathPlanner: PathPlanner;
 
   // storage
   vessels: Map<string, Vessel>;
@@ -32,12 +28,12 @@ export class Terminal {
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
-    this.layoutManager = new LayoutManager(visualizer);
     this.init();
   }
 
   private async init() {
     // wait for layout to load
+    this.layoutManager = new LayoutManager(this.visualizer);
     const layout = await this.layoutManager.load();
 
     // init vessel
@@ -53,8 +49,7 @@ export class Terminal {
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
 
     // init truckplanner
-    this.pathPlanner = new PathPlanner(this, layout);
-    this.truckManager = new TruckManager(this);
+    this.truckManager = new TruckManager(this.visualizer, layout);
 
     // plan operation
     const planner = new JobPlanner(
@@ -77,14 +72,5 @@ export class Terminal {
       this.yardManager
     );
     this.jobRunner.run(jobs);
-    // this.testDrive();
-  }
-
-  private testDrive() {
-    const target = new Vector2(100, 50);
-    const truck = this.truckManager.getAvailableTruck(target);
-    const job = new TruckMoveJob([], target);
-    job.truckId = truck.id;
-    this.truckManager.execute(job);
   }
 }

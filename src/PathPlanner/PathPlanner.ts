@@ -6,28 +6,20 @@ import {
   Vector2,
 } from "three";
 import { TruckJob } from "../Job/Definition/TruckJob";
-import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
 import { GridPlanner } from "./GridPlanner";
-import { Layout } from "./types";
-
-const PLAN_INTERVAL = 1000;
-
-type Plan = {
-  from: Vector2;
-  to: Vector2;
-};
+import { Visualizer } from "../Visualizer/Visualizer";
+import { Layout } from "../Layout/types";
 
 export class PathPlanner {
-  terminal: Terminal;
+  visualizer: Visualizer;
   gridPlanner: GridPlanner;
   timer: NodeJS.Timer;
   pathMesh: Object3D[];
 
-  constructor(terminal: Terminal, layout: Layout) {
-    this.terminal = terminal;
-    this.gridPlanner = new GridPlanner(terminal, layout);
-    this.timer = setInterval(() => this.tick(), PLAN_INTERVAL);
+  constructor(visualizer: Visualizer, layout: Layout) {
+    this.visualizer = visualizer;
+    this.gridPlanner = new GridPlanner(this.visualizer, layout);
     this.pathMesh = [];
   }
 
@@ -139,8 +131,6 @@ export class PathPlanner {
     return curve.getPoints(10);
   }
 
-  private tick() {}
-
   private renderPath(controlPoints: Vector2[], path: Vector2[]) {
     // mesh container
     const mesh = new Object3D();
@@ -163,21 +153,8 @@ export class PathPlanner {
     });
     mesh.add(...controlPointMeshes);
 
-    this.terminal.visualizer.scene.add(mesh);
+    this.visualizer.scene.add(mesh);
     this.pathMesh.push(mesh);
-  }
-
-  private randomPlan(): Plan {
-    const from = this.randomDrivablePosition();
-    const to = this.randomDrivablePosition();
-
-    if (
-      Math.floor(from.x) === Math.floor(to.x) &&
-      Math.floor(from.y) === Math.floor(to.y)
-    )
-      return this.randomPlan();
-
-    return { from, to };
   }
 
   private randomVector(xRange: number, yRange: number): Vector2 {

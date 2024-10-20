@@ -25,7 +25,6 @@ import {
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
-import { Terminal } from "../Terminal/Terminal";
 import {
   CONTAINER_SIZE_X,
   CONTAINER_SIZE_Y,
@@ -34,6 +33,8 @@ import {
 import { Render } from "../Visualizer/Render";
 import { PathPhysics } from "./PathPhysics";
 import { SafetyField } from "./SafetyField";
+import { Visualizer } from "../Visualizer/Visualizer";
+import { TruckManager } from "./TruckManager";
 
 const WHEEL_DIAMETER = 0.8;
 const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
@@ -53,7 +54,8 @@ export type TruckId = string;
 export class Truck {
   static count = 0;
 
-  terminal: Terminal;
+  visualizer: Visualizer;
+  truckManager: TruckManager;
 
   id: TruckId;
   trailerModel: Object3D;
@@ -65,21 +67,30 @@ export class Truck {
   container: Container | null;
   containerPlaceholder: Object3D;
 
-  constructor(terminal: Terminal, initialPosition?: Vector3) {
-    this.terminal = terminal;
+  constructor(
+    visualizer: Visualizer,
+    truckManager: TruckManager,
+    initialPosition?: Vector3
+  ) {
+    this.visualizer = visualizer;
+    this.truckManager = truckManager;
     this.id = `Truck.${Truck.count++}`;
     this.pathPhysics = null;
     this.container = null;
     this.createModel();
-    this.safetyField = new SafetyField(this, this.terminal);
+    this.safetyField = new SafetyField(
+      this,
+      this.truckManager,
+      this.visualizer
+    );
 
     if (initialPosition) {
       this.trailerModel.position.copy(initialPosition);
     }
-    this.terminal.visualizer.emit(
+    this.visualizer.emit(
       new EquipmentCreateEvent(this.id, EquipmentType.Truck)
     );
-    this.terminal.visualizer.onEvent<TruckDriveEndEvent>(`truckdriveend`, (e) =>
+    this.visualizer.onEvent<TruckDriveEndEvent>(`truckdriveend`, (e) =>
       this.onDriveEnd(e)
     );
   }
@@ -89,12 +100,12 @@ export class Truck {
 
     // update job
     this.currentJob = job;
-    this.currentJob.updateStatus(JobStatus.Working, this.terminal.visualizer);
+    this.currentJob.updateStatus(JobStatus.Working, this.visualizer);
 
     // execute move
-    const path = this.terminal.pathPlanner.plan(this.position, job);
+    const path = this.truckManager.pathPlanner.plan(this.position, job);
     this.drive(path);
-    this.terminal.visualizer.emit(
+    this.visualizer.emit(
       new EquipmentMoveStartEvent(this.id, EquipmentType.Truck)
     );
   }
@@ -105,7 +116,7 @@ export class Truck {
     }
 
     this.pathPhysics = new PathPhysics(
-      this.terminal.visualizer,
+      this.visualizer,
       this,
       controlPoints,
       TRAILER_KINGPIN_DISTANCE,
@@ -127,15 +138,12 @@ export class Truck {
     if (this.currentJob.reason === "truckmove") {
       const job = this.currentJob;
       this.currentJob = null;
-      job.updateStatus(JobStatus.Completed, this.terminal.visualizer);
+      job.updateStatus(JobStatus.Completed, this.visualizer);
     } else {
-      this.currentJob.updateStatus(
-        JobStatus.WaitForRelease,
-        this.terminal.visualizer
-      );
+      this.currentJob.updateStatus(JobStatus.WaitForRelease, this.visualizer);
     }
 
-    this.terminal.visualizer.emit(
+    this.visualizer.emit(
       new EquipmentMoveEndEvent(this.id, EquipmentType.Truck)
     );
   }
@@ -161,10 +169,10 @@ export class Truck {
       new Vector2(box.min.x, box.min.y),
       new Vector2(box.max.x, box.max.y)
     );
-    this.terminal.visualizer.emit(new TruckMoveEvent(this.id, box2));
+    this.visualizer.emit(new TruckMoveEvent(this.id, box2));
 
     if (this.pathPhysics.safetyFieldDetection) {
-      this.terminal.visualizer.emit(new TruckQueuingTrafficEvent(this.id));
+      this.visualizer.emit(new TruckQueuingTrafficEvent(this.id));
     }
   }
 
@@ -186,7 +194,7 @@ export class Truck {
     container.mesh.material = Render.containerMaterial;
     this.containerPlaceholder.remove(container.mesh);
 
-    this.currentJob.updateStatus(JobStatus.Completed, this.terminal.visualizer);
+    this.currentJob.updateStatus(JobStatus.Completed, this.visualizer);
     this.currentJob = null;
 
     return container;
@@ -221,7 +229,7 @@ export class Truck {
   private createModel() {
     // TRAILER
     this.trailerModel = new Object3D();
-    this.terminal.visualizer.scene.add(this.trailerModel);
+    this.visualizer.scene.add(this.trailerModel);
 
     // trailer bed
     const bedLength = TRAILER_KINGPIN_DISTANCE;
@@ -286,7 +294,7 @@ export class Truck {
     this.tractorModel.add(cabin);
 
     // text label
-    const text = this.terminal.visualizer.text.createTextMesh(this.id);
+    const text = this.visualizer.text.createTextMesh(this.id);
     text.translateZ(3);
     cabin.add(text);
 

@@ -1,9 +1,9 @@
 import { Vector2 } from "three";
-import { Layout } from "../PathPlanner/types";
 import { CONTAINER_SIZE_Z, YARD_MAX_TIER } from "../Terminal/const";
 import { Terminal } from "../Terminal/Terminal";
 import { YardBlock } from "./YardBlock";
 import { YardCoordinate } from "./YardCoordinate";
+import { Layout } from "../Layout/types";
 
 export class YardManager {
   terminal: Terminal;
