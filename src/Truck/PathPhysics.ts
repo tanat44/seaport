@@ -103,6 +103,10 @@ export class PathPhysics {
     return (this.velocity * this.velocity) / 2 / Math.abs(this.maxDeceleration);
   }
 
+  get stopped(): boolean {
+    return MathUtility.floatEqual(this.velocity, 0);
+  }
+
   setSafetyFieldDetection(detection: boolean) {
     this.safetyFieldDetection = detection;
   }

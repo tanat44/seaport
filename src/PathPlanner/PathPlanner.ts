@@ -24,7 +24,12 @@ export class PathPlanner {
     this.pathMesh = [];
   }
 
-  plan(from: Vector2, fromDir: Vector2, job: TruckJob): Vector2[] {
+  plan(
+    from: Vector2,
+    fromDir: Vector2,
+    job: TruckJob,
+    ignoreTraffic: boolean
+  ): Vector2[] {
     // console.log("PathPlanner: from", from, "to", to);
     // delete old path
     if (this.pathMesh.length > 0) {
@@ -43,7 +48,8 @@ export class PathPlanner {
       fromDir,
       job.to,
       toDir,
-      job.truckId
+      job.truckId,
+      ignoreTraffic
     );
     const path = this.makeCurve(controlPoints, fromDir, toDir);
     this.renderPath(controlPoints, path);

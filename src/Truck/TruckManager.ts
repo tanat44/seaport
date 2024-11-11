@@ -1,5 +1,5 @@
 import { Box2, Vector2, Vector3 } from "three";
-import { TruckMoveEvent } from "../Event/TruckEvent";
+import { TruckMoveEvent, TruckQueuingTrafficEvent } from "../Event/TruckEvent";
 import { SequenceId } from "../Job/Definition/JobSequence";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Truck, TruckId } from "./Truck";
@@ -30,8 +30,13 @@ export class TruckManager {
       this.activeSequences.set(truck.id, undefined);
     }
 
+    // register event handler
     this.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) =>
       this.onTruckMove(e)
+    );
+    this.visualizer.onEvent<TruckQueuingTrafficEvent>(
+      "truckqueuingtraffic",
+      (e) => this.onTruckQueuingTraffic(e)
     );
   }
 
@@ -99,13 +104,17 @@ export class TruckManager {
         bestTruck = truck;
       }
     }
-
     // console.log("closest truck: ", bestTruck?.id ?? "-");
     return bestTruck;
   }
 
   private onTruckMove(e: TruckMoveEvent) {
     this.footprints.set(e.truckId, e.footprint);
+  }
+
+  private onTruckQueuingTraffic(e: TruckQueuingTrafficEvent) {
+    const truck = this.getTruck(e.truckId);
+    truck.replan();
   }
 }
 

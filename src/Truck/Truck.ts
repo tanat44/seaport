@@ -106,12 +106,24 @@ export class Truck {
     const path = this.truckManager.pathPlanner.plan(
       this.position,
       this.direction,
-      job
+      this.currentJob,
+      true
     );
     this.drive(path);
     this.visualizer.emit(
       new EquipmentMoveStartEvent(this.id, EquipmentType.Truck)
     );
+  }
+
+  replan() {
+    console.log("replan", this.id, this.position, this.direction);
+    const path = this.truckManager.pathPlanner.plan(
+      this.position,
+      this.direction,
+      this.currentJob,
+      true
+    );
+    this.drive(path);
   }
 
   private drive(controlPoints: Vector2[]) {
@@ -175,7 +187,7 @@ export class Truck {
     );
     this.visualizer.emit(new TruckMoveEvent(this.id, box2));
 
-    if (this.pathPhysics.safetyFieldDetection) {
+    if (this.pathPhysics.safetyFieldDetection && this.pathPhysics.stopped) {
       this.visualizer.emit(new TruckQueuingTrafficEvent(this.id));
     }
   }

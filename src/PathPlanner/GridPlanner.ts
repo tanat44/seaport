@@ -3,7 +3,7 @@ import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPose } from "./GridPose";
 import { SimplifyPath1 } from "./SimplifyPath1";
-import { CellType, Grid } from "./types";
+import { CellType, Grid, GridPath } from "./types";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Layout } from "../Layout/types";
 import { OccupySpaces } from "./OccupySpaces";
@@ -40,7 +40,8 @@ export class GridPlanner {
     fromDir: Vector2,
     to: Vector2,
     toDir: Vector2,
-    truckId: TruckId
+    truckId: TruckId,
+    ignoreTraffic: boolean
   ): Vector2[] {
     if (!this.isDrivable(from, truckId)) {
       throw new Error("Cannot find path from non drivable point");
@@ -54,15 +55,23 @@ export class GridPlanner {
     const toGrid = GridPose.poseToGridPose(to, toGridDir, GRID_SIZE);
     const beforeEndGrid = toGrid.beforeGrid.beforeGrid;
 
-    const path = AStar.search(
-      afterStartGrid,
-      beforeEndGrid,
-      this.grid,
-      truckId,
-      true
-    );
-    path.unshift(fromGrid); // insert original 'from' at index 0
-    path.push(toGrid); // add original 'to' at last index
+    let path: GridPath;
+    const tempGrid = GridPlanner.copyGrid(this.grid);
+    try {
+      path = AStar.search(
+        afterStartGrid,
+        beforeEndGrid,
+        tempGrid,
+        truckId,
+        ignoreTraffic
+      );
+
+      path.unshift(fromGrid); // insert original 'from' at index 0
+      path.push(toGrid); // add original 'to' at last index
+    } catch (error) {
+      this.printGrid(tempGrid);
+      throw error;
+    }
 
     // simplify1
     const simplePath1 = SimplifyPath1.simplify(path);
@@ -100,5 +109,29 @@ export class GridPlanner {
       if (yard.containsPoint(pos)) return true;
     }
     return false;
+  }
+
+  private printGrid(grid: Grid) {
+    let text = "";
+    for (let i = grid.length - 1; i >= 0; --i) {
+      const row = grid[i];
+      for (const type of row) {
+        if (type === "road") text += "o";
+        else if (type === "yard") text += "x";
+        else {
+          text += type[type.length - 1];
+        }
+      }
+      text += "\n";
+    }
+    console.log(text);
+  }
+
+  private static copyGrid(grid: Grid): Grid {
+    const newGrid: Grid = grid.map((row) => {
+      const newRow = row.map((cell) => cell);
+      return newRow;
+    });
+    return newGrid;
   }
 }

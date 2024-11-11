@@ -11,7 +11,7 @@ export class TrafficPlanner extends JobControl {
       const sequence = new JobSequence(i.toFixed(0));
 
       // truck move1
-      const move1 = new TruckMoveJob([], new Vector2(20, 90));
+      const move1 = new TruckMoveJob([], new Vector2(20, 30));
       sequence.addJob(move1);
 
       // truck move2
