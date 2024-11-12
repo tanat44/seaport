@@ -2,10 +2,11 @@ import { Box2, Vector2, Vector3 } from "three";
 import { TruckMoveEvent, TruckQueuingTrafficEvent } from "../Event/TruckEvent";
 import { SequenceId } from "../Job/Definition/JobSequence";
 import { TruckJob } from "../Job/Definition/TruckJob";
-import { Truck, TruckId } from "./Truck";
-import { Visualizer } from "../Visualizer/Visualizer";
-import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { Layout } from "../Layout/types";
+import { PathPlanner } from "../PathPlanner/PathPlanner";
+import { Visualizer } from "../Visualizer/Visualizer";
+import { Truck, TruckId } from "./Truck";
+import { SafetyFieldDetection, TrafficType } from "./types";
 
 export class TruckManager {
   private visualizer: Visualizer;
@@ -74,10 +75,21 @@ export class TruckManager {
   isSafetyFieldIntersectOtherTrucks(
     myTruckId: string,
     mySafetyField: Box2
-  ): TruckId | null {
-    for (const [truckId, footprint] of this.footprints) {
-      if (truckId === myTruckId) continue;
-      if (mySafetyField.intersectsBox(footprint)) return truckId;
+  ): SafetyFieldDetection | null {
+    for (const [thatTruckId, footprint] of this.footprints) {
+      if (thatTruckId === myTruckId) continue;
+      if (mySafetyField.intersectsBox(footprint)) {
+        const myTruck = this.trucks.get(myTruckId);
+        const anotherTruck = this.trucks.get(thatTruckId);
+        const trafficType =
+          myTruck.direction.dot(anotherTruck.direction) > 0
+            ? TrafficType.Queuing
+            : TrafficType.Opposing;
+        return {
+          anotherTruckId: thatTruckId,
+          trafficType,
+        };
+      }
     }
 
     return null;
@@ -114,7 +126,7 @@ export class TruckManager {
 
   private onTruckQueuingTraffic(e: TruckQueuingTrafficEvent) {
     const truck = this.getTruck(e.truckId);
-    truck.replan();
+    if (e.detection.trafficType === TrafficType.Opposing) truck.replan();
   }
 }
 

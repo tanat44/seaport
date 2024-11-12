@@ -7,7 +7,7 @@ import { TruckEventType } from "./TruckEvent";
 import { VisualizationEventType } from "./VisualizationEvent";
 
 export type EventType =
-  | "undefined"
+  | "nope"
   | "animate"
   | QcEventType
   | RtgEventType

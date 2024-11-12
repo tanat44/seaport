@@ -1,5 +1,6 @@
 import { Box2 } from "three";
 import { TruckJob } from "../Job/Definition/TruckJob";
+import { SafetyFieldDetection } from "../Truck/types";
 import { EventBase } from "./types";
 
 export type TruckEventType =
@@ -41,7 +42,10 @@ export class TruckMoveEvent extends TruckBaseEvent {
 }
 
 export class TruckQueuingTrafficEvent extends TruckBaseEvent {
-  constructor(truckId: string) {
+  detection: SafetyFieldDetection;
+
+  constructor(truckId: string, detection: SafetyFieldDetection) {
     super("truckqueuingtraffic", truckId);
+    this.detection = { ...detection };
   }
 }

@@ -17,11 +17,7 @@ import {
   EquipmentMoveStartEvent,
   EquipmentType,
 } from "../Event/EquipmentEvent";
-import {
-  TruckDriveEndEvent,
-  TruckMoveEvent,
-  TruckQueuingTrafficEvent,
-} from "../Event/TruckEvent";
+import { TruckDriveEndEvent, TruckMoveEvent } from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
 import { Container } from "../StorageBlock/StorageBlock";
@@ -31,9 +27,9 @@ import {
   CONTAINER_SIZE_Z,
 } from "../Terminal/const";
 import { Render } from "../Visualizer/Render";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { PathPhysics } from "./PathPhysics";
 import { SafetyField } from "./SafetyField";
-import { Visualizer } from "../Visualizer/Visualizer";
 import { TruckManager } from "./TruckManager";
 
 const WHEEL_DIAMETER = 0.8;
@@ -116,7 +112,7 @@ export class Truck {
   }
 
   replan() {
-    console.log("replan", this.id, this.position, this.direction);
+    console.log(`${this.id}: replanning`);
     const path = this.truckManager.pathPlanner.plan(
       this.position,
       this.direction,
@@ -129,6 +125,7 @@ export class Truck {
   private drive(controlPoints: Vector2[]) {
     if (this.pathPhysics) {
       console.warn("Abort driving on the current path to drive new path");
+      this.pathPhysics.dispose();
     }
 
     this.pathPhysics = new PathPhysics(
@@ -186,10 +183,6 @@ export class Truck {
       new Vector2(box.max.x, box.max.y)
     );
     this.visualizer.emit(new TruckMoveEvent(this.id, box2));
-
-    if (this.pathPhysics.safetyFieldDetection && this.pathPhysics.stopped) {
-      this.visualizer.emit(new TruckQueuingTrafficEvent(this.id));
-    }
   }
 
   load(container: Container) {

@@ -1,7 +1,8 @@
 import { Box2, Box3, Object3D, Vector2, Vector3 } from "three";
+import { TruckQueuingTrafficEvent } from "../Event/TruckEvent";
 import { Render } from "../Visualizer/Render";
-import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
 import { TruckManager } from "./TruckManager";
 
 const STEERING_FACTOR = 0.3;
@@ -55,18 +56,18 @@ export class SafetyField {
 
     // console.log(this.truck.id);
 
-    const collideTruckId = this.truckManager.isSafetyFieldIntersectOtherTrucks(
+    const detection = this.truckManager.isSafetyFieldIntersectOtherTrucks(
       this.truck.id,
       safetyField
     );
 
-    let detection = false;
-    if (collideTruckId !== null) {
-      detection = true;
-      // console.log(this.truck.id, "collide", collideTruckId);
-    } else {
-      // console.log("no");
+    let trigger = false;
+    if (detection) {
+      trigger = true;
+      this.visualizer.emit(
+        new TruckQueuingTrafficEvent(this.truck.id, detection)
+      );
     }
-    this.truck.pathPhysics.setSafetyFieldDetection(detection);
+    this.truck.pathPhysics.setSafetyFieldDetection(trigger);
   }
 }

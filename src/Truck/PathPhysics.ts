@@ -34,6 +34,7 @@ export class PathPhysics {
   acceleration: number;
   safetyFieldDetection: boolean;
   status: TruckStatus;
+  private animationCallback: (e: AnimateEvent) => void;
 
   // temporal
   lastIndex: number;
@@ -90,9 +91,8 @@ export class PathPhysics {
     this.meshes = [pathTractorMesh];
 
     // setup event listener
-    this.visualizer.onEvent<AnimateEvent>("animate", (e) =>
-      this.animate(e.deltaTime)
-    );
+    this.animationCallback = (e: AnimateEvent) => this.animate(e);
+    this.visualizer.onEvent<AnimateEvent>("animate", this.animationCallback);
   }
 
   get totalDistance(): number {
@@ -107,11 +107,19 @@ export class PathPhysics {
     return MathUtility.floatEqual(this.velocity, 0);
   }
 
+  dispose(): void {
+    this.visualizer.offEvent("animate", this.animationCallback);
+    this.meshes.forEach((mesh) => {
+      this.visualizer.scene.remove(mesh);
+    });
+  }
+
   setSafetyFieldDetection(detection: boolean) {
     this.safetyFieldDetection = detection;
   }
 
-  private animate(deltaTime: number) {
+  private animate(e: AnimateEvent) {
+    const deltaTime = e.deltaTime;
     if (this.arrived) return;
 
     if (this.safetyFieldDetection) {

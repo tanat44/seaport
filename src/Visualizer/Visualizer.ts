@@ -65,6 +65,13 @@ export class Visualizer {
     this.event.on(eventType, callback);
   }
 
+  offEvent<T extends EventBase>(
+    eventType: EventType,
+    callback: (value: T) => void
+  ) {
+    this.event.off(eventType, callback);
+  }
+
   emit(event: EventBase) {
     this.event.emit(event);
   }
