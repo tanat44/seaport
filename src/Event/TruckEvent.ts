@@ -43,9 +43,11 @@ export class TruckMoveEvent extends TruckBaseEvent {
 
 export class TruckQueuingTrafficEvent extends TruckBaseEvent {
   detection: SafetyFieldDetection;
+  job: TruckJob;
 
-  constructor(truckId: string, detection: SafetyFieldDetection) {
+  constructor(truckId: string, detection: SafetyFieldDetection, job: TruckJob) {
     super("truckqueuingtraffic", truckId);
-    this.detection = { ...detection };
+    this.detection = detection;
+    this.job = job;
   }
 }

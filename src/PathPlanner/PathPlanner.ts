@@ -6,18 +6,19 @@ import { Layout } from "../Layout/types";
 import { TruckId } from "../Truck/Truck";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { PathSimplifier } from "./PathSimplifier";
+import { Simplifier } from "./Simplifier";
+import { SimplifyDirectConnection } from "./SimplifyDirectConnection";
 
 export class PathPlanner {
   visualizer: Visualizer;
   grid: Grid;
-  simplifier: PathSimplifier;
+  simplifier: Simplifier;
   pathMesh: Object3D[];
 
   constructor(visualizer: Visualizer, layout: Layout) {
     this.visualizer = visualizer;
     this.grid = new Grid(this.visualizer, layout);
-    this.simplifier = new PathSimplifier(this.grid);
+    this.simplifier = new SimplifyDirectConnection(this.grid);
     this.pathMesh = [];
   }
 
@@ -27,7 +28,6 @@ export class PathPlanner {
     job: TruckJob,
     ignoreTraffic: boolean
   ): Vector2[] {
-    // console.log("PathPlanner: from", from, "to", to);
     // delete old path
     if (this.pathMesh.length > 0) {
       this.pathMesh.forEach((mesh) => mesh.removeFromParent());
@@ -55,7 +55,7 @@ export class PathPlanner {
       toDir
     );
     // convert control points into drivable curve
-    const path = PathUtility.createCurve(
+    const path = PathUtility.createCurveControlPoints(
       simplifiedControlPoints,
       fromDir,
       toDir

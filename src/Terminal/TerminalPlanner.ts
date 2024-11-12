@@ -1,7 +1,4 @@
 import { Vector2, Vector3 } from "three";
-import { Qc } from "../QC/Qc";
-import { Truck } from "../Truck/Truck";
-import { QcPlan, Vessel } from "../Vessel/Vessel";
 import {
   HandoverQcToTruckJob,
   HandoverRtgToYardJob,
@@ -24,6 +21,9 @@ import {
   TruckMoveToUnderQcJob,
 } from "../Job/Definition/TruckJob";
 import { JobControl } from "../Job/JobControl";
+import { Qc } from "../QC/Qc";
+import { Truck } from "../Truck/Truck";
+import { QcPlan, Vessel } from "../Vessel/Vessel";
 
 export class TerminalPlanner extends JobControl {
   planUnloadJob(qcPlans: QcPlan, vessel: Vessel): JobSequence[] {
@@ -81,7 +81,7 @@ export class TerminalPlanner extends JobControl {
           Truck.containerLoadHeight()
         );
         const truckMoveUnderQc = new TruckMoveToUnderQcJob(
-          [truckStandbyJob.id, qcStandbyJob.id],
+          [qcStandbyJob.id],
           new Vector2(qcDropPosition.x, qc.position.y)
         );
         sequence.addJob(truckMoveUnderQc);

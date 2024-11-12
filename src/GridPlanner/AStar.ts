@@ -1,6 +1,6 @@
 import { TruckId } from "../Truck/Truck";
-import { Grid } from "./Grid";
 import { GridPose } from "./GridPose";
+import { GridUtility } from "./GridUtility";
 import { MinGridHeap } from "./MinGridHeap";
 import { GridDirection, GridMap, GridPath } from "./types";
 
@@ -92,7 +92,7 @@ export class AStar {
         pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height;
       if (outOfBound) continue;
 
-      const drivable = Grid.isDrivableCell(
+      const drivable = GridUtility.isDrivableCell(
         map[pos.y][pos.x],
         truckId,
         ignoreTraffic

@@ -126,7 +126,11 @@ export class TruckManager {
 
   private onTruckQueuingTraffic(e: TruckQueuingTrafficEvent) {
     const truck = this.getTruck(e.truckId);
-    if (e.detection.trafficType === TrafficType.Opposing) truck.replan();
+    if (
+      e.detection.trafficType === TrafficType.Opposing ||
+      e.job.reason === "truckmovetounderqc"
+    )
+      truck.replan();
   }
 }
 

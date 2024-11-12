@@ -6,6 +6,7 @@ import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPose } from "./GridPose";
 import { GridSimplifier } from "./GridSimplifier";
+import { GridUtility } from "./GridUtility";
 import { OccupySpaces } from "./OccupySpaces";
 import { CellType, GridMap, GridPath } from "./types";
 
@@ -87,17 +88,7 @@ export class Grid {
   isDrivable(pos: Vector2, truckId: TruckId): boolean {
     const coordinate = GridCoordinate.fromVector2(pos, GRID_SIZE);
     const type = this.grid[coordinate.y][coordinate.x];
-    return Grid.isDrivableCell(type, truckId);
-  }
-
-  static isDrivableCell(
-    type: CellType,
-    TruckId: TruckId,
-    ignoreTraffic: boolean = true
-  ): boolean {
-    if (type === "yard") return false;
-    if (ignoreTraffic || type === "road") return true;
-    return type === TruckId;
+    return GridUtility.isDrivableCell(type, truckId);
   }
 
   private isInYardBlock(pos: Vector2): boolean {

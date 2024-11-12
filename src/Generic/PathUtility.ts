@@ -3,7 +3,7 @@ import { CubicBezierCurve, QuadraticBezierCurve, Vector2 } from "three";
 const SEGMENT_LENGTH = 0.1;
 
 export class PathUtility {
-  static createCurve(
+  static createCurveControlPoints(
     controlPoints: Vector2[],
     fromDir: Vector2,
     toDir: Vector2
@@ -11,11 +11,25 @@ export class PathUtility {
     const newControlPoints: Vector2[] = [];
     const GAP = 2;
 
+    if (controlPoints.length < 2)
+      throw new Error("Cannot create curve with control points < 2");
+
+    if (controlPoints.length === 2) {
+      return this.createCurveControlPointsFromPose(
+        controlPoints[0],
+        fromDir,
+        0.2,
+        controlPoints[1],
+        toDir,
+        0.2
+      );
+    }
+
     for (let i = 0; i < controlPoints.length; ++i) {
       if (i === 0) {
         const dir = controlPoints[1].clone().sub(controlPoints[0]).normalize();
         const p = controlPoints[1].clone().sub(dir.multiplyScalar(GAP));
-        const points = this.createCurveFromPose(
+        const points = this.createCurveControlPointsFromPose(
           controlPoints[0],
           fromDir,
           0.6,
@@ -31,7 +45,7 @@ export class PathUtility {
           .sub(controlPoints[i - 1])
           .normalize();
         const p = controlPoints[i - 1].clone().add(dir.multiplyScalar(GAP));
-        const points = this.createCurveFromPose(
+        const points = this.createCurveControlPointsFromPose(
           p,
           dir,
           0.2,
@@ -66,7 +80,7 @@ export class PathUtility {
     return newControlPoints;
   }
 
-  static createCurveFromPose(
+  static createCurveControlPointsFromPose(
     from: Vector2,
     fromDir: Vector2,
     weightFrom: number,

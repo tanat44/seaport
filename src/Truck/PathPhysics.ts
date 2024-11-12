@@ -41,7 +41,7 @@ export class PathPhysics {
   lastIndex: number;
   arrived: boolean;
   previousTractorDirection: Vector2;
-  steeringVelocity: number;
+  steeringAngle: number;
 
   // render
   meshes: Object3D[];
@@ -185,9 +185,9 @@ export class PathPhysics {
         this.previousTractorDirection,
         tractorDirection
       );
-      this.steeringVelocity = angle / deltaTime;
+      this.steeringAngle = angle;
     } else {
-      this.steeringVelocity = 0;
+      this.steeringAngle = 0;
     }
     this.previousTractorDirection = tractorDirection.clone();
 

@@ -49,7 +49,7 @@ export class Terminal {
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
 
     // init truckplanner
-    this.truckManager = new TruckManager(this.visualizer, layout, 1);
+    this.truckManager = new TruckManager(this.visualizer, layout, 3);
 
     // plan operation
     const planner = new TerminalPlanner(

@@ -5,7 +5,7 @@ import { Visualizer } from "../Visualizer/Visualizer";
 import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
 import { TruckManager } from "./TruckManager";
 
-const STEERING_FACTOR = 0.3;
+const STEERING_FACTOR = 30;
 export class SafetyField {
   visualizer: Visualizer;
   truckManager: TruckManager;
@@ -40,11 +40,12 @@ export class SafetyField {
     // update field size
     const baseLength = TRACTOR_LENGTH - 1;
     const fieldLength = baseLength * 2 + stoppingDistance;
+    const steerDirection = this.truck.pathPhysics.steeringAngle > 0;
     let fieldWidth =
-      1 + this.truck.pathPhysics.steeringVelocity * STEERING_FACTOR;
+      1 + Math.abs(this.truck.pathPhysics.steeringAngle) * STEERING_FACTOR;
     this.fieldModel.scale.x = fieldLength;
     this.fieldModel.scale.y = fieldWidth;
-    let yOffset = fieldWidth - 0.5;
+    let yOffset = steerDirection ? fieldWidth - 0.5 : -fieldWidth + 0.5;
     this.fieldModel.position.y = yOffset;
 
     // field box
@@ -65,7 +66,11 @@ export class SafetyField {
     if (detection) {
       trigger = true;
       this.visualizer.emit(
-        new TruckQueuingTrafficEvent(this.truck.id, detection)
+        new TruckQueuingTrafficEvent(
+          this.truck.id,
+          detection,
+          this.truck.currentJob
+        )
       );
     }
     this.truck.pathPhysics.setSafetyFieldDetection(trigger);

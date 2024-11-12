@@ -27,6 +27,7 @@ import { QcControl } from "./QcControl";
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
 
+export const QC_ID_PREFIX = "QC.";
 export type QcId = string;
 export const QC_WIDTH = 10;
 
@@ -62,7 +63,7 @@ export class Qc {
     outReach: number = 20
   ) {
     this.visualizer = visualizer;
-    this.id = `QC.${++Qc.count}`;
+    this.id = `${QC_ID_PREFIX}${++Qc.count}`;
     this.width = width;
     this.height = height;
     this.legSpan = legSpan;
