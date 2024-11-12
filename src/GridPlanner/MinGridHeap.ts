@@ -1,5 +1,5 @@
-import { GridPose } from "./GridPose";
-import { MinHeap } from "./MinHeap";
+import { MinHeap } from "../Generic/MinHeap";
+import { GridPose } from "../GridPlanner/GridPose";
 
 export class MinGridHeap extends MinHeap<GridPose> {
   set: Set<string>;

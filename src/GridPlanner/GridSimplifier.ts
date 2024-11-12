@@ -8,14 +8,21 @@ enum Direction {
   Others = "Others",
 }
 
-export class SimplifyPath1 {
+/**
+ * Simplify grid pose align in the same direction
+ * P1 -> P2 -> P3 will results in P1 -> P3 when all GridPose.direction are the same
+ */
+export class GridSimplifier {
   static simplify(path: GridPose[]): GridPose[] {
     if (path.length < 2) return [...path];
 
     const simplePath: GridPose[] = [path[0]];
-    let lastDirection = SimplifyPath1.getDirection(path[0], path[1]);
+    let lastDirection = GridSimplifier.getDirection(path[0], path[1]);
     for (let i = 1; i < path.length - 1; ++i) {
-      const currentDirection = SimplifyPath1.getDirection(path[i], path[i + 1]);
+      const currentDirection = GridSimplifier.getDirection(
+        path[i],
+        path[i + 1]
+      );
       if (currentDirection !== lastDirection) {
         lastDirection = currentDirection;
         simplePath.push(path[i]);

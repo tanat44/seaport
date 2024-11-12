@@ -1,17 +1,17 @@
 import { Box2 } from "three";
-import { CellType, Grid } from "./types";
-import { Visualizer } from "../Visualizer/Visualizer";
+import { EquipmentId } from "../Event/EquipmentEvent";
 import { QcGantryEvent } from "../Event/QcEvent";
 import { TruckMoveEvent } from "../Event/TruckEvent";
-import { EquipmentId } from "../Event/EquipmentEvent";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { OccupySpace } from "./OccupySpace";
+import { CellType, GridMap } from "./types";
 
 export class OccupySpaces {
   private visualizer: Visualizer;
-  private grid: Grid;
+  private grid: GridMap;
   private spaces: Map<string, OccupySpace>;
 
-  constructor(visualizer: Visualizer, grid: Grid) {
+  constructor(visualizer: Visualizer, grid: GridMap) {
     this.visualizer = visualizer;
     this.grid = grid;
     this.spaces = new Map();

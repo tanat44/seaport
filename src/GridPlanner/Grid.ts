@@ -1,20 +1,20 @@
 import { Vector2 } from "three";
+import { Layout } from "../Layout/types";
+import { TruckId } from "../Truck/Truck";
+import { Visualizer } from "../Visualizer/Visualizer";
 import { AStar } from "./AStar";
 import { GridCoordinate } from "./GridCoordinate";
 import { GridPose } from "./GridPose";
-import { SimplifyPath1 } from "./SimplifyPath1";
-import { CellType, Grid, GridPath } from "./types";
-import { Visualizer } from "../Visualizer/Visualizer";
-import { Layout } from "../Layout/types";
+import { GridSimplifier } from "./GridSimplifier";
 import { OccupySpaces } from "./OccupySpaces";
-import { TruckId } from "../Truck/Truck";
+import { CellType, GridMap, GridPath } from "./types";
 
 export const GRID_SIZE = 5;
 
-export class GridPlanner {
+export class Grid {
   visualizer: Visualizer;
   layout: Layout;
-  grid: Grid;
+  grid: GridMap;
   occupySpaces: OccupySpaces;
 
   constructor(visualizer: Visualizer, layout: Layout) {
@@ -56,7 +56,7 @@ export class GridPlanner {
     const beforeEndGrid = toGrid.beforeGrid.beforeGrid;
 
     let path: GridPath;
-    const tempGrid = GridPlanner.copyGrid(this.grid);
+    const tempGrid = Grid.copyGrid(this.grid);
     try {
       path = AStar.search(
         afterStartGrid,
@@ -73,25 +73,21 @@ export class GridPlanner {
       throw error;
     }
 
-    // simplify1
-    const simplePath1 = SimplifyPath1.simplify(path);
-    // return simplePath1.map((pos) => pos.toVector2(GRID_SIZE));
-
-    // simplify2
-    // const simplify = new SimplifyPath2(this.grid);
-    // const simplePath2 = simplify.simplify(simplePath1);
+    // simplify grid space
+    const simplePath1 = GridSimplifier.simplify(path);
+    const simplifiedPath = simplePath1.map((pos) => pos.toVector2(GRID_SIZE));
 
     // replace first and last with exact from and to position
-    const simplifiedPath = simplePath1.map((pos) => pos.toVector2(GRID_SIZE));
     simplifiedPath[0].copy(from);
     simplifiedPath[simplifiedPath.length - 1].copy(to);
+
     return simplifiedPath;
   }
 
   isDrivable(pos: Vector2, truckId: TruckId): boolean {
     const coordinate = GridCoordinate.fromVector2(pos, GRID_SIZE);
     const type = this.grid[coordinate.y][coordinate.x];
-    return GridPlanner.isDrivableCell(type, truckId);
+    return Grid.isDrivableCell(type, truckId);
   }
 
   static isDrivableCell(
@@ -100,7 +96,7 @@ export class GridPlanner {
     ignoreTraffic: boolean = true
   ): boolean {
     if (type === "yard") return false;
-    if (ignoreTraffic) return true;
+    if (ignoreTraffic || type === "road") return true;
     return type === TruckId;
   }
 
@@ -111,7 +107,7 @@ export class GridPlanner {
     return false;
   }
 
-  private printGrid(grid: Grid) {
+  private printGrid(grid: GridMap) {
     let text = "";
     for (let i = grid.length - 1; i >= 0; --i) {
       const row = grid[i];
@@ -127,8 +123,8 @@ export class GridPlanner {
     console.log(text);
   }
 
-  private static copyGrid(grid: Grid): Grid {
-    const newGrid: Grid = grid.map((row) => {
+  private static copyGrid(grid: GridMap): GridMap {
+    const newGrid: GridMap = grid.map((row) => {
       const newRow = row.map((cell) => cell);
       return newRow;
     });

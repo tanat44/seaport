@@ -1,10 +1,10 @@
 import { Box2, Mesh, Vector2 } from "three";
-import { GridBox } from "./GridBox";
-import { GridCoordinate } from "./GridCoordinate";
-import { GRID_SIZE } from "./GridPlanner";
-import { CellType } from "./types";
+import { GridBox } from "../GridPlanner/GridBox";
+import { GridCoordinate } from "../GridPlanner/GridCoordinate";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { GRID_SIZE } from "./Grid";
+import { CellType } from "./types";
 
 const HIGHLIGHT_MESH_HEIGHT = 0.5;
 

@@ -5,6 +5,6 @@ export type CellType = "road" | "yard" | EquipmentId;
 
 export type GridDirection = "up" | "left" | "down" | "right";
 
-export type Grid = CellType[][];
+export type GridMap = CellType[][];
 
 export type GridPath = GridPose[];

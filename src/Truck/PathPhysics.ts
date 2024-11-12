@@ -1,6 +1,7 @@
 import { Object3D, Vector2 } from "three";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { AnimateEvent } from "../Event/types";
+import { PathUtility } from "../Generic/PathUtility";
 import { MathUtility } from "../MathUtility";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
@@ -56,7 +57,7 @@ export class PathPhysics {
   ) {
     this.visualizer = visualizer;
     this.truck = truck;
-    this.pathTrailer = PathPhysics.resampleEvenSpace(controlPoints);
+    this.pathTrailer = PathUtility.resample(controlPoints);
     this.pathTractor = PathPhysics.pathKingPin(
       this.pathTrailer,
       trailerPivotDistance
@@ -247,39 +248,6 @@ export class PathPhysics {
         deltaV.multiplyScalar((this.distance - lastDistance) / segmentDistance)
       )
       .normalize();
-  }
-
-  private static resampleEvenSpace(
-    path: Vector2[],
-    space: number = 0.5
-  ): Vector2[] {
-    const output: Vector2[] = [];
-
-    let carryOver = 0;
-    for (let i = 0; i < path.length - 1; ++i) {
-      const p0 = path[i];
-      const p1 = path[i + 1];
-      const v = p1.clone().sub(p0);
-      const v_norm = v.clone().normalize();
-      const v_length = v.length();
-
-      if (v_length > carryOver) {
-        // add remaining points
-        const remainDistance = v_length - carryOver;
-        const count = Math.floor(remainDistance / space);
-        let j = 0;
-        do {
-          output.push(
-            p0.clone().add(v_norm.clone().multiplyScalar(carryOver + j * space))
-          );
-          ++j;
-        } while (j <= count);
-        carryOver = space - (v_length - carryOver - count * space);
-      } else {
-        carryOver -= v_length;
-      }
-    }
-    return output;
   }
 
   private static pathKingPin(

@@ -103,7 +103,7 @@ export class Truck {
       this.position,
       this.direction,
       this.currentJob,
-      true
+      false
     );
     this.drive(path);
     this.visualizer.emit(

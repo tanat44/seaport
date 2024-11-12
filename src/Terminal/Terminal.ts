@@ -1,5 +1,5 @@
-import { TerminalPlanner } from "./TerminalPlanner";
 import { JobRunner } from "../Job/JobRunner";
+import { LayoutManager } from "../Layout/LayoutManager";
 import { QC_WIDTH } from "../QC/Qc";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
@@ -7,7 +7,7 @@ import { TruckManager } from "../Truck/TruckManager";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
-import { LayoutManager } from "../Layout/LayoutManager";
+import { TerminalPlanner } from "./TerminalPlanner";
 
 const VESSEL_NAME = "Vessel-Polo";
 export class Terminal {
@@ -49,7 +49,7 @@ export class Terminal {
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
 
     // init truckplanner
-    this.truckManager = new TruckManager(this.visualizer, layout, 6);
+    this.truckManager = new TruckManager(this.visualizer, layout, 1);
 
     // plan operation
     const planner = new TerminalPlanner(

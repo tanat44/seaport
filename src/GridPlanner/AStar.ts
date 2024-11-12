@@ -1,14 +1,14 @@
 import { TruckId } from "../Truck/Truck";
-import { GridPlanner } from "./GridPlanner";
+import { Grid } from "./Grid";
 import { GridPose } from "./GridPose";
 import { MinGridHeap } from "./MinGridHeap";
-import { Grid, GridDirection, GridPath } from "./types";
+import { GridDirection, GridMap, GridPath } from "./types";
 
 export class AStar {
   public static search(
     start: GridPose,
     goal: GridPose,
-    map: Grid,
+    map: GridMap,
     truckId: TruckId,
     ignoreTraffic: boolean
   ): GridPath {
@@ -79,7 +79,7 @@ export class AStar {
 
   private static neighbors(
     current: GridPose,
-    map: Grid,
+    map: GridMap,
     truckId: TruckId,
     ignoreTraffic: boolean
   ): GridPose[] {
@@ -92,7 +92,7 @@ export class AStar {
         pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height;
       if (outOfBound) continue;
 
-      const drivable = GridPlanner.isDrivableCell(
+      const drivable = Grid.isDrivableCell(
         map[pos.y][pos.x],
         truckId,
         ignoreTraffic
