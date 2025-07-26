@@ -48,14 +48,14 @@ export class TerminalRunner extends TerminalManager {
     );
   }
   onJobStatusChange(e: JobStatusChangeEvent): void {
-    if (!HandoverQcToTruckJob.prototype.isPrototypeOf(e.job)) return;
-
-    const job = e.job as HandoverQcToTruckJob;
-    if (
-      job.status === JobStatus.Completed &&
-      job.reason === "handoverqctotruck"
-    ) {
-      this.executeNextCargo(job.qcId);
+    if (HandoverQcToTruckJob.prototype.isPrototypeOf(e.job)) {
+      const job = e.job as HandoverQcToTruckJob;
+      if (
+        job.status === JobStatus.Completed &&
+        job.reason === "handoverqctotruck"
+      ) {
+        this.executeNextCargo(job.qcId);
+      }
     }
   }
 
@@ -79,6 +79,9 @@ export class TerminalRunner extends TerminalManager {
   }
 
   run(cargoOrders: CargoOrders, vessel: Vessel): void {
+    // reset
+    this.qcPlans = new Map();
+
     // map cargo orders to available qc
     for (const cargoOrder of cargoOrders) {
       const qc = this.qcManager.assignQuayCrane(vessel);

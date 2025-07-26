@@ -124,15 +124,5 @@ export class JobRunner extends TerminalManager {
       this.runSequence();
   }
 
-  private onJobSequenceStatusChange(e: JobSequenceStatusChangeEvent) {
-    const sequence = e.sequence;
-
-    if (sequence.status === SequenceStatus.Complete) {
-      const totalJobs =
-        this.jobSequences.length + this.completeSequences.length;
-      console.log(
-        `JobRunner: Remaining ${this.jobSequences.length}/${totalJobs} sequences`
-      );
-    }
-  }
+  private onJobSequenceStatusChange(e: JobSequenceStatusChangeEvent) {}
 }
