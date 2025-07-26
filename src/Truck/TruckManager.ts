@@ -1,10 +1,11 @@
 import { Box2, Vector2, Vector3 } from "three";
 import { TruckMoveEvent, TruckQueuingTrafficEvent } from "../Event/TruckEvent";
 import { SequenceId } from "../Job/Definition/JobSequence";
-import { TruckJob } from "../Job/Definition/TruckJob";
+import { TruckJob, TruckMoveToQcStandby } from "../Job/Definition/TruckJob";
 import { Layout } from "../Layout/types";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { WaitingPoint } from "../WaitingPoint/WaitingPoint";
 import { Truck, TruckId } from "./Truck";
 import { SafetyFieldDetection, TrafficType } from "./types";
 
@@ -12,6 +13,7 @@ export class TruckManager {
   private visualizer: Visualizer;
   pathPlanner: PathPlanner;
   private trucks: Map<string, Truck>;
+  waitingPoint: WaitingPoint;
 
   // operation
   private activeSequences: Map<TruckId, SequenceId | undefined>;
@@ -21,6 +23,7 @@ export class TruckManager {
     this.visualizer = visualizer;
     this.pathPlanner = new PathPlanner(this.visualizer, layout);
     this.trucks = new Map();
+    this.waitingPoint = new WaitingPoint(this.visualizer, this);
     this.activeSequences = new Map();
     this.footprints = new Map();
 
@@ -63,6 +66,9 @@ export class TruckManager {
 
     const truck = this.getTruck(job.truckId);
     truck.execute(job);
+    if (TruckMoveToQcStandby.prototype.isPrototypeOf(job)) {
+      this.waitingPoint.addJob(job as TruckMoveToQcStandby);
+    }
     this.activeSequences.set(job.truckId, job.sequenceId);
 
     return true;

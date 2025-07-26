@@ -42,12 +42,10 @@ export class Terminal {
       new Vessel(this, VESSEL_NAME, 10, 50, 12, 70, layout)
     );
 
-    // init yard, qc, rtg
+    // init yard, qc, rtg, truck
     this.yardManager = new YardManager(this, layout);
     this.qcManager = new QcManager(this, layout.quayCraneOrigins);
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
-
-    // init truckplanner
     this.truckManager = new TruckManager(this.visualizer, layout, 3);
 
     // get vessel plan

@@ -1,9 +1,9 @@
 import { Vector2 } from "three";
-import { JobSequence } from "../Job/Definition/JobSequence";
-import { TruckMoveJob } from "../Job/Definition/TruckJob";
-import { TerminalManager } from "../Terminal/TerminalManager";
+import { JobSequence } from "../../Job/Definition/JobSequence";
+import { TruckMoveJob } from "../../Job/Definition/TruckJob";
+import { TerminalManager } from "../../Terminal/TerminalManager";
 
-export class TrafficPlanner extends TerminalManager {
+export class CityTrafficPlanner extends TerminalManager {
   plan(): JobSequence[] {
     const sequences: JobSequence[] = [];
 

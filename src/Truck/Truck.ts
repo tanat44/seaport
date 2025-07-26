@@ -209,6 +209,14 @@ export class Truck {
     return container;
   }
 
+  pause() {
+    this.pathPhysics?.pause();
+  }
+
+  resume() {
+    this.pathPhysics?.resume();
+  }
+
   get position(): Vector2 {
     return new Vector2(
       this.trailerModel.position.x,

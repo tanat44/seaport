@@ -1,10 +1,10 @@
-import { JobRunner } from "../Job/JobRunner";
-import { LayoutManager } from "../Layout/LayoutManager";
-import { TruckManager } from "../Truck/TruckManager";
-import { Visualizer } from "../Visualizer/Visualizer";
-import { TrafficPlanner } from "./TrafficPlanner";
+import { JobRunner } from "../../Job/JobRunner";
+import { LayoutManager } from "../../Layout/LayoutManager";
+import { TruckManager } from "../../Truck/TruckManager";
+import { Visualizer } from "../../Visualizer/Visualizer";
+import { CityTrafficPlanner } from "./CityTrafficPlanner";
 
-export class Traffic {
+export class CityTraffic {
   visualizer: Visualizer;
   truckManager: TruckManager;
 
@@ -22,7 +22,7 @@ export class Traffic {
     this.truckManager = new TruckManager(this.visualizer, layout, 2);
 
     // plan
-    const planner = new TrafficPlanner(
+    const planner = new CityTrafficPlanner(
       this.visualizer,
       null,
       null,

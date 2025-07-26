@@ -20,7 +20,7 @@ import {
 } from "./Definition/RtgJob";
 import {
   TruckMoveContainerToYardJob,
-  TruckMoveJob,
+  TruckMoveToQcStandby,
   TruckMoveToUnderQcJob,
 } from "./Definition/TruckJob";
 
@@ -48,7 +48,7 @@ export class JobPlanner extends TerminalManager {
     sequence.addJob(qcPickJob);
 
     // truck move to standby
-    const truckStandbyJob = new TruckMoveJob(
+    const truckStandbyJob = new TruckMoveToQcStandby(
       [],
       new Vector2(20, qc.position.y)
     );

@@ -36,6 +36,7 @@ export class PathPhysics {
   safetyFieldDetection: boolean;
   status: TruckStatus;
   private animationCallback: (e: AnimateEvent) => void;
+  private running: boolean;
 
   // temporal
   lastIndex: number;
@@ -85,6 +86,7 @@ export class PathPhysics {
     this.status = TruckStatus.Idle;
     this.lastIndex = 0;
     this.arrived = false;
+    this.running = true;
 
     // render
     const pathTractorMesh = Render.createPath2D(this.pathTractor, 0, 0xa600ff);
@@ -119,9 +121,17 @@ export class PathPhysics {
     this.safetyFieldDetection = detection;
   }
 
+  pause() {
+    this.running = false;
+  }
+
+  resume() {
+    this.running = true;
+  }
+
   private animate(e: AnimateEvent) {
     const deltaTime = e.deltaTime;
-    if (this.arrived) return;
+    if (this.arrived || !this.running) return;
 
     if (this.safetyFieldDetection) {
       if (this.velocity > 0) {

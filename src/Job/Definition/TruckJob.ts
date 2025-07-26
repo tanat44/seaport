@@ -6,7 +6,8 @@ import { JobBase } from "./JobBase";
 export type TruckJobReason =
   | "truckmove"
   | "truckmovecontainertoyard"
-  | "truckmovetounderqc";
+  | "truckmovetounderqc"
+  | "truckmovetoqcstandby";
 export abstract class TruckJob extends JobBase {
   to: Vector2;
   truckId: string | undefined;
@@ -21,6 +22,13 @@ export class TruckMoveJob extends TruckJob {
   constructor(dependencies: number[], to: Vector2) {
     super(dependencies, to);
     this.reason = "truckmove";
+  }
+}
+
+export class TruckMoveToQcStandby extends TruckJob {
+  constructor(dependencies: number[], to: Vector2) {
+    super(dependencies, to);
+    this.reason = "truckmovetoqcstandby";
   }
 }
 
