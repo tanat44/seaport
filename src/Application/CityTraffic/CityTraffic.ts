@@ -1,12 +1,12 @@
 import { JobRunner } from "../../Job/JobRunner";
 import { LayoutManager } from "../../Layout/LayoutManager";
-import { TruckManager } from "../../Truck/TruckManager";
+import { TrafficManager } from "../../Truck/TrafficManager";
 import { Visualizer } from "../../Visualizer/Visualizer";
 import { CityTrafficPlanner } from "./CityTrafficPlanner";
 
 export class CityTraffic {
   visualizer: Visualizer;
-  truckManager: TruckManager;
+  truckManager: TrafficManager;
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
@@ -19,7 +19,7 @@ export class CityTraffic {
     const layout = await layoutManager.load();
 
     // init truckplanner
-    this.truckManager = new TruckManager(this.visualizer, layout, 2);
+    this.truckManager = new TrafficManager(this.visualizer, layout, 2);
 
     // plan
     const planner = new CityTrafficPlanner(

@@ -5,7 +5,7 @@ import {
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
 import { TerminalManager } from "../Terminal/TerminalManager";
-import { TruckManager } from "../Truck/TruckManager";
+import { TrafficManager } from "../Truck/TrafficManager";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
 import { HandoverJob } from "./Definition/HanoverJob";
@@ -25,7 +25,7 @@ export class JobRunner extends TerminalManager {
     visualizer: Visualizer,
     qcManager: QcManager,
     rtgManager: RtgManager,
-    truckManager: TruckManager,
+    truckManager: TrafficManager,
     yardManager: YardManager
   ) {
     super(visualizer, qcManager, rtgManager, truckManager, yardManager);

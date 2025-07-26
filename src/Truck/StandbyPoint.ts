@@ -1,15 +1,15 @@
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { TruckMoveToQcStandby } from "../Job/Definition/TruckJob";
 import { Truck } from "../Truck/Truck";
-import { TruckManager } from "../Truck/TruckManager";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { TrafficManager } from "./TrafficManager";
 
-export class WaitingPoint {
+export class StandbyPoint {
   visualizer: Visualizer;
-  truckManager: TruckManager;
+  truckManager: TrafficManager;
   queue: Truck[];
 
-  constructor(visualizer: Visualizer, truckManager: TruckManager) {
+  constructor(visualizer: Visualizer, truckManager: TrafficManager) {
     this.queue = [];
     this.visualizer = visualizer;
     this.truckManager = truckManager;

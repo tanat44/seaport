@@ -5,15 +5,15 @@ import { TruckJob, TruckMoveToQcStandby } from "../Job/Definition/TruckJob";
 import { Layout } from "../Layout/types";
 import { PathPlanner } from "../PathPlanner/PathPlanner";
 import { Visualizer } from "../Visualizer/Visualizer";
-import { WaitingPoint } from "../WaitingPoint/WaitingPoint";
+import { StandbyPoint } from "./StandbyPoint";
 import { Truck, TruckId } from "./Truck";
 import { SafetyFieldDetection, TrafficType } from "./types";
 
-export class TruckManager {
+export class TrafficManager {
   private visualizer: Visualizer;
   pathPlanner: PathPlanner;
   private trucks: Map<string, Truck>;
-  waitingPoint: WaitingPoint;
+  standbyPoint: StandbyPoint;
 
   // operation
   private activeSequences: Map<TruckId, SequenceId | undefined>;
@@ -23,7 +23,7 @@ export class TruckManager {
     this.visualizer = visualizer;
     this.pathPlanner = new PathPlanner(this.visualizer, layout);
     this.trucks = new Map();
-    this.waitingPoint = new WaitingPoint(this.visualizer, this);
+    this.standbyPoint = new StandbyPoint(this.visualizer, this);
     this.activeSequences = new Map();
     this.footprints = new Map();
 
@@ -67,7 +67,7 @@ export class TruckManager {
     const truck = this.getTruck(job.truckId);
     truck.execute(job);
     if (TruckMoveToQcStandby.prototype.isPrototypeOf(job)) {
-      this.waitingPoint.addJob(job as TruckMoveToQcStandby);
+      this.standbyPoint.addJob(job as TruckMoveToQcStandby);
     }
     this.activeSequences.set(job.truckId, job.sequenceId);
 
@@ -131,12 +131,11 @@ export class TruckManager {
   }
 
   private onTruckQueuingTraffic(e: TruckQueuingTrafficEvent) {
+    const NO_REPLAN_JOB = ["truckmovetoqcstandby", "truckmovetounderqc"];
+    if (NO_REPLAN_JOB.includes(e.job.reason)) return;
+
     const truck = this.getTruck(e.truckId);
-    if (
-      e.detection.trafficType === TrafficType.Opposing ||
-      e.job.reason === "truckmovetounderqc"
-    )
-      truck.replan();
+    truck.replan();
   }
 }
 

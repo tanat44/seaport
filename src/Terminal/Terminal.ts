@@ -2,13 +2,14 @@ import { LayoutManager } from "../Layout/LayoutManager";
 import { QC_WIDTH } from "../QC/Qc";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
-import { TruckManager } from "../Truck/TruckManager";
+import { TrafficManager } from "../Truck/TrafficManager";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
 import { TerminalRunner } from "./TerminalRunner";
 
 const VESSEL_NAME = "Vessel-Polo";
+const TRUCK_COUNT = 7;
 export class Terminal {
   visualizer: Visualizer;
   layoutManager: LayoutManager;
@@ -20,7 +21,7 @@ export class Terminal {
   // equipment
   qcManager: QcManager;
   rtgManager: RtgManager;
-  truckManager: TruckManager;
+  truckManager: TrafficManager;
 
   // operation
   terminalRunner: TerminalRunner;
@@ -46,7 +47,7 @@ export class Terminal {
     this.yardManager = new YardManager(this, layout);
     this.qcManager = new QcManager(this, layout.quayCraneOrigins);
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
-    this.truckManager = new TruckManager(this.visualizer, layout, 3);
+    this.truckManager = new TrafficManager(this.visualizer, layout, 7);
 
     // get vessel plan
     const vessel = this.vessels.get(VESSEL_NAME);

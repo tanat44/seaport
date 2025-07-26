@@ -47,20 +47,29 @@ export class PathPlanner {
       ignoreTraffic
     );
 
-    // simplify the control points
-    const simplifiedControlPoints = this.simplifier.simplify(
-      controlPoints,
-      job.truckId,
-      fromDir,
-      toDir
-    );
-    // convert control points into drivable curve
+    // // simplify the control points
+    // const simplifiedControlPoints = this.simplifier.simplify(
+    //   controlPoints,
+    //   job.truckId,
+    //   fromDir,
+    //   toDir
+    // );
+    // // convert control points into drivable curve
+    // const path = PathUtility.createCurveControlPoints(
+    //   simplifiedControlPoints,
+    //   fromDir,
+    //   toDir
+    // );
+    // this.renderPath(simplifiedControlPoints, path);
+
+    // raw control points
     const path = PathUtility.createCurveControlPoints(
-      simplifiedControlPoints,
+      controlPoints,
       fromDir,
       toDir
     );
-    this.renderPath(simplifiedControlPoints, path);
+    // this.renderPath(simplifiedControlPoints, path);
+    this.renderPath(controlPoints, path);
 
     return path;
   }

@@ -1,20 +1,20 @@
-import { Box2, Box3, Object3D, Vector2, Vector3 } from "three";
+import { Box2, Box3, Object3D, Quaternion, Vector2, Vector3 } from "three";
 import { TruckQueuingTrafficEvent } from "../Event/TruckEvent";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
+import { TrafficManager } from "./TrafficManager";
 import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
-import { TruckManager } from "./TruckManager";
 
 const STEERING_FACTOR = 30;
 export class SafetyField {
   visualizer: Visualizer;
-  truckManager: TruckManager;
+  truckManager: TrafficManager;
   truck: Truck;
   fieldModel: Object3D;
 
   constructor(
     truck: Truck,
-    truckManager: TruckManager,
+    truckManager: TrafficManager,
     visualizer: Visualizer
   ) {
     this.visualizer = visualizer;
@@ -30,7 +30,7 @@ export class SafetyField {
     fieldShape.position.x = 0.5;
     this.fieldModel = new Object3D();
     this.fieldModel.add(fieldShape);
-    this.truck.tractorModel.add(this.fieldModel);
+    this.visualizer.scene.add(this.fieldModel);
   }
 
   update() {
@@ -46,7 +46,17 @@ export class SafetyField {
     this.fieldModel.scale.x = fieldLength;
     this.fieldModel.scale.y = fieldWidth;
     let yOffset = steerDirection ? fieldWidth - 0.5 : -fieldWidth + 0.5;
-    this.fieldModel.position.y = yOffset;
+
+    // apply position / rotation in global coordinate
+    const tractorPosition = new Vector3();
+    this.truck.tractorModel.getWorldPosition(tractorPosition);
+    tractorPosition.y += yOffset;
+
+    const tractorRot = new Quaternion();
+    this.truck.tractorModel.getWorldQuaternion(tractorRot);
+
+    this.fieldModel.position.copy(tractorPosition);
+    this.fieldModel.quaternion.copy(tractorRot);
 
     // field box
     const box3 = new Box3().setFromObject(this.fieldModel);

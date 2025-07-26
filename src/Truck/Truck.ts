@@ -30,7 +30,7 @@ import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { PathPhysics } from "./PathPhysics";
 import { SafetyField } from "./SafetyField";
-import { TruckManager } from "./TruckManager";
+import { TrafficManager } from "./TrafficManager";
 
 const WHEEL_DIAMETER = 0.8;
 const WHEEL_MATERIAL = new MeshBasicMaterial({ color: 0x2d2961 });
@@ -51,7 +51,7 @@ export class Truck {
   static count = 0;
 
   visualizer: Visualizer;
-  truckManager: TruckManager;
+  truckManager: TrafficManager;
 
   id: TruckId;
   trailerModel: Object3D;
@@ -65,7 +65,7 @@ export class Truck {
 
   constructor(
     visualizer: Visualizer,
-    truckManager: TruckManager,
+    truckManager: TrafficManager,
     initialPosition?: Vector3
   ) {
     this.visualizer = visualizer;
@@ -92,7 +92,7 @@ export class Truck {
   }
 
   execute(job: TruckJob) {
-    // console.log(job.toString(), "Execute");
+    // console.log("Truck: execute", job);
 
     // update job
     this.currentJob = job;
@@ -103,7 +103,7 @@ export class Truck {
       this.position,
       this.direction,
       this.currentJob,
-      false
+      true
     );
     this.drive(path);
     this.visualizer.emit(
@@ -117,14 +117,13 @@ export class Truck {
       this.position,
       this.direction,
       this.currentJob,
-      true
+      false
     );
     this.drive(path);
   }
 
   private drive(controlPoints: Vector2[]) {
     if (this.pathPhysics) {
-      console.warn("Abort driving on the current path to drive new path");
       this.pathPhysics.dispose();
     }
 

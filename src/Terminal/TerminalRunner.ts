@@ -1,11 +1,11 @@
 import { JobStatusChangeEvent } from "../Event/JobEvent";
+import { HandoverQcToTruckJob } from "../Job/Definition/HanoverJob";
 import { JobStatus } from "../Job/Definition/JobBase";
-import { QcJob } from "../Job/Definition/QcJob";
 import { JobPlanner } from "../Job/JobPlanner";
 import { JobRunner } from "../Job/JobRunner";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
-import { TruckManager } from "../Truck/TruckManager";
+import { TrafficManager } from "../Truck/TrafficManager";
 import { CargoOrder } from "../Vessel/types";
 import { CargoOrders, Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
@@ -24,7 +24,7 @@ export class TerminalRunner extends TerminalManager {
     visualizer: Visualizer,
     qcManager: QcManager,
     rtgManager: RtgManager,
-    truckManager: TruckManager,
+    truckManager: TrafficManager,
     yardManager: YardManager
   ) {
     super(visualizer, qcManager, rtgManager, truckManager, yardManager);
@@ -48,12 +48,14 @@ export class TerminalRunner extends TerminalManager {
     );
   }
   onJobStatusChange(e: JobStatusChangeEvent): void {
-    if (!QcJob.prototype.isPrototypeOf(e)) return;
-    const job = e.job as QcJob;
+    if (!HandoverQcToTruckJob.prototype.isPrototypeOf(e.job)) return;
+
+    const job = e.job as HandoverQcToTruckJob;
     if (
       job.status === JobStatus.Completed &&
-      job.reason === "qcdropcontainertotruck"
+      job.reason === "handoverqctotruck"
     ) {
+      this.executeNextCargo(job.qcId);
     }
   }
 

@@ -75,7 +75,7 @@ export class JobPlanner extends TerminalManager {
       Truck.containerLoadHeight()
     );
     const truckMoveUnderQc = new TruckMoveToUnderQcJob(
-      [qcStandbyJob.id],
+      [qcStandbyJob.id, truckStandbyJob.id],
       new Vector2(qcDropPosition.x, qc.position.y)
     );
     sequence.addJob(truckMoveUnderQc);
