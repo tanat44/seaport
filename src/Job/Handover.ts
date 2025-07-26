@@ -1,3 +1,4 @@
+import { TerminalManager } from "../Terminal/TerminalManager";
 import {
   HandoverJob,
   HandoverQcToTruckJob,
@@ -7,9 +8,8 @@ import {
 } from "./Definition/HanoverJob";
 import { JobStatus } from "./Definition/JobBase";
 import { JobSequence } from "./Definition/JobSequence";
-import { JobControl } from "./JobControl";
 
-export class Handover extends JobControl {
+export class Handover extends TerminalManager {
   execute(job: HandoverJob, sequence: JobSequence) {
     job.updateStatus(JobStatus.Working, this.visualizer);
 

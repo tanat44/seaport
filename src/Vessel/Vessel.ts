@@ -1,11 +1,11 @@
 import { Box2, Vector2 } from "three";
+import { Layout } from "../Layout/types";
 import { StorageBlock } from "../StorageBlock/StorageBlock";
 import { Terminal } from "../Terminal/Terminal";
 import { Render } from "../Visualizer/Render";
 import { CargoOrder } from "./types";
-import { Layout } from "../Layout/types";
 
-export type QcPlan = CargoOrder[];
+export type CargoOrders = CargoOrder[];
 export class Vessel extends StorageBlock {
   constructor(
     terminal: Terminal,
@@ -36,7 +36,7 @@ export class Vessel extends StorageBlock {
     this.addRandomCargo();
   }
 
-  planUnloadUsingQc(numberOfQc: number, qcWidth: number): QcPlan {
+  planUnloadUsingQc(numberOfQc: number, qcWidth: number): CargoOrders {
     // group plan into each bay
     const fullPlan = this.planFullUnload();
     const bayPlans = new Map<number, CargoOrder>();
@@ -54,7 +54,7 @@ export class Vessel extends StorageBlock {
     const baysPerQc = Math.ceil(numberOfBays / numberOfQc);
 
     // give plan to qc
-    const qcPlans: QcPlan = [];
+    const qcPlans: CargoOrders = [];
     for (let i = 0; i < numberOfQc; ++i) {
       qcPlans.push([]);
     }

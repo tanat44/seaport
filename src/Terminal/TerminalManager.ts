@@ -4,7 +4,7 @@ import { TruckManager } from "../Truck/TruckManager";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
 
-export abstract class JobControl {
+export abstract class TerminalManager {
   visualizer: Visualizer;
   qcManager: QcManager;
   rtgManager: RtgManager;

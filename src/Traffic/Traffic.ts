@@ -39,6 +39,6 @@ export class Traffic {
       this.truckManager,
       null
     );
-    jobRunner.run(sequences);
+    // jobRunner.run(sequences);
   }
 }

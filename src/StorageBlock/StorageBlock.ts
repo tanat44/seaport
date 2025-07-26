@@ -124,6 +124,7 @@ export class StorageBlock {
         for (let k = 0; k < row.length; ++k) {
           const coordinate = new StorageCoordinate(i, j, k);
           bayOrder.push({
+            storage: this,
             containerId: this.getContainerId(coordinate),
             coordinate,
           });

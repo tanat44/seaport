@@ -1,4 +1,3 @@
-import { JobRunner } from "../Job/JobRunner";
 import { LayoutManager } from "../Layout/LayoutManager";
 import { QC_WIDTH } from "../QC/Qc";
 import { QcManager } from "../QC/QcManager";
@@ -7,7 +6,7 @@ import { TruckManager } from "../Truck/TruckManager";
 import { Vessel } from "../Vessel/Vessel";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
-import { TerminalPlanner } from "./TerminalPlanner";
+import { TerminalRunner } from "./TerminalRunner";
 
 const VESSEL_NAME = "Vessel-Polo";
 export class Terminal {
@@ -24,7 +23,7 @@ export class Terminal {
   truckManager: TruckManager;
 
   // operation
-  jobRunner: JobRunner;
+  terminalRunner: TerminalRunner;
 
   constructor(visualizer: Visualizer) {
     this.visualizer = visualizer;
@@ -51,26 +50,18 @@ export class Terminal {
     // init truckplanner
     this.truckManager = new TruckManager(this.visualizer, layout, 3);
 
-    // plan operation
-    const planner = new TerminalPlanner(
-      this.visualizer,
-      this.qcManager,
-      this.rtgManager,
-      this.truckManager,
-      this.yardManager
-    );
+    // get vessel plan
     const vessel = this.vessels.get(VESSEL_NAME);
     const qcPlans = vessel.planUnloadUsingQc(3, QC_WIDTH);
-    const jobs = planner.planUnloadJob(qcPlans, vessel);
 
-    // run operation
-    this.jobRunner = new JobRunner(
+    // execute the plan
+    this.terminalRunner = new TerminalRunner(
       this.visualizer,
       this.qcManager,
       this.rtgManager,
       this.truckManager,
       this.yardManager
     );
-    this.jobRunner.run(jobs);
+    this.terminalRunner.run(qcPlans, vessel);
   }
 }

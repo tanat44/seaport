@@ -4,6 +4,7 @@ import {
 } from "../Event/JobEvent";
 import { QcManager } from "../QC/QcManager";
 import { RtgManager } from "../RTG/RtgManager";
+import { TerminalManager } from "../Terminal/TerminalManager";
 import { TruckManager } from "../Truck/TruckManager";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { YardManager } from "../Yard/YardManager";
@@ -14,9 +15,8 @@ import { QcJob } from "./Definition/QcJob";
 import { RtgJob } from "./Definition/RtgJob";
 import { TruckJob } from "./Definition/TruckJob";
 import { Handover } from "./Handover";
-import { JobControl } from "./JobControl";
 
-export class JobRunner extends JobControl {
+export class JobRunner extends TerminalManager {
   handover: Handover;
   jobSequences: JobSequence[];
   completeSequences: JobSequence[];
@@ -50,8 +50,8 @@ export class JobRunner extends JobControl {
     );
   }
 
-  run(jobs: JobSequence[]) {
-    this.jobSequences = jobs;
+  addJobSequence(sequence: JobSequence) {
+    this.jobSequences.push(sequence);
     this.runSequence();
   }
 
