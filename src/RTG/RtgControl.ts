@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { PhysicsState3D } from "../Physics/PhysicsState3D";
+import { PhysicsCrane } from "../Physics/PhysicsCrane";
 import { Trajectory } from "../Physics/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
@@ -11,7 +11,7 @@ const SPREADER_MAX_ACCEL = 2;
 const TROLLY_MAX_ACCEL = 1;
 const GANTRY_MAX_ACCEL = 0.5;
 
-export class RtgControl extends PhysicsState3D {
+export class RtgControl extends PhysicsCrane {
   rtg: Rtg;
   onArrive: () => void;
 

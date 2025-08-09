@@ -1,15 +1,15 @@
-import { Line, Vector3 } from "three";
+import { Line, Vector2, Vector3 } from "three";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { PhysicsState } from "./PhysicsState";
+import { PhysicsState2D } from "./PhysicsState2D";
 import { Trajectory } from "./types";
 
-export class PhysicsState3D {
+export class PhysicsCrane {
   visualizer: Visualizer;
 
-  x: PhysicsState;
-  y: PhysicsState;
-  z: PhysicsState;
+  gantryState: PhysicsState;
+  trolleySpreaderState: PhysicsState2D;
 
   // motion
   trajectory: Trajectory;
@@ -19,36 +19,33 @@ export class PhysicsState3D {
   constructor(
     visualizer: Visualizer,
     maxVelocity: Vector3 | undefined,
-    maxAcceleration: Vector3 | undefined,
+    maxAcceleration: Vector3,
     initialPosition: Vector3 | undefined,
     name: string
   ) {
     this.visualizer = visualizer;
-    this.x = new PhysicsState(
-      `${name}.x`,
+    this.gantryState = new PhysicsState(
+      `${name}.gantry`,
       visualizer,
       maxVelocity?.x,
       maxAcceleration?.x,
       initialPosition?.x
     );
-    this.y = new PhysicsState(
-      `${name}.y`,
+    this.trolleySpreaderState = new PhysicsState2D(
+      `${name}.trolleyspreader`,
       visualizer,
-      maxVelocity?.y,
-      maxAcceleration?.y,
-      initialPosition?.y
-    );
-    this.z = new PhysicsState(
-      `${name}.z`,
-      visualizer,
-      maxVelocity?.z,
-      maxAcceleration?.z,
-      initialPosition?.z
+      maxVelocity ? new Vector2(maxVelocity.y, maxVelocity.z) : undefined,
+      new Vector2(maxAcceleration.y, maxAcceleration.z),
+      new Vector2(initialPosition?.y, initialPosition?.z)
     );
   }
 
   get position(): Vector3 {
-    return new Vector3(this.x.position, this.y.position, this.z.position);
+    return new Vector3(
+      this.gantryState.position,
+      this.trolleySpreaderState.position.x,
+      this.trolleySpreaderState.position.y
+    );
   }
 
   execute(trajectory: Trajectory) {
@@ -56,28 +53,34 @@ export class PhysicsState3D {
     this.trajectory = trajectory;
     this.updateAxisTarget();
     this.drawTrajectory();
+    // console.log(trajectory);
   }
 
   private updateAxisTarget() {
-    this.x.setTarget(this.trajectory[this.lastTargetIndex].x, true, (state) =>
-      this.onAxisArrive(state)
+    this.gantryState.setTarget(
+      this.trajectory[this.lastTargetIndex].x,
+      true,
+      (state) => this.onAxisArrive(this.gantryState.name)
     );
-    this.y.setTarget(this.trajectory[this.lastTargetIndex].y, true, (state) =>
-      this.onAxisArrive(state)
+
+    const trolleySpreaderTarget = new Vector2(
+      this.trajectory[this.lastTargetIndex].y,
+      this.trajectory[this.lastTargetIndex].z
     );
-    this.z.setTarget(this.trajectory[this.lastTargetIndex].z, true, (state) =>
-      this.onAxisArrive(state)
+    this.trolleySpreaderState.setTarget(trolleySpreaderTarget, true, (state) =>
+      this.onAxisArrive(this.trolleySpreaderState.name)
     );
   }
 
-  onAxisArrive(state: PhysicsState) {
+  onAxisArrive(axisName: string) {
+    // console.log(`Axis ${axisName} arrived.`);
     if (!this.allArrived()) {
       return;
     }
 
     ++this.lastTargetIndex;
     if (this.lastTargetIndex === this.trajectory.length) {
-      // console.log("Trajectory execution complete");
+      console.log("Trajectory execution complete");
       this.visualizer.scene.remove(this.trajectoryMesh);
       this.trajectoryMesh = undefined;
       this.afterArrive();
@@ -97,6 +100,6 @@ export class PhysicsState3D {
   protected afterArrive() {}
 
   private allArrived(): boolean {
-    return this.x.arrived && this.y.arrived && this.z.arrived;
+    return this.gantryState.arrived && this.trolleySpreaderState.arrived;
   }
 }

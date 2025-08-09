@@ -1,6 +1,6 @@
 import { Vector3 } from "three";
 import { QcGantryEvent } from "../Event/QcEvent";
-import { PhysicsState3D } from "../Physics/PhysicsState3D";
+import { PhysicsCrane } from "../Physics/PhysicsCrane";
 import { Trajectory } from "../Physics/types";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { Qc } from "./Qc";
@@ -11,7 +11,7 @@ const SPREADER_MAX_ACCEL = 2;
 const TROLLY_MAX_ACCEL = 1;
 const GANTRY_MAX_ACCEL = 0.5;
 
-export class QcControl extends PhysicsState3D {
+export class QcControl extends PhysicsCrane {
   crane: Qc;
   onArrive: () => void;
 

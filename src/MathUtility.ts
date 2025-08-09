@@ -39,4 +39,8 @@ export class MathUtility {
   static vector3To2(v: Vector3) {
     return new Vector2(v.x, v.y);
   }
+
+  static vector2Abs(v: Vector2) {
+    return new Vector2(Math.abs(v.x), Math.abs(v.y));
+  }
 }
