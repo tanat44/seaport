@@ -44,9 +44,11 @@ export class QcControl extends PhysicsCrane {
     }
     // 1 move spreader up to plan lift height
     const trolleyMove = target.y - this.position.y;
-    trajectory.push(
-      new Vector3(target.x, this.position.y + trolleyMove / 2, planLiftHeight)
-    );
+    if (Math.abs(trolleyMove) > 0) {
+      trajectory.push(
+        new Vector3(target.x, this.position.y + trolleyMove / 2, planLiftHeight)
+      );
+    }
 
     // 2 trolley to above target
     const HEIGHT_ABOVE = 3;

@@ -11,8 +11,8 @@ import {
 import { JobSequence } from "./Definition/JobSequence";
 import {
   QcDropContainerToTruckJob,
-  QcMoveJob,
   QcPickContainerFromVesselJob,
+  QcStandbyOverTruckJob,
 } from "./Definition/QcJob";
 import {
   RtgDropContainerInYardJob,
@@ -50,7 +50,8 @@ export class JobPlanner extends TerminalManager {
     // truck move to standby
     const truckStandbyJob = new TruckMoveToQcStandby(
       [],
-      new Vector2(20, qc.position.y)
+      new Vector2(20, qc.position.y),
+      qc.id
     );
     sequence.addJob(truckStandbyJob);
 
@@ -61,7 +62,7 @@ export class JobPlanner extends TerminalManager {
     sequence.addJob(handoverVessel);
 
     // qc standby above drop off
-    const qcStandbyJob = new QcMoveJob(
+    const qcStandbyJob = new QcStandbyOverTruckJob(
       [handoverVessel.id],
       qc.id,
       new Vector3(containerPosition.x, 0, 10)

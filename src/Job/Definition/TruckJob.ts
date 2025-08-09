@@ -26,9 +26,11 @@ export class TruckMoveJob extends TruckJob {
 }
 
 export class TruckMoveToQcStandby extends TruckJob {
-  constructor(dependencies: number[], to: Vector2) {
+  qcId: string;
+  constructor(dependencies: number[], to: Vector2, qcId: string) {
     super(dependencies, to);
     this.reason = "truckmovetoqcstandby";
+    this.qcId = qcId;
   }
 }
 

@@ -4,7 +4,7 @@ import { JobBase } from "./JobBase";
 
 export type QcJobReason =
   | "qcpickcontainerfromvessel"
-  | "qcmove"
+  | "qcstandbyovertruck"
   | "qcdropcontainertotruck";
 export abstract class QcJob extends JobBase {
   qcId: string;
@@ -33,10 +33,10 @@ export class QcPickContainerFromVesselJob extends QcJob {
   }
 }
 
-export class QcMoveJob extends QcJob {
+export class QcStandbyOverTruckJob extends QcJob {
   constructor(dependencies: number[], qcId: string, position: Vector3) {
     super(dependencies, qcId, position);
-    this.reason = "qcmove";
+    this.reason = "qcstandbyovertruck";
   }
 }
 

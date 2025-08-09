@@ -251,7 +251,7 @@ export class Qc {
     this.visualizer.emit(new EquipmentMoveEndEvent(this.id, EquipmentType.Qc));
 
     // update job status
-    if (this.currentJob.reason === "qcmove") {
+    if (this.currentJob.reason === "qcstandbyovertruck") {
       const job = this.currentJob;
       this.currentJob = null;
       job.updateStatus(JobStatus.Completed, this.visualizer);

@@ -9,6 +9,7 @@ import { StandbyPoint } from "./StandbyPoint";
 import { Truck, TruckId } from "./Truck";
 import { SafetyFieldDetection, TrafficType } from "./types";
 
+const STANDBY_QUEUE_LENGTH = 2;
 export class TrafficManager {
   private visualizer: Visualizer;
   pathPlanner: PathPlanner;
@@ -23,7 +24,11 @@ export class TrafficManager {
     this.visualizer = visualizer;
     this.pathPlanner = new PathPlanner(this.visualizer, layout);
     this.trucks = new Map();
-    this.standbyPoint = new StandbyPoint(this.visualizer, this);
+    this.standbyPoint = new StandbyPoint(
+      this.visualizer,
+      this,
+      STANDBY_QUEUE_LENGTH
+    );
     this.activeSequences = new Map();
     this.footprints = new Map();
 
