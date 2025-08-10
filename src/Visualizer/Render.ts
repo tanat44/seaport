@@ -43,7 +43,13 @@ export class Render {
   });
 
   static safetyFieldMaterial = new MeshBasicMaterial({
-    color: 0xdea300,
+    color: 0xffcf4a,
+    opacity: 0.3,
+    transparent: true,
+  });
+
+  static safetyFieldDetectMaterial = new MeshBasicMaterial({
+    color: 0xff984f,
     opacity: 0.5,
     transparent: true,
   });

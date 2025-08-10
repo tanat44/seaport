@@ -1,4 +1,5 @@
-import { Box2, Vector2, Vector3 } from "three";
+import { Box2, Box3, Vector2, Vector3 } from "three";
+import { OBB } from "three/examples/jsm/math/OBB";
 import { TruckMoveEvent, TruckQueuingTrafficEvent } from "../Event/TruckEvent";
 import { SequenceId } from "../Job/Definition/JobSequence";
 import { TruckJob, TruckMoveToQcStandby } from "../Job/Definition/TruckJob";
@@ -85,11 +86,15 @@ export class TrafficManager {
 
   isSafetyFieldIntersectOtherTrucks(
     myTruckId: string,
-    mySafetyField: Box2
+    mySafetyField: OBB
   ): SafetyFieldDetection | null {
     for (const [thatTruckId, footprint] of this.footprints) {
       if (thatTruckId === myTruckId) continue;
-      if (mySafetyField.intersectsBox(footprint)) {
+      const thatBox3 = new Box3(
+        new Vector3(footprint.min.x, footprint.min.y, 0),
+        new Vector3(footprint.max.x, footprint.max.y, 10)
+      );
+      if (mySafetyField.intersectsBox3(thatBox3)) {
         const myTruck = this.trucks.get(myTruckId);
         const anotherTruck = this.trucks.get(thatTruckId);
         const trafficType =

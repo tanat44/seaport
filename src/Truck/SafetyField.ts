@@ -1,4 +1,5 @@
-import { Box2, Box3, Object3D, Quaternion, Vector2, Vector3 } from "three";
+import { Mesh, Object3D, Quaternion, Vector3 } from "three";
+import { OBB } from "three/examples/jsm/math/OBB.js";
 import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
@@ -11,7 +12,10 @@ export class SafetyField {
   visualizer: Visualizer;
   truckManager: TrafficManager;
   truck: Truck;
-  fieldModel: Object3D;
+
+  // model
+  fieldModel: Object3D; // parent mesh container (provide scaling behavior)
+  fieldShape: Mesh; // actual shape of the safety field
 
   constructor(
     truck: Truck,
@@ -23,14 +27,14 @@ export class SafetyField {
     this.truck = truck;
 
     // create 3d Object
-    const fieldShape = Render.createBox(
+    this.fieldShape = Render.createBox(
       new Vector3(1, TRUCK_WIDTH, 0.5),
       Render.safetyFieldMaterial,
       0.5
     );
-    fieldShape.position.x = 0.5;
+    this.fieldShape.position.x = 0.5;
     this.fieldModel = new Object3D();
-    this.fieldModel.add(fieldShape);
+    this.fieldModel.add(this.fieldShape);
     this.visualizer.scene.add(this.fieldModel);
     this.visualizer.onEvent<AnimateEvent>("animate", (e) => this.animate(e));
   }
@@ -71,16 +75,18 @@ export class SafetyField {
     this.fieldModel.quaternion.copy(tractorRot);
 
     // field box
-    const box3 = new Box3().setFromObject(this.fieldModel);
-    const safetyField = new Box2(
-      new Vector2(box3.min.x, box3.min.y),
-      new Vector2(box3.max.x, box3.max.y)
-    );
 
-    // const detection = this.truckManager.isSafetyFieldIntersectOtherTrucks(
-    //   this.truck.id,
-    //   safetyField
-    // );
+    const fieldBox = new OBB();
+    fieldBox.applyMatrix4(this.fieldShape.matrixWorld);
+    fieldBox.halfSize.copy(this.fieldModel.scale);
+
+    const detection = this.truckManager.isSafetyFieldIntersectOtherTrucks(
+      this.truck.id,
+      fieldBox
+    );
+    this.fieldShape.material = detection
+      ? Render.safetyFieldDetectMaterial
+      : Render.safetyFieldMaterial;
 
     // let trigger = false;
     // if (detection) {
@@ -93,6 +99,6 @@ export class SafetyField {
     //     )
     //   );
     // }
-    // this.truck.pathPhysics.setSafetyFieldDetection(trigger);
+    // this.truck.pathPhysics?.setSafetyFieldDetection(detection ? true : false);
   }
 }
