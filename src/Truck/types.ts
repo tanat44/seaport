@@ -10,6 +10,6 @@ export enum TrafficType {
 }
 
 export type SafetyFieldDetection = {
-  anotherTruckId: string;
+  theOtherTruckId: string;
   trafficType: TrafficType;
 };

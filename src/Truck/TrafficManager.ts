@@ -1,6 +1,9 @@
 import { Box2, Box3, Vector2, Vector3 } from "three";
 import { OBB } from "three/examples/jsm/math/OBB";
-import { TruckMoveEvent, TruckQueuingTrafficEvent } from "../Event/TruckEvent";
+import {
+  TruckMoveEvent,
+  TruckSafetyFieldTriggerEvent,
+} from "../Event/TruckEvent";
 import { SequenceId } from "../Job/Definition/JobSequence";
 import { TruckJob, TruckMoveToQcStandby } from "../Job/Definition/TruckJob";
 import { Layout } from "../Layout/types";
@@ -44,9 +47,9 @@ export class TrafficManager {
     this.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) =>
       this.onTruckMove(e)
     );
-    this.visualizer.onEvent<TruckQueuingTrafficEvent>(
-      "truckqueuingtraffic",
-      (e) => this.onTruckQueuingTraffic(e)
+    this.visualizer.onEvent<TruckSafetyFieldTriggerEvent>(
+      "trucksafetyfieldtrigger",
+      this.onSafetyFieldTrigger.bind(this)
     );
   }
 
@@ -102,7 +105,7 @@ export class TrafficManager {
             ? TrafficType.Queuing
             : TrafficType.Opposing;
         return {
-          anotherTruckId: thatTruckId,
+          theOtherTruckId: thatTruckId,
           trafficType,
         };
       }
@@ -140,27 +143,34 @@ export class TrafficManager {
     this.footprints.set(e.truckId, e.footprint);
   }
 
-  private onTruckQueuingTraffic(e: TruckQueuingTrafficEvent) {
-    const NO_REPLAN_JOB = ["truckmovetoqcstandby", "truckmovetounderqc"];
-    if (NO_REPLAN_JOB.includes(e.job.reason)) return;
+  private async onSafetyFieldTrigger(e: TruckSafetyFieldTriggerEvent) {
+    const thisTruck = this.getTruck(e.truckId);
+    const thatTruck = this.getTruck(e.detection.theOtherTruckId);
+    if (!thisTruck.currentJob) {
+      console.log(
+        `cannot handle safety field trigger because ${thisTruck.id} has no current job`
+      );
+      return;
+    }
+    if (!thatTruck.currentJob) {
+      console.log(
+        `cannot handle safety field trigger because ${thatTruck.id} has no current job`
+      );
+      return;
+    }
 
-    const truck = this.getTruck(e.truckId);
-    truck.replan();
+    // this has priority over that
+    if (thisTruck.currentJob.id < thatTruck.currentJob.id) {
+      // truck1 resume -> truck2 flagdown -> truck2 wait for truck1 to pass -> truck2 resume
+      thisTruck.resume();
+      thatTruck.flagDown(); // let truck1 proceed and flag down truck2
+      await thisTruck.safetyField.waitForSafetyFieldReset(); // wait for truck1 to pass by, then resume truck2
+      thatTruck.resume();
+    } else {
+      // that truck has more priority
+      thisTruck.flagDown(); // let truck2 proceed and flag down truck1
+      await thisTruck.safetyField.waitForSafetyFieldReset(); // wait for truck2 to pass by, then resume truck1
+      thisTruck.resume();
+    }
   }
 }
-
-// getAvailableTruckAsync(jobPosition: Vector2): Promise<Truck> {
-//   return new Promise((resolve, reject) => {
-//     const truck = this.getClosestTruck(jobPosition);
-//     if (truck) resolve(truck);
-
-//     // no available truck .. wait for next available truck
-//     this.terminal.visualizer.onEvent<TruckReleaseEvent>(
-//       "truckrelease",
-//       (e) => {
-//         const truck = this.trucks.get(e.truckId);
-//         resolve(truck);
-//       }
-//     );
-//   });
-// }

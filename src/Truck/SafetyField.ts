@@ -1,5 +1,9 @@
 import { Mesh, Object3D, Quaternion, Vector3 } from "three";
 import { OBB } from "three/examples/jsm/math/OBB.js";
+import {
+  TruckSafetyFieldResetEvent,
+  TruckSafetyFieldTriggerEvent,
+} from "../Event/TruckEvent";
 import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
@@ -8,12 +12,16 @@ import { TRACTOR_LENGTH, Truck, TRUCK_WIDTH } from "./Truck";
 
 const STEERING_FACTOR = 10;
 const MAX_STEERING_ANGLE = Math.PI / 6; // 30 degrees
+const FIELD_NOMINAL_WIDTH = 2;
 export class SafetyField {
   visualizer: Visualizer;
   truckManager: TrafficManager;
   truck: Truck;
 
-  // model
+  // state
+  triggered: boolean;
+
+  // visual model
   fieldModel: Object3D; // parent mesh container (provide scaling behavior)
   fieldShape: Mesh; // actual shape of the safety field
 
@@ -25,6 +33,8 @@ export class SafetyField {
     this.visualizer = visualizer;
     this.truckManager = truckManager;
     this.truck = truck;
+
+    this.triggered = false;
 
     // create 3d Object
     this.fieldShape = Render.createBox(
@@ -48,7 +58,7 @@ export class SafetyField {
     const fieldLength = baseLength * 2 + stoppingDistance;
 
     // calculate field width
-    let fieldWidth = 1;
+    let fieldWidth = FIELD_NOMINAL_WIDTH;
     const steerDirection = this.truck.steeringAngle > 0;
     if (this.truck.velocity.length() > 0) {
       let capSteering = this.truck.steeringAngle;
@@ -63,7 +73,9 @@ export class SafetyField {
     this.fieldModel.scale.x = fieldLength;
     this.fieldModel.scale.y = fieldWidth;
     const yOffset =
-      (fieldWidth / 2 - 1 / 2) * (steerDirection ? 1 : -1) * TRUCK_WIDTH;
+      (fieldWidth / 2 - FIELD_NOMINAL_WIDTH / 2) *
+      (steerDirection ? 1 : -1) *
+      TRUCK_WIDTH;
 
     // apply position / rotation in global coordinate
     const fieldOffset = new Vector3(TRACTOR_LENGTH, yOffset, 0);
@@ -88,17 +100,35 @@ export class SafetyField {
       ? Render.safetyFieldDetectMaterial
       : Render.safetyFieldMaterial;
 
-    // let trigger = false;
-    // if (detection) {
-    //   trigger = true;
-    //   this.visualizer.emit(
-    //     new TruckQueuingTrafficEvent(
-    //       this.truck.id,
-    //       detection,
-    //       this.truck.currentJob
-    //     )
-    //   );
-    // }
-    // this.truck.pathPhysics?.setSafetyFieldDetection(detection ? true : false);
+    if (detection && !this.triggered) {
+      this.triggered = true;
+      this.visualizer.emit(
+        new TruckSafetyFieldTriggerEvent(this.truck.id, detection)
+      );
+    } else if (!detection) {
+      this.triggered = false;
+      this.visualizer.emit(new TruckSafetyFieldResetEvent(this.truck.id));
+    }
+  }
+
+  async waitForSafetyFieldReset() {
+    return new Promise<void>((resolve, reject) => {
+      if (!this.triggered) {
+        resolve();
+        return;
+      }
+
+      const onReset = (e: TruckSafetyFieldResetEvent) => {
+        if (e.truckId === this.truck.id) {
+          resolve();
+          this.visualizer.offEvent("trucksafetyfieldreset", onReset);
+        }
+      };
+
+      this.visualizer.onEvent<TruckSafetyFieldResetEvent>(
+        "trucksafetyfieldreset",
+        onReset
+      );
+    });
   }
 }

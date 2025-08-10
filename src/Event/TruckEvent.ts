@@ -7,7 +7,8 @@ export type TruckEventType =
   | "truckdriveend"
   | "truckrelease"
   | "truckmove"
-  | "truckqueuingtraffic";
+  | "trucksafetyfieldtrigger"
+  | "trucksafetyfieldreset";
 
 export abstract class TruckBaseEvent extends EventBase {
   truckId: string;
@@ -41,13 +42,17 @@ export class TruckMoveEvent extends TruckBaseEvent {
   }
 }
 
-export class TruckQueuingTrafficEvent extends TruckBaseEvent {
+export class TruckSafetyFieldTriggerEvent extends TruckBaseEvent {
   detection: SafetyFieldDetection;
-  job: TruckJob;
 
-  constructor(truckId: string, detection: SafetyFieldDetection, job: TruckJob) {
-    super("truckqueuingtraffic", truckId);
+  constructor(truckId: string, detection: SafetyFieldDetection) {
+    super("trucksafetyfieldtrigger", truckId);
     this.detection = detection;
-    this.job = job;
+  }
+}
+
+export class TruckSafetyFieldResetEvent extends TruckBaseEvent {
+  constructor(truckId: string) {
+    super("trucksafetyfieldreset", truckId);
   }
 }

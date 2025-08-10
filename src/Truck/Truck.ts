@@ -224,10 +224,12 @@ export class Truck {
   }
 
   flagDown() {
+    // console.log(`${this.id}: flag down`);
     this.pathPhysics?.flagDown();
   }
 
   resume() {
+    // console.trace(`${this.id}: resume`);
     this.pathPhysics?.resume();
   }
 

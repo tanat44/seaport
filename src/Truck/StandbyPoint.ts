@@ -90,6 +90,7 @@ export class StandbyPoint {
     }
     const truck = trucks[0];
     this.queue.splice(this.queue.indexOf(truck), 1); // remove truck from queue
+    // console.log("standby: release", truck.id);
     truck.resume();
     this.updateStatusBanner();
   }

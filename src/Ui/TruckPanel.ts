@@ -1,5 +1,8 @@
 import { EquipmentCreateEvent, EquipmentType } from "../Event/EquipmentEvent";
-import { TruckMoveEvent, TruckQueuingTrafficEvent } from "../Event/TruckEvent";
+import {
+  TruckMoveEvent,
+  TruckSafetyFieldTriggerEvent,
+} from "../Event/TruckEvent";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { UiBase } from "./UiBase";
 
@@ -12,16 +15,18 @@ export class TruckPanel extends UiBase {
     super(visualizer, canvasElement);
     this.truckCard = new Map();
 
-    // register equipment event
-    this.visualizer.onEvent<EquipmentCreateEvent>("equipmentcreate", (e) =>
-      this.onEquipmentCreate(e)
+    // event handler
+    this.visualizer.onEvent<EquipmentCreateEvent>(
+      "equipmentcreate",
+      this.onEquipmentCreate.bind(this)
     );
-    this.visualizer.onEvent<TruckMoveEvent>("truckmove", (e) =>
-      this.onTruckMove(e)
+    this.visualizer.onEvent<TruckMoveEvent>(
+      "truckmove",
+      this.onTruckMove.bind(this)
     );
-    this.visualizer.onEvent<TruckQueuingTrafficEvent>(
-      "truckqueuingtraffic",
-      (e) => this.onTruckQueuingTraffic(e)
+    this.visualizer.onEvent<TruckSafetyFieldTriggerEvent>(
+      "trucksafetyfieldtrigger",
+      this.onTruckSafetyFieldTrigger.bind(this)
     );
   }
 
@@ -45,7 +50,7 @@ export class TruckPanel extends UiBase {
     card.className = `${CARD_CLASS} workingStatus`;
   }
 
-  private onTruckQueuingTraffic(e: TruckQueuingTrafficEvent) {
+  private onTruckSafetyFieldTrigger(e: TruckSafetyFieldTriggerEvent) {
     const card = this.truckCard.get(e.truckId);
     card.className = `${CARD_CLASS} blockingStatus`;
   }
