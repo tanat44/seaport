@@ -2,8 +2,8 @@ import {
   Box2,
   Box3,
   BoxGeometry,
+  CylinderGeometry,
   Mesh,
-  MeshBasicMaterial,
   Object3D,
   Vector2,
   Vector3,
@@ -26,6 +26,7 @@ import { QcControl } from "./QcControl";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
+const ROPE_SIZE = 0.1;
 
 export const QC_ID_PREFIX = "QC.";
 export type QcId = string;
@@ -48,6 +49,7 @@ export class Qc {
   model: Object3D; // root mesh
   trolley: Mesh;
   spreader: Mesh;
+  wirerope: Mesh;
   containerPlaceholder: Object3D;
 
   // operation
@@ -155,7 +157,7 @@ export class Qc {
     // leg
     const heightTopLevel = this.height + SPREADER_THICKNESS;
     const legGeometry = new BoxGeometry(LEG_SIZE, LEG_SIZE, heightTopLevel);
-    const legMaterial = new MeshBasicMaterial({ color: "#3b4452" });
+    const legMaterial = Render.legMaterial;
 
     // legBL
     const legBL = new Mesh(legGeometry, legMaterial);
@@ -175,35 +177,34 @@ export class Qc {
     this.model.add(legBL, legBR, legTL, legTR);
 
     // rail
-    const railL = new Mesh(
-      new BoxGeometry(LEG_SIZE, this.legSpan + this.outReach, LEG_SIZE),
+    const railGeometry = new BoxGeometry(
+      LEG_SIZE,
+      this.legSpan + this.outReach,
+      LEG_SIZE
+    );
+    const RAIL_WIDTH = this.width / 2;
+    const railL = new Mesh(railGeometry, legMaterial);
+    railL.position.set(-RAIL_WIDTH / 2, this.outReach / 2, heightTopLevel);
+    const railR = new Mesh(railGeometry, legMaterial);
+    railR.position.set(RAIL_WIDTH / 2, this.outReach / 2, heightTopLevel);
+    const railCap = new Mesh(
+      new BoxGeometry(RAIL_WIDTH, LEG_SIZE, LEG_SIZE),
       legMaterial
     );
-    railL.position.set(-this.width / 4, this.outReach / 2, heightTopLevel);
-    const railR = new Mesh(
-      new BoxGeometry(LEG_SIZE, this.legSpan + this.outReach, LEG_SIZE),
-      legMaterial
-    );
-    railR.position.set(this.width / 4, this.outReach / 2, heightTopLevel);
-    this.model.add(railL, railR);
+    railCap.position.set(0, this.legSpan / 2 + this.outReach, heightTopLevel);
+    this.model.add(railL, railR, railCap);
 
-    // machine room
-    const machineH = this.width / 5;
-    const machineRoom = new Mesh(
-      new BoxGeometry(this.width / 3, this.legSpan / 3, machineH),
-      legMaterial
-    );
-    machineRoom.position.set(
-      0,
-      -this.legSpan / 4,
-      heightTopLevel + machineH / 1.5
-    );
-    this.model.add(machineRoom);
+    // across beam
+    const acrossBeamGeometry = new BoxGeometry(this.width, LEG_SIZE, LEG_SIZE);
+    const acrossBeamSea = new Mesh(acrossBeamGeometry, legMaterial);
+    acrossBeamSea.position.set(0, this.legSpan / 2, heightTopLevel);
+    const acrossBeamLand = acrossBeamSea.clone();
+    acrossBeamLand.position.set(0, -this.legSpan / 2, heightTopLevel);
+    this.model.add(acrossBeamSea, acrossBeamLand);
 
     // text label
     const text = this.visualizer.text.createTextMesh(this.id);
-    text.translateZ(machineH * 2);
-    machineRoom.add(text);
+    text.translateZ(heightTopLevel);
 
     // trolley
     const trolleyGeometry = new BoxGeometry(
@@ -212,12 +213,20 @@ export class Qc {
       SPREADER_THICKNESS
     );
     this.trolley = new Mesh(trolleyGeometry, Render.trolleyMaterial);
-    this.trolley.position.set(
+    const trolleyPosition = new Vector3(
       0,
       this.legSpan + this.outReach / 2,
       this.height + SPREADER_THICKNESS
     );
+    this.trolley.position.copy(trolleyPosition);
     this.model.add(this.trolley);
+
+    // wire rope
+    const wireropeGeometry = new CylinderGeometry(ROPE_SIZE, ROPE_SIZE, 1);
+    wireropeGeometry.rotateX(Math.PI / 2);
+    wireropeGeometry.translate(0, 0, -0.5);
+    this.wirerope = new Mesh(wireropeGeometry, Render.spreaderMaterial);
+    this.trolley.add(this.wirerope);
 
     // spreader
     this.spreader = new Mesh(trolleyGeometry, Render.spreaderMaterial);
@@ -234,10 +243,11 @@ export class Qc {
 
   private updateModelState() {
     this.model.position.setX(this.control.position.x);
-    this.spreader.position.setZ(
-      this.control.position.z - this.height - SPREADER_THICKNESS / 2
-    );
+    const spreaderZ =
+      this.control.position.z - this.height - SPREADER_THICKNESS / 2;
+    this.spreader.position.setZ(spreaderZ);
     this.trolley.position.setY(this.control.position.y);
+    this.wirerope.scale.setZ(-spreaderZ);
   }
 
   private listenToEvents() {

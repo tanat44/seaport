@@ -13,6 +13,7 @@ import {
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 //@ts-ignore
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+import { AnimateEvent } from "../Event/types";
 import { CameraMoveEvent } from "../Event/VisualizationEvent";
 import { MathUtility } from "../MathUtility";
 import { Visualizer } from "./Visualizer";
@@ -28,10 +29,7 @@ export class Text {
     this.loader = new FontLoader();
     this.textObjects = [];
 
-    visualizer.onEvent<CameraMoveEvent>(
-      "cameramove",
-      this.onCameraMove.bind(this)
-    );
+    visualizer.onEvent<AnimateEvent>("animate", this.onAnimate.bind(this));
   }
 
   load(url: string = "helvetiker_bold.typeface.json"): Promise<void> {
@@ -94,8 +92,11 @@ export class Text {
     });
   }
 
-  private onCameraMove(e: CameraMoveEvent): void {
-    const cameraPos = new Vector2(e.position.x, e.position.y);
+  private onAnimate(e: CameraMoveEvent): void {
+    const cameraPos = new Vector2(
+      this.visualizer.camera.position.x,
+      this.visualizer.camera.position.y
+    );
 
     for (const text of this.textObjects) {
       // get old world matrix
@@ -103,7 +104,7 @@ export class Text {
       text.matrixWorld.decompose(pos, new Quaternion(), new Vector3());
 
       const qParent = new Quaternion();
-      text.parent.getWorldQuaternion(qParent);
+      if (text.parent) text.parent.getWorldQuaternion(qParent);
 
       // calculate new text facing rotation
       const v = cameraPos.clone().sub(MathUtility.vector3To2(pos));

@@ -34,6 +34,10 @@ export class Render {
     transparent: true,
   });
 
+  static legMaterial = new MeshBasicMaterial({
+    color: "#3b4452",
+  });
+
   static trolleyMaterial = new MeshBasicMaterial({
     color: 0xfc9803,
   });

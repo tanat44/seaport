@@ -2,8 +2,8 @@ import {
   Box2,
   Box3,
   BoxGeometry,
+  CylinderGeometry,
   Mesh,
-  MeshBasicMaterial,
   Object3D,
   Vector2,
   Vector3,
@@ -25,6 +25,7 @@ import { RtgControl } from "./RtgControl";
 
 const LEG_SIZE = 0.3;
 const SPREADER_THICKNESS = 0.6;
+const ROPE_SIZE = 0.1;
 
 export type RtgId = string;
 export class Rtg {
@@ -44,6 +45,7 @@ export class Rtg {
   model: Object3D; // root mesh
   trolley: Mesh;
   spreader: Mesh;
+  wirerope: Mesh;
   containerPlaceholder: Object3D;
 
   // operation
@@ -133,6 +135,7 @@ export class Rtg {
 
   public dropContainer(): Container {
     const container = this.container;
+    container.mesh.material = Render.containerMaterial;
     this.container = null;
     this.containerPlaceholder.remove(container.mesh);
 
@@ -149,7 +152,7 @@ export class Rtg {
     // leg
     const heightTopLevel = this.height + SPREADER_THICKNESS;
     const legGeometry = new BoxGeometry(LEG_SIZE, LEG_SIZE, heightTopLevel);
-    const legMaterial = new MeshBasicMaterial({ color: "#3b4452" });
+    const legMaterial = Render.legMaterial;
 
     // legBL
     const legBL = new Mesh(legGeometry, legMaterial);
@@ -167,6 +170,14 @@ export class Rtg {
     const legTR = new Mesh(legGeometry, legMaterial);
     legTR.position.set(this.width / 2, this.legSpan, heightTopLevel / 2);
     this.model.add(legBL, legBR, legTL, legTR);
+
+    // across beam
+    const acrossBeamGeometry = new BoxGeometry(this.width, LEG_SIZE, LEG_SIZE);
+    const acrossBeam1 = new Mesh(acrossBeamGeometry, legMaterial);
+    acrossBeam1.position.set(0, 0, heightTopLevel);
+    const acrossBeam2 = acrossBeam1.clone();
+    acrossBeam2.position.set(0, this.legSpan, heightTopLevel);
+    this.model.add(acrossBeam1, acrossBeam2);
 
     // rail
     const railL = new Mesh(
@@ -191,6 +202,13 @@ export class Rtg {
     this.trolley.position.set(0, 0, this.height + SPREADER_THICKNESS);
     this.model.add(this.trolley);
 
+    // wire rope
+    const wireropeGeometry = new CylinderGeometry(ROPE_SIZE, ROPE_SIZE, 1);
+    wireropeGeometry.rotateX(Math.PI / 2);
+    wireropeGeometry.translate(0, 0, -0.5);
+    this.wirerope = new Mesh(wireropeGeometry, Render.spreaderMaterial);
+    this.trolley.add(this.wirerope);
+
     // spreader
     this.spreader = new Mesh(trolleyGeometry, Render.spreaderMaterial);
     this.spreader.position.set(0, 0, 0);
@@ -211,9 +229,10 @@ export class Rtg {
 
   private updateModelState() {
     this.model.position.setX(this.control.position.x + this.origin.x);
-    this.spreader.position.setZ(
-      this.control.position.z - this.height - SPREADER_THICKNESS / 2
-    );
+    const spreaderZ =
+      this.control.position.z - this.height - SPREADER_THICKNESS / 2;
+    this.spreader.position.setZ(spreaderZ);
+    this.wirerope.scale.setZ(-spreaderZ);
     this.trolley.position.setY(this.control.position.y);
   }
 
