@@ -21,7 +21,7 @@ export class Terminal {
   // equipment
   qcManager: QcManager;
   rtgManager: RtgManager;
-  truckManager: TrafficManager;
+  trafficManager: TrafficManager;
 
   // operation
   terminalRunner: TerminalRunner;
@@ -47,7 +47,7 @@ export class Terminal {
     this.yardManager = new YardManager(this, layout);
     this.qcManager = new QcManager(this, layout.quayCraneOrigins);
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
-    this.truckManager = new TrafficManager(this.visualizer, layout, 6);
+    this.trafficManager = new TrafficManager(this.visualizer, layout, 6);
 
     // get vessel plan
     const vessel = this.vessels.get(VESSEL_NAME);
@@ -58,7 +58,7 @@ export class Terminal {
       this.visualizer,
       this.qcManager,
       this.rtgManager,
-      this.truckManager,
+      this.trafficManager,
       this.yardManager
     );
     this.terminalRunner.run(qcPlans, vessel);

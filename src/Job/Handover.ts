@@ -32,15 +32,15 @@ export class Handover extends TerminalManager {
       this.qcManager.releaseQc(qc.id);
 
       // truck load container
-      const truck = this.truckManager.getTruck(handoverJob.truckId);
+      const truck = this.trafficManager.getTruck(handoverJob.truckId);
       truck.load(container);
     } else if (job.reason === "handovertrucktortg") {
       const handoverJob = job as HandoverTruckToRtgJob;
 
       // truck unload container
-      const truck = this.truckManager.getTruck(handoverJob.truckId);
+      const truck = this.trafficManager.getTruck(handoverJob.truckId);
       const container = truck.unload();
-      this.truckManager.releaseTruck(handoverJob.truckId);
+      this.trafficManager.releaseTruck(handoverJob.truckId);
 
       // rtg pick container
       const rtg = this.rtgManager.getRtg(handoverJob.rtgId);

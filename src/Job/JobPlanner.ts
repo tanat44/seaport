@@ -50,7 +50,7 @@ export class JobPlanner extends TerminalManager {
     // truck move to standby
     const truckStandbyJob = new TruckMoveToQcStandby(
       [],
-      new Vector2(20, qc.position.y),
+      this.trafficManager.standbyPoint.position.clone(),
       qc.id
     );
     sequence.addJob(truckStandbyJob);

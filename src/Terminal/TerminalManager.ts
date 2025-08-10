@@ -8,20 +8,20 @@ export abstract class TerminalManager {
   visualizer: Visualizer;
   qcManager: QcManager;
   rtgManager: RtgManager;
-  truckManager: TrafficManager;
+  trafficManager: TrafficManager;
   yardManager: YardManager;
 
   constructor(
     visualizer: Visualizer,
     qcManager: QcManager,
     rtgManager: RtgManager,
-    truckManager: TrafficManager,
+    trafficManager: TrafficManager,
     yardManager: YardManager
   ) {
     this.visualizer = visualizer;
     this.qcManager = qcManager;
     this.rtgManager = rtgManager;
-    this.truckManager = truckManager;
+    this.trafficManager = trafficManager;
     this.yardManager = yardManager;
   }
 }

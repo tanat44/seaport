@@ -33,7 +33,6 @@ export class PathPhysics {
   distance: number;
   velocity: number;
   acceleration: number;
-  safetyFieldDetection: boolean;
   status: TruckStatus;
   private animationCallback: (e: AnimateEvent) => void;
   private running: boolean;
@@ -80,7 +79,6 @@ export class PathPhysics {
     this.distance = 0;
     this.velocity = 0;
     this.acceleration = 0;
-    this.safetyFieldDetection = false;
     this.status = TruckStatus.Idle;
     this.lastIndex = 0;
     this.arrived = false;
@@ -115,11 +113,7 @@ export class PathPhysics {
     });
   }
 
-  setSafetyFieldDetection(detection: boolean) {
-    this.safetyFieldDetection = detection;
-  }
-
-  pause() {
+  flagDown() {
     this.running = false;
   }
 
@@ -129,9 +123,9 @@ export class PathPhysics {
 
   private animate(e: AnimateEvent) {
     const deltaTime = e.deltaTime;
-    if (this.arrived || !this.running) return;
+    if (this.arrived) return;
 
-    if (this.safetyFieldDetection) {
+    if (!this.running) {
       if (this.velocity > 0) {
         this.acceleration = this.maxDeceleration;
       } else {

@@ -13,7 +13,7 @@ import {
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 //@ts-ignore
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { AnimateEvent } from "../Event/types";
+import { CameraMoveEvent } from "../Event/VisualizationEvent";
 import { MathUtility } from "../MathUtility";
 import { Visualizer } from "./Visualizer";
 
@@ -28,8 +28,9 @@ export class Text {
     this.loader = new FontLoader();
     this.textObjects = [];
 
-    visualizer.onEvent<AnimateEvent>("animate", (e) =>
-      this.onAnimate(e.deltaTime)
+    visualizer.onEvent<CameraMoveEvent>(
+      "cameramove",
+      this.onCameraMove.bind(this)
     );
   }
 
@@ -52,17 +53,7 @@ export class Text {
 
   createTextMesh(text: string): Object3D {
     const material = new MeshBasicMaterial({ color: "#1f1d36" });
-    const geometry = new TextGeometry(text, {
-      font: this.font,
-      size: 70,
-      depth: 5,
-      curveSegments: 12,
-      bevelEnabled: true,
-      bevelThickness: 1,
-      bevelSize: 1,
-      bevelOffset: 0,
-      bevelSegments: 5,
-    });
+    const geometry = this.createTextGeometry(text);
     const mesh = new Mesh(geometry, material);
     const scale = 0.02;
     mesh.scale.set(scale, scale, scale);
@@ -78,11 +69,33 @@ export class Text {
     return wrapper;
   }
 
-  private onAnimate(deltaTime: number) {
-    const cameraPos = new Vector2(
-      this.visualizer.camera.position.x,
-      this.visualizer.camera.position.y
-    );
+  updateText(ref: Object3D, newText: string): void {
+    const target = this.textObjects.find((obj) => obj === ref);
+    if (!target) console.warn("cannot find reference to text");
+
+    // dispose old geometry
+    (target.children[0] as Mesh).geometry.dispose();
+
+    // update geometry
+    (target.children[0] as Mesh).geometry = this.createTextGeometry(newText);
+  }
+
+  private createTextGeometry(text: string): TextGeometry {
+    return new TextGeometry(text, {
+      font: this.font,
+      size: 70,
+      depth: 5,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 1,
+      bevelSize: 1,
+      bevelOffset: 0,
+      bevelSegments: 5,
+    });
+  }
+
+  private onCameraMove(e: CameraMoveEvent): void {
+    const cameraPos = new Vector2(e.position.x, e.position.y);
 
     for (const text of this.textObjects) {
       // get old world matrix

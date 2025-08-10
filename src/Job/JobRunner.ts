@@ -83,14 +83,14 @@ export class JobRunner extends TerminalManager {
             thisJobSuccess || this.rtgManager.execute(job as RtgJob);
         } else if (TruckJob.prototype.isPrototypeOf(job)) {
           const truckJob = job as TruckJob;
-          let truck = this.truckManager.getTruckForSequence(job.sequenceId);
+          let truck = this.trafficManager.getTruckForSequence(job.sequenceId);
           if (!truck) {
-            truck = this.truckManager.getAvailableTruck(truckJob.to);
+            truck = this.trafficManager.getAvailableTruck(truckJob.to);
             if (truck) sequence.assignTruck(truck.id);
           }
 
           if (truck) {
-            this.truckManager.execute(truckJob);
+            this.trafficManager.execute(truckJob);
             thisJobSuccess = true;
           }
         } else if (HandoverJob.prototype.isPrototypeOf(job)) {

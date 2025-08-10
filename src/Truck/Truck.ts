@@ -223,8 +223,8 @@ export class Truck {
     return container;
   }
 
-  pause() {
-    this.pathPhysics?.pause();
+  flagDown() {
+    this.pathPhysics?.flagDown();
   }
 
   resume() {

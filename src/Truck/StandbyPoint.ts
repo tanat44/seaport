@@ -1,3 +1,4 @@
+import { Object3D, Vector2 } from "three";
 import { JobStatusChangeEvent } from "../Event/JobEvent";
 import { TruckDriveEndEvent } from "../Event/TruckEvent";
 import { JobStatus } from "../Job/Definition/JobBase";
@@ -11,18 +12,28 @@ export class StandbyPoint {
   visualizer: Visualizer;
   truckManager: TrafficManager;
   queue: Truck[];
-  queueLength: number;
+  maxQueueLength: number;
+  position: Vector2;
+
+  banner: Object3D;
 
   constructor(
     visualizer: Visualizer,
     truckManager: TrafficManager,
-    queueLength: number
+    maxQueueLength: number
   ) {
     this.queue = [];
     this.visualizer = visualizer;
     this.truckManager = truckManager;
-    this.queueLength = queueLength;
+    this.maxQueueLength = maxQueueLength;
+    this.position = new Vector2(30, 138);
 
+    // banner
+    this.banner = visualizer.text.createTextMesh("standby");
+    this.banner.position.set(this.position.x, this.position.y, 5);
+    this.visualizer.scene.add(this.banner);
+
+    // events
     this.visualizer.onEvent<TruckDriveEndEvent>(`truckdriveend`, (e) =>
       this.onDriveEnd(e)
     );
@@ -31,16 +42,31 @@ export class StandbyPoint {
     );
   }
 
+  private updateStatusBanner() {
+    let text = "empty standby";
+    for (let i = 0; i < this.queue.length; ++i) {
+      if (i == 0) {
+        text = "claim: ";
+      }
+      text += this.queue[i].id + " ";
+      if (i === this.maxQueueLength - 1) {
+        text += "\nnext: ";
+      }
+    }
+    this.visualizer.text.updateText(this.banner, text);
+  }
+
   // if queue is not full, truck can proceed to standby point
   addJob(job: TruckMoveToQcStandby) {
     const truck = this.truckManager.getTruck(job.truckId);
 
     this.queue.push(truck);
-    if (this.queue.length <= this.queueLength) {
+    if (this.queue.length <= this.maxQueueLength) {
       truck.resume();
     } else {
-      truck.pause();
+      truck.flagDown();
     }
+    this.updateStatusBanner();
   }
 
   onJobStatusChange(e: JobStatusChangeEvent) {
@@ -65,6 +91,7 @@ export class StandbyPoint {
     const truck = trucks[0];
     this.queue.splice(this.queue.indexOf(truck), 1); // remove truck from queue
     truck.resume();
+    this.updateStatusBanner();
   }
 
   onDriveEnd(e: any) {

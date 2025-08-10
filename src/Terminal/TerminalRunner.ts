@@ -32,14 +32,14 @@ export class TerminalRunner extends TerminalManager {
       this.visualizer,
       this.qcManager,
       this.rtgManager,
-      this.truckManager,
+      this.trafficManager,
       this.yardManager
     );
     this.jobRunner = new JobRunner(
       this.visualizer,
       this.qcManager,
       this.rtgManager,
-      this.truckManager,
+      this.trafficManager,
       this.yardManager
     );
     this.qcPlans = new Map();
