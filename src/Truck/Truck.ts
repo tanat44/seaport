@@ -3,7 +3,6 @@ import {
   Box3,
   BoxGeometry,
   CylinderGeometry,
-  Euler,
   Mesh,
   MeshBasicMaterial,
   Object3D,
@@ -18,8 +17,10 @@ import {
   EquipmentType,
 } from "../Event/EquipmentEvent";
 import { TruckDriveEndEvent, TruckMoveEvent } from "../Event/TruckEvent";
+import { AnimateEvent } from "../Event/types";
 import { JobStatus } from "../Job/Definition/JobBase";
 import { TruckJob } from "../Job/Definition/TruckJob";
+import { MathUtility } from "../MathUtility";
 import { Container } from "../StorageBlock/StorageBlock";
 import {
   CONTAINER_SIZE_X,
@@ -53,15 +54,23 @@ export class Truck {
   visualizer: Visualizer;
   truckManager: TrafficManager;
 
+  // objects
   id: TruckId;
   trailerModel: Object3D;
   tractorModel: Object3D;
   pathPhysics: PathPhysics | null;
   safetyField: SafetyField;
 
+  // job
   currentJob: TruckJob | null;
   container: Container | null;
   containerPlaceholder: Object3D;
+
+  // state
+  lastTractorRotation: Quaternion;
+  lastTractorPosition: Vector3;
+  velocity: Vector3;
+  steeringAngle: number;
 
   constructor(
     visualizer: Visualizer,
@@ -80,6 +89,12 @@ export class Truck {
       this.visualizer
     );
 
+    // init state
+    this.lastTractorRotation = new Quaternion();
+    this.lastTractorPosition = new Vector3();
+    this.velocity = new Vector3();
+    this.steeringAngle = 0;
+
     if (initialPosition) {
       this.trailerModel.position.copy(initialPosition);
     }
@@ -89,6 +104,7 @@ export class Truck {
     this.visualizer.onEvent<TruckDriveEndEvent>(`truckdriveend`, (e) =>
       this.onDriveEnd(e)
     );
+    this.visualizer.onEvent<AnimateEvent>("animate", (e) => this.animate(e));
   }
 
   execute(job: TruckJob) {
@@ -167,13 +183,12 @@ export class Truck {
   ) {
     this.trailerModel.position.set(positionTrailer.x, positionTrailer.y, 0);
 
-    const qTrailer = this.directionToQuaternion(directionTrailer);
+    const qTrailer = MathUtility.directionToQuaternion(directionTrailer);
     this.trailerModel.rotation.setFromQuaternion(qTrailer);
-    const qTractor = this.directionToQuaternion(directionTractor).multiply(
-      qTrailer.clone().invert()
-    );
+    const qTractor = MathUtility.directionToQuaternion(
+      directionTractor
+    ).multiply(qTrailer.clone().invert());
     this.tractorModel.rotation.setFromQuaternion(qTractor);
-    this.safetyField.update();
 
     // publish truck move event
     const box = new Box3().setFromObject(this.trailerModel);
@@ -338,20 +353,30 @@ export class Truck {
     this.tractorModel.add(wheelFL);
   }
 
-  private directionToQuaternion(direction: Vector2) {
-    const q = new Quaternion();
-    q.setFromUnitVectors(
-      new Vector3(1, 0, 0),
-      new Vector3(direction.x, direction.y)
+  animate(e: AnimateEvent): void {
+    const deltaTime = e.deltaTime;
+
+    const newPosition = new Vector3();
+    this.tractorModel.getWorldPosition(newPosition);
+    this.velocity = newPosition
+      .clone()
+      .sub(this.lastTractorPosition)
+      .divideScalar(deltaTime);
+
+    // calculate steering angle
+    const oldDirection = new Vector3(1, 0, 0).applyQuaternion(
+      this.lastTractorRotation
+    );
+    const newRotation = new Quaternion();
+    this.tractorModel.getWorldQuaternion(newRotation);
+    const newDirection = new Vector3(1, 0, 0).applyQuaternion(newRotation);
+    this.steeringAngle = MathUtility.signedAngleBetweenVector(
+      new Vector2(oldDirection.x, oldDirection.y),
+      new Vector2(newDirection.x, newDirection.y)
     );
 
-    // make sure quaternion doesn't flip upside down
-    const euler = new Euler();
-    euler.setFromQuaternion(q);
-    if (euler.x === 0) return q;
-
-    const qFlip = new Quaternion();
-    qFlip.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI);
-    return q.multiply(qFlip);
+    // cache state for next calculation
+    this.lastTractorRotation = newRotation.clone();
+    this.lastTractorPosition = newPosition.clone();
   }
 }

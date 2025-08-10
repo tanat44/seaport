@@ -41,8 +41,6 @@ export class PathPhysics {
   // temporal
   lastIndex: number;
   arrived: boolean;
-  previousTractorDirection: Vector2;
-  steeringAngle: number;
 
   // render
   meshes: Object3D[];
@@ -188,23 +186,12 @@ export class PathPhysics {
       ++nextIndex;
     }
 
-    // calculate steering velocity
-    const tractorDirection = this.rotation(this.pathTractor);
-    if (this.previousTractorDirection) {
-      const angle = MathUtility.signedAngleBetweenVector(
-        this.previousTractorDirection,
-        tractorDirection
-      );
-      this.steeringAngle = angle;
-    } else {
-      this.steeringAngle = 0;
-    }
-    this.previousTractorDirection = tractorDirection.clone();
+    const tractorDirection = this.rotation(this.pathTractor, this.distance);
 
     if (this.updateCallback)
       this.updateCallback(
         this.positionTrailer,
-        this.rotation(this.pathTrailer),
+        this.rotation(this.pathTrailer, this.distance),
         tractorDirection
       );
 
@@ -234,7 +221,7 @@ export class PathPhysics {
     return p0.clone().add(v.multiplyScalar(this.distance - lastDistance));
   }
 
-  private rotation(path: Vector2[]): Vector2 {
+  private rotation(path: Vector2[], distance: number): Vector2 {
     if (this.lastIndex >= path.length - 2) {
       const p0 = path[this.lastIndex - 1];
       const p1 = path[this.lastIndex];
@@ -254,9 +241,7 @@ export class PathPhysics {
     const segmentDistance =
       this.pathTrailerDistances[this.lastIndex + 1] - lastDistance;
     return v1
-      .add(
-        deltaV.multiplyScalar((this.distance - lastDistance) / segmentDistance)
-      )
+      .add(deltaV.multiplyScalar((distance - lastDistance) / segmentDistance))
       .normalize();
   }
 

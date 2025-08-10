@@ -1,4 +1,4 @@
-import { Vector2, Vector3 } from "three";
+import { Euler, Quaternion, Vector2, Vector3 } from "three";
 
 const EPSILON = 0.01;
 
@@ -42,5 +42,22 @@ export class MathUtility {
 
   static vector2Abs(v: Vector2) {
     return new Vector2(Math.abs(v.x), Math.abs(v.y));
+  }
+
+  static directionToQuaternion(direction: Vector2) {
+    const q = new Quaternion();
+    q.setFromUnitVectors(
+      new Vector3(1, 0, 0),
+      new Vector3(direction.x, direction.y)
+    );
+
+    // make sure quaternion doesn't flip upside down
+    const euler = new Euler();
+    euler.setFromQuaternion(q);
+    if (euler.x === 0) return q;
+
+    const qFlip = new Quaternion();
+    qFlip.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI);
+    return q.multiply(qFlip);
   }
 }

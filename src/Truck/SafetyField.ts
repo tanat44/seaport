@@ -1,4 +1,5 @@
 import { Box2, Box3, Object3D, Quaternion, Vector2, Vector3 } from "three";
+import { AnimateEvent } from "../Event/types";
 import { Render } from "../Visualizer/Render";
 import { Visualizer } from "../Visualizer/Visualizer";
 import { TrafficManager } from "./TrafficManager";
@@ -11,7 +12,6 @@ export class SafetyField {
   truckManager: TrafficManager;
   truck: Truck;
   fieldModel: Object3D;
-  previousSteeringAngle: number = 0;
 
   constructor(
     truck: Truck,
@@ -32,36 +32,43 @@ export class SafetyField {
     this.fieldModel = new Object3D();
     this.fieldModel.add(fieldShape);
     this.visualizer.scene.add(this.fieldModel);
+    this.visualizer.onEvent<AnimateEvent>("animate", (e) => this.animate(e));
   }
 
-  update() {
+  animate(e: AnimateEvent) {
     let stoppingDistance = this.truck.pathPhysics?.stoppingDistance;
     if (!stoppingDistance) stoppingDistance = 0;
 
     // update field size
     const baseLength = TRACTOR_LENGTH - 1;
     const fieldLength = baseLength * 2 + stoppingDistance;
-    const steerDirection = this.truck.pathPhysics.steeringAngle > 0;
-    let capSteering = this.truck.pathPhysics.steeringAngle;
-    if (capSteering > MAX_STEERING_ANGLE) {
-      capSteering = MAX_STEERING_ANGLE;
-    } else if (capSteering < -MAX_STEERING_ANGLE) {
-      capSteering = -MAX_STEERING_ANGLE;
+
+    // calculate field width
+    let fieldWidth = 1;
+    const steerDirection = this.truck.steeringAngle > 0;
+    if (this.truck.velocity.length() > 0) {
+      let capSteering = this.truck.steeringAngle;
+      if (capSteering > MAX_STEERING_ANGLE) {
+        capSteering = MAX_STEERING_ANGLE;
+      } else if (capSteering < -MAX_STEERING_ANGLE) {
+        capSteering = -MAX_STEERING_ANGLE;
+      }
+      fieldWidth += Math.abs(capSteering) * STEERING_FACTOR;
     }
-    let fieldWidth = 1 + Math.abs(capSteering) * STEERING_FACTOR;
+
     this.fieldModel.scale.x = fieldLength;
     this.fieldModel.scale.y = fieldWidth;
-    let yOffset = steerDirection ? fieldWidth - 0.5 : -fieldWidth + 0.5;
+    const yOffset =
+      (fieldWidth / 2 - 1 / 2) * (steerDirection ? 1 : -1) * TRUCK_WIDTH;
 
     // apply position / rotation in global coordinate
-    const tractorPosition = new Vector3();
-    this.truck.tractorModel.getWorldPosition(tractorPosition);
-    tractorPosition.y += yOffset;
+    const fieldOffset = new Vector3(TRACTOR_LENGTH, yOffset, 0);
+    const tractorMat = this.truck.tractorModel.matrixWorld;
+    const tractorPosition = fieldOffset.applyMatrix4(tractorMat);
     const tractorRot = new Quaternion();
     this.truck.tractorModel.getWorldQuaternion(tractorRot);
     this.fieldModel.position.copy(tractorPosition);
     this.fieldModel.quaternion.copy(tractorRot);
-    this.previousSteeringAngle = capSteering;
 
     // field box
     const box3 = new Box3().setFromObject(this.fieldModel);

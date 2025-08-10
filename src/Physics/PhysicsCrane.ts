@@ -80,7 +80,7 @@ export class PhysicsCrane {
 
     ++this.lastTargetIndex;
     if (this.lastTargetIndex === this.trajectory.length) {
-      console.log("Trajectory execution complete");
+      // console.log("Trajectory execution complete");
       this.visualizer.scene.remove(this.trajectoryMesh);
       this.trajectoryMesh = undefined;
       this.afterArrive();

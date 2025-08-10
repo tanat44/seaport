@@ -47,7 +47,7 @@ export class Terminal {
     this.yardManager = new YardManager(this, layout);
     this.qcManager = new QcManager(this, layout.quayCraneOrigins);
     this.rtgManager = new RtgManager(this, this.yardManager.allYards);
-    this.truckManager = new TrafficManager(this.visualizer, layout, 7);
+    this.truckManager = new TrafficManager(this.visualizer, layout, 6);
 
     // get vessel plan
     const vessel = this.vessels.get(VESSEL_NAME);
